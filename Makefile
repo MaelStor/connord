@@ -34,3 +34,10 @@ version:
 
 version-verbose:
 	vermin -vv connord/
+
+test-upload: dist/*
+	twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+
+test-install:
+	python3 -m pip install --index-url https://test.pypi.org/simple/ connord
+

@@ -1,5 +1,6 @@
 """setup.py"""
-from setuptools import setup, setuptools
+from setuptools import setup, find_packages
+from connord import __version__
 
 
 def readme():
@@ -13,10 +14,10 @@ def readme():
 
 setup(
     name="connord",
-    version="0.1.0-alpha",
+    version=__version__,
     description="Command-Line tool to connect to nordvpn.",
     long_description=readme(),
-    long_description_content_type="text/markup",
+    long_description_content_type="text/markdown; charset=UTF-8; variant=GFM",
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Environment :: Console",
@@ -28,15 +29,10 @@ setup(
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.5",
-        "Programming Language :: Python :: 3.4",
-        "Programming Language :: Python :: 3.3",
-        "Programming Language :: Python :: 3.2",
-        "Programming Language :: Python :: 2.7",
-        "Topic :: System",
         "Topic :: Security",
-        "Topic :: Networking",
-        "Topic :: Networking :: Firewalls",
-        "Topic :: Systems Administration",
+        "Topic :: System :: Networking",
+        "Topic :: System :: Networking :: Firewalls",
+        "Topic :: System :: Systems Administration",
     ],
     install_requires=[
         "requests>=2.22.0,<3.0.0",
@@ -47,8 +43,9 @@ setup(
         "python-iptables>=0.14.0,<1.0.0",
     ],
     tests_require=["pytest", "pytest-cov", "vermin", "mock"],
-    python_requires=">=3.2,>=2.7",
-    packages=setuptools.find_packages(),
+    python_requires=">=3.5",
+    packages=find_packages(),
+    include_package_data=True,
     entry_points={"console_scripts": ["connord = connord.__main__:main"]},
     url="http://gitlab.noiams.space/maelstor/connord",
     author="Mael Stor",
