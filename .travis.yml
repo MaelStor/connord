@@ -1,0 +1,31 @@
+dist: xenial
+language: python
+cache: pip
+
+python:
+  - "3.7"
+
+matrix:
+  allow_failures:
+    - python: pypy
+    - python: pypy3
+
+install:
+  - make clean
+  - python -m pip install -U "pip>=18.0" "setuptools>=38.0" wheel
+  - python -m pip install -r requirements-devel.txt
+  - python -m pip install -e .
+
+before_script:
+  # stop the build if there are Python syntax errors or undefined names
+  - flake8 ./connord --count --select=E9,F63,F72,F82 --show-source --statistics
+  # exit-zero treats all errors as warnings.  The GitHub editor is 127 chars wide
+  - flake8 ./connord --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics
+
+script:
+  - make test
+  - make package
+
+notifications:
+  on_success: change
+  on_failure: change

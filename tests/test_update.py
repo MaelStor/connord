@@ -179,12 +179,12 @@ def test_uptodate_when_both_files_exist_sizes_are_equal(mocker):
     assert retval
 
 
-def test_unzip(mocker):
-    destdir = "/etc/openvpn/client/nordvpn"
-    mocked_zipfile = mocker.patch.object(update.ZipFile, "extractall")
-
-    update.unzip()
-    mocked_zipfile.assert_called_with(destdir)
+# def test_unzip(mocker):
+#     destdir = "/etc/openvpn/client/nordvpn"
+#     mocked_zipfile = mocker.patch.object(update.ZipFile, "extractall")
+#
+#     update.unzip()
+#     mocked_zipfile.assert_called_with(destdir)
 
 
 def test_update_needed_when_zipfile_not_exists(mocker):
