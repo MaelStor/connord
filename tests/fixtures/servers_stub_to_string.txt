@@ -1,0 +1,27 @@
+      Country                    Domain  IP Address            Load  Type
+      Features
+      ---------------------------------------------------------------------------
+   1: Germany                    de111   185.145.66.248   load:  83  standard,p2p
+      ikev2,openvpn_udp,openvpn_tcp,socks,proxy,proxy_cybersec,proxy_ssl_cybersec
+      ---------------------------------------------------------------------------
+   2: Germany                    de112   185.145.66.249   load:  20  standard,p2p
+      ikev2,openvpn_udp,openvpn_tcp,socks,proxy,proxy_cybersec,proxy_ssl,proxy_ssl_cybersec
+      ---------------------------------------------------------------------------
+   3: Germany                    de113   185.145.66.250   load:  20  standard,p2p
+      ikev2,openvpn_udp,openvpn_tcp,socks,proxy,proxy_cybersec,proxy_ssl
+      ---------------------------------------------------------------------------
+   4: Netherlands                nl80    217.23.1.184     load:   6  obfuscated
+      openvpn_xor_udp,openvpn_xor_tcp
+      ---------------------------------------------------------------------------
+   5: Netherlands                nl81    217.23.1.186     load:  25  obfuscated
+      openvpn_xor_udp,openvpn_xor_tcp
+      ---------------------------------------------------------------------------
+   6: Netherlands                nl82    217.23.1.186     load:  25  obfuscated
+      openvpn_xor_udp,openvpn_xor_tcp,ikev2_v6,openvpn_udp_v6,openvpn_tcp_v6,wireguard_udp,openvpn_udp_tls_crypt,openvpn_tcp_tls_crypt
+      ---------------------------------------------------------------------------
+   7: United States              us-ca5  87.101.95.180    load: 100  double
+      openvpn_tcp
+      ---------------------------------------------------------------------------
+   8: United States              us2853  45.35.93.146     load:  34  dedicated
+      openvpn_udp,openvpn_tcp
+      ---------------------------------------------------------------------------

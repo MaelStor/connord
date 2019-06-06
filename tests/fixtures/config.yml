@@ -1,0 +1,241 @@
+FORWARD: []
+INPUT:
+- conntrack:
+    ctstate: RELATED,ESTABLISHED
+  in-interface: tun+
+  target: ACCEPT
+- conntrack:
+    ctstate: RELATED,ESTABLISHED
+  in-interface: enp0s25
+  src: 81.92.203.47/32
+  target: ACCEPT
+- conntrack:
+    ctstate: RELATED,ESTABLISHED
+  in-interface: enp0s25
+  src: 100.86.13.64/27
+  target: ACCEPT
+- conntrack:
+    ctstate: RELATED,ESTABLISHED
+  in-interface: lo
+  src: 81.92.203.47/32
+  target: ACCEPT
+- conntrack:
+    ctstate: RELATED,ESTABLISHED
+  in-interface: lo
+  src: 127.0.0.0/8
+  target: ACCEPT
+- in-interface: lo
+  target: ACCEPT
+- src: 127.0.0.0/8
+  target: DROP
+OUTPUT:
+- dst: 103.86.96.100/32
+  out-interface: lo
+  protocol: udp
+  target: ACCEPT
+  udp:
+    dport: '53'
+- dst: 103.86.96.100/32
+  out-interface: tun+
+  protocol: udp
+  target: ACCEPT
+  udp:
+    dport: '53'
+- dst: 103.86.99.100/32
+  out-interface: lo
+  protocol: udp
+  target: ACCEPT
+  udp:
+    dport: '53'
+- dst: 103.86.99.100/32
+  out-interface: tun+
+  protocol: udp
+  target: ACCEPT
+  udp:
+    dport: '53'
+- out-interface: tun+
+  target: ACCEPT
+- dst: 81.92.203.47/32
+  out-interface: enp0s25
+  target: ACCEPT
+- dst: 100.86.13.64/27
+  out-interface: enp0s25
+  target: ACCEPT
+- dst: 81.92.203.47/32
+  out-interface: lo
+  target: ACCEPT
+- dst: 127.0.0.0/8
+  out-interface: lo
+  target: ACCEPT
+- out-interface: lo
+  target: ACCEPT
+icmp-in:
+- icmp:
+    icmp-type: '0'
+  protocol: icmp
+  target: ACCEPT
+- protocol: icmp
+  target:
+    LOG:
+      log-prefix: '[ICMP-IN]: '
+- protocol: icmp
+  target: DROP
+icmp-out:
+- icmp:
+    icmp-type: '8'
+  protocol: icmp
+  target: ACCEPT
+- icmp:
+    icmp-type: '3'
+  protocol: icmp
+  target: ACCEPT
+- protocol: icmp
+  target:
+    LOG:
+      log-prefix: '[ICMP-OUT]: '
+- protocol: icmp
+  target:
+    REJECT:
+      reject-with: icmp-port-unreachable
+lan-out:
+- protocol: udp
+  set:
+    match-set:
+    - dns-white
+    - dst,dst
+  target: ACCEPT
+  udp:
+    dport: '53'
+- protocol: tcp
+  set:
+    match-set:
+    - dns-white
+    - dst,dst
+  target: ACCEPT
+  tcp:
+    dport: '53'
+- protocol: udp
+  set:
+    match-set:
+    - vpn
+    - dst,dst
+  target: ACCEPT
+  udp:
+    dport: '1194'
+- protocol: tcp
+  set:
+    match-set:
+    - dhcp-white
+    - dst,dst
+  target: ACCEPT
+  tcp:
+    dport: 67:68
+- protocol: udp
+  set:
+    match-set:
+    - dhcp-white
+    - dst,dst
+  target: ACCEPT
+  udp:
+    dport: 67:68
+- target:
+    LOG:
+      log-prefix: '[LAN_OUT]: '
+- target:
+    REJECT:
+      reject-with: icmp-port-unreachable
+vpn-out:
+- protocol: udp
+  set:
+    match-set:
+    - vpn-dns
+    - dst,dst
+  target: ACCEPT
+  udp:
+    dport: '53'
+- protocol: tcp
+  set:
+    match-set:
+    - vpn-dns
+    - dst,dst
+  target: ACCEPT
+  tcp:
+    dport: '53'
+- protocol: udp
+  set:
+    match-set:
+    - vpn
+    - dst,dst
+  target: ACCEPT
+  udp:
+    dport: '1194'
+- protocol: tcp
+  set:
+    match-set:
+    - ssh
+    - dst,dst
+  target: ACCEPT
+  tcp:
+    dport: '22'
+- protocol: tcp
+  set:
+    match-set:
+    - dhcp-white
+    - dst,dst
+  target: ACCEPT
+  tcp:
+    dport: 67:68
+- protocol: udp
+  set:
+    match-set:
+    - dhcp-white
+    - dst,dst
+  target: ACCEPT
+  udp:
+    dport: 67:68
+- protocol: tcp
+  target: ACCEPT
+  tcp:
+    dport: '80'
+- protocol: tcp
+  target: ACCEPT
+  tcp:
+    dport: '43'
+- protocol: udp
+  target: ACCEPT
+  udp:
+    dport: '123'
+- protocol: tcp
+  target: ACCEPT
+  tcp:
+    dport: '443'
+- protocol: tcp
+  target: ACCEPT
+  tcp:
+    dport: '139'
+- protocol: tcp
+  target: ACCEPT
+  tcp:
+    dport: '445'
+- protocol: tcp
+  target: ACCEPT
+  tcp:
+    dport: '143'
+- protocol: tcp
+  target: ACCEPT
+  tcp:
+    dport: '465'
+- protocol: tcp
+  target: ACCEPT
+  tcp:
+    dport: '993'
+- protocol: tcp
+  target: ACCEPT
+  tcp:
+    dport: '587'
+- target:
+    LOG:
+      log-prefix: '[VPN_OUT]: '
+- target:
+    REJECT:
+      reject-with: icmp-port-unreachable

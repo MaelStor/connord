@@ -1,0 +1,19 @@
+usage: connord [-h] [-q | -v] {update,list,connect,kill,iptables,version} ...
+
+connord is a script/service to connect to nordvpn servers. It manages dns
+through resolvconf and the firewall through iptables to keep your connection
+safe.
+
+positional arguments:
+  {update,list,connect,kill,iptables,version}
+    update              Update nordvpn configuration files.
+    list                Prints all servers if no argument is given.
+    connect             Connect to a server.
+    kill                Kill all processes of connord. Useful in daemon mode.
+    iptables            Wrapper around iptables.
+    version             Show version
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -q, --quiet           Be quiet
+  -v, --verbose         Be verbose

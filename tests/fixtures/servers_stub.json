@@ -1,0 +1,345 @@
+[
+    {
+        "id": 590703,
+        "ip_address": "185.145.66.248",
+        "search_keywords": [],
+        "categories": [
+            {
+                "name": "Standard VPN servers"
+            },
+            {
+                "name": "P2P"
+            }
+        ],
+        "name": "Germany #111",
+        "domain": "de111.nordvpn.com",
+        "price": 0,
+        "flag": "DE",
+        "country": "Germany",
+        "location": {
+            "lat": 50.116667,
+            "long": 8.683333
+        },
+        "load": 83,
+        "features": {
+            "ikev2": true,
+            "openvpn_udp": true,
+            "openvpn_tcp": true,
+            "socks": true,
+            "proxy": true,
+            "pptp": false,
+            "l2tp": false,
+            "openvpn_xor_udp": false,
+            "openvpn_xor_tcp": false,
+            "proxy_cybersec": true,
+            "proxy_ssl": false,
+            "proxy_ssl_cybersec": true,
+            "ikev2_v6": false,
+            "openvpn_udp_v6": false,
+            "openvpn_tcp_v6": false,
+            "wireguard_udp": false,
+            "openvpn_udp_tls_crypt": false,
+            "openvpn_tcp_tls_crypt": false
+        }
+    },
+    {
+        "id": 590704,
+        "ip_address": "185.145.66.249",
+        "search_keywords": [],
+        "categories": [
+            {
+                "name": "Standard VPN servers"
+            },
+            {
+                "name": "P2P"
+            }
+        ],
+        "name": "Germany #112",
+        "domain": "de112.nordvpn.com",
+        "price": 0,
+        "flag": "DE",
+        "country": "Germany",
+        "location": {
+            "lat": 50.116667,
+            "long": 8.683333
+        },
+        "load": 20,
+        "features": {
+            "ikev2": true,
+            "openvpn_udp": true,
+            "openvpn_tcp": true,
+            "socks": true,
+            "proxy": true,
+            "pptp": false,
+            "l2tp": false,
+            "openvpn_xor_udp": false,
+            "openvpn_xor_tcp": false,
+            "proxy_cybersec": true,
+            "proxy_ssl": true,
+            "proxy_ssl_cybersec": true,
+            "ikev2_v6": false,
+            "openvpn_udp_v6": false,
+            "openvpn_tcp_v6": false,
+            "wireguard_udp": false,
+            "openvpn_udp_tls_crypt": false,
+            "openvpn_tcp_tls_crypt": false
+        }
+    },
+    {
+        "id": 590705,
+        "ip_address": "185.145.66.250",
+        "search_keywords": [],
+        "categories": [
+            {
+                "name": "Standard VPN servers"
+            },
+            {
+                "name": "P2P"
+            }
+        ],
+        "name": "Germany #113",
+        "domain": "de113.nordvpn.com",
+        "price": 0,
+        "flag": "DE",
+        "country": "Germany",
+        "location": {
+            "lat": 50.116667,
+            "long": 8.683333
+        },
+        "load": 20,
+        "features": {
+            "ikev2": true,
+            "openvpn_udp": true,
+            "openvpn_tcp": true,
+            "socks": true,
+            "proxy": true,
+            "pptp": false,
+            "l2tp": false,
+            "openvpn_xor_udp": false,
+            "openvpn_xor_tcp": false,
+            "proxy_cybersec": true,
+            "proxy_ssl": true,
+            "proxy_ssl_cybersec": false,
+            "ikev2_v6": false,
+            "openvpn_udp_v6": false,
+            "openvpn_tcp_v6": false,
+            "wireguard_udp": false,
+            "openvpn_udp_tls_crypt": false,
+            "openvpn_tcp_tls_crypt": false
+        }
+    },
+    {
+        "id": 917915,
+        "ip_address": "217.23.1.184",
+        "search_keywords": [
+            "sha512",
+            "P2P"
+        ],
+        "categories": [
+            {
+                "name": "Obfuscated Servers"
+            }
+        ],
+        "name": "Netherlands #80",
+        "domain": "nl80.nordvpn.com",
+        "price": 0,
+        "flag": "NL",
+        "country": "Netherlands",
+        "location": {
+            "lat": 52.35,
+            "long": 4.916667
+        },
+        "load": 6,
+        "features": {
+            "ikev2": false,
+            "openvpn_udp": false,
+            "openvpn_tcp": false,
+            "socks": false,
+            "proxy": false,
+            "pptp": false,
+            "l2tp": false,
+            "openvpn_xor_udp": true,
+            "openvpn_xor_tcp": true,
+            "proxy_cybersec": false,
+            "proxy_ssl": false,
+            "proxy_ssl_cybersec": false,
+            "ikev2_v6": false,
+            "openvpn_udp_v6": false,
+            "openvpn_tcp_v6": false,
+            "wireguard_udp": false,
+            "openvpn_udp_tls_crypt": false,
+            "openvpn_tcp_tls_crypt": false
+        }
+    },
+    {
+        "id": 917917,
+        "ip_address": "217.23.1.186",
+        "search_keywords": [
+            "P2P",
+            "sha512"
+        ],
+        "categories": [
+            {
+                "name": "Obfuscated Servers"
+            }
+        ],
+        "name": "Netherlands #81",
+        "domain": "nl81.nordvpn.com",
+        "price": 0,
+        "flag": "NL",
+        "country": "Netherlands",
+        "location": {
+            "lat": 52.35,
+            "long": 4.916667
+        },
+        "load": 25,
+        "features": {
+            "ikev2": false,
+            "openvpn_udp": false,
+            "openvpn_tcp": false,
+            "socks": false,
+            "proxy": false,
+            "pptp": false,
+            "l2tp": false,
+            "openvpn_xor_udp": true,
+            "openvpn_xor_tcp": true,
+            "proxy_cybersec": false,
+            "proxy_ssl": false,
+            "proxy_ssl_cybersec": false,
+            "ikev2_v6": false,
+            "openvpn_udp_v6": false,
+            "openvpn_tcp_v6": false,
+            "wireguard_udp": false,
+            "openvpn_udp_tls_crypt": false,
+            "openvpn_tcp_tls_crypt": false
+        }
+    },
+    {
+	"_comment": "This is a fictional server",
+        "id": 917917,
+        "ip_address": "217.23.1.186",
+        "search_keywords": [
+            "P2P",
+            "sha512"
+        ],
+        "categories": [
+            {
+                "name": "Obfuscated Servers"
+            }
+        ],
+        "name": "Netherlands #82",
+        "domain": "nl82.nordvpn.com",
+        "price": 0,
+        "flag": "NL",
+        "country": "Netherlands",
+        "location": {
+            "lat": 52.35,
+            "long": 4.916667
+        },
+        "load": 25,
+        "features": {
+            "ikev2": false,
+            "openvpn_udp": false,
+            "openvpn_tcp": false,
+            "socks": false,
+            "proxy": false,
+            "pptp": false,
+            "l2tp": false,
+            "openvpn_xor_udp": true,
+            "openvpn_xor_tcp": true,
+            "proxy_cybersec": false,
+            "proxy_ssl": false,
+            "proxy_ssl_cybersec": false,
+            "ikev2_v6": true,
+            "openvpn_udp_v6": true,
+            "openvpn_tcp_v6": true,
+            "wireguard_udp": true,
+            "openvpn_udp_tls_crypt": true,
+            "openvpn_tcp_tls_crypt": true
+        }
+    },
+    {
+        "id": 932375,
+        "ip_address": "87.101.95.180",
+        "search_keywords": [
+            "sha512"
+        ],
+        "categories": [
+            {
+                "name": "Double VPN"
+            }
+        ],
+        "name": "United States - Canada #5",
+        "domain": "us-ca5.nordvpn.com",
+        "price": 0,
+        "flag": "US",
+        "country": "United States",
+        "location": {
+            "lat": 38.7508333,
+            "long": -77.4755556
+        },
+        "load": 100,
+        "features": {
+            "ikev2": false,
+            "openvpn_udp": false,
+            "openvpn_tcp": true,
+            "socks": false,
+            "proxy": false,
+            "pptp": false,
+            "l2tp": false,
+            "openvpn_xor_udp": false,
+            "openvpn_xor_tcp": false,
+            "proxy_cybersec": false,
+            "proxy_ssl": false,
+            "proxy_ssl_cybersec": false,
+            "ikev2_v6": false,
+            "openvpn_udp_v6": false,
+            "openvpn_tcp_v6": false,
+            "wireguard_udp": false,
+            "openvpn_udp_tls_crypt": false,
+            "openvpn_tcp_tls_crypt": false
+        }
+    },
+    {
+        "id": 931766,
+        "ip_address": "45.35.93.146",
+        "search_keywords": [
+            "sha512"
+        ],
+        "categories": [
+            {
+                "name": "Dedicated IP"
+            }
+        ],
+        "name": "United States #2853",
+        "domain": "us2853.nordvpn.com",
+        "price": 0,
+        "flag": "US",
+        "country": "United States",
+        "location": {
+            "lat": 32.7833333,
+            "long": -96.8
+        },
+        "load": 34,
+        "features": {
+            "ikev2": false,
+            "openvpn_udp": true,
+            "openvpn_tcp": true,
+            "socks": false,
+            "proxy": false,
+            "pptp": false,
+            "l2tp": false,
+            "openvpn_xor_udp": false,
+            "openvpn_xor_tcp": false,
+            "proxy_cybersec": false,
+            "proxy_ssl": false,
+            "proxy_ssl_cybersec": false,
+            "ikev2_v6": false,
+            "openvpn_udp_v6": false,
+            "openvpn_tcp_v6": false,
+            "wireguard_udp": false,
+            "openvpn_udp_tls_crypt": false,
+            "openvpn_tcp_tls_crypt": false
+        }
+    }
+]

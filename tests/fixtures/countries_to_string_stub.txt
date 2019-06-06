@@ -1,0 +1,61 @@
+List of countries:
+  ae    United Arab Emirates
+  al    Albania
+  ar    Argentina
+  at    Austria
+  au    Australia
+  ba    Bosnia and Herzegovina
+  be    Belgium
+  bg    Bulgaria
+  br    Brazil
+  ca    Canada
+  ch    Switzerland
+  cl    Chile
+  cr    Costa Rica
+  cy    Cyprus
+  cz    Czech Republic
+  de    Germany
+  dk    Denmark
+  ee    Estonia
+  eg    Egypt
+  es    Spain
+  fi    Finland
+  fr    France
+  gb    United Kingdom
+  ge    Georgia
+  gr    Greece
+  hk    Hong Kong
+  hr    Croatia
+  hu    Hungary
+  id    Indonesia
+  ie    Ireland
+  il    Israel
+  in    India
+  is    Iceland
+  it    Italy
+  jp    Japan
+  kr    South Korea
+  lu    Luxembourg
+  lv    Latvia
+  md    Moldova
+  mk    North Macedonia
+  mx    Mexico
+  my    Malaysia
+  nl    Netherlands
+  no    Norway
+  nz    New Zealand
+  pl    Poland
+  pt    Portugal
+  ro    Romania
+  rs    Serbia
+  se    Sweden
+  sg    Singapore
+  si    Slovenia
+  sk    Slovakia
+  th    Thailand
+  tr    Turkey
+  tw    Taiwan
+  ua    Ukraine
+  us    United States
+  vn    Vietnam
+  za    South Africa

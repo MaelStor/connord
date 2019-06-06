@@ -1,0 +1,248 @@
+FORWARD:
+  policy: DROP
+  action: None
+  rules: []
+INPUT:
+  policy: DROP
+  action: None
+  rules:
+  - in-interface: lo
+    target: connord-lo-input
+  - in-interface: tun+
+    target: connord-vpn-input
+  - in-interface: enp0s25
+    target: connord-lan-input
+  # TODO: needed? Seems to be good practice
+  # - src: 127.0.0.0/8
+  #   target: DROP
+connord-lo-input:
+  policy: None
+  action: create
+  rules:
+  # TODO: create dynamically
+  # - conntrack:
+  #     ctstate: RELATED,ESTABLISHED
+  #   src: 81.92.203.47/32
+  #   target: ACCEPT
+  - conntrack:
+      ctstate: RELATED,ESTABLISHED
+    src: 127.0.0.0/8
+    target: ACCEPT
+connord-vpn-input:
+  policy: None
+  action: create
+  rules:
+  - conntrack:
+      ctstate: RELATED,ESTABLISHED
+    target: ACCEPT
+  - protocol: icmp
+    target: connord-icmp-in
+connord-lan-input:
+  policy: None
+  action: create
+  rules:
+  - protocol: icmp
+    target: connord-icmp-in
+  # TODO: create dynamically
+  # - conntrack:
+  #     ctstate: RELATED,ESTABLISHED
+  #   src: 81.92.203.47/32
+  #   target: ACCEPT
+  # - conntrack:
+  #     ctstate: RELATED,ESTABLISHED
+  #   src: 100.86.13.64/27
+  #   target: ACCEPT
+connord-icmp-in:
+  policy: None
+  action: create
+  rules:
+  - icmp:
+      icmp-type: '0'
+    target: ACCEPT
+  - target:
+      LOG:
+        log-prefix: '[ICMP-IN]: '
+  - target: DROP
+connord-icmp-out:
+  policy: None
+  action: create
+  rules:
+  - icmp:
+      icmp-type: '8'
+    protocol: icmp
+    target: ACCEPT
+  - icmp:
+      icmp-type: '3'
+    protocol: icmp
+    target: ACCEPT
+  - protocol: icmp
+    target:
+      LOG:
+        log-prefix: '[ICMP-OUT]: '
+  - protocol: icmp
+    target:
+      REJECT:
+        reject-with: icmp-port-unreachable
+OUTPUT:
+  policy: DROP
+  action: None
+  rules:
+  - conntrack:
+      ctstate: RELATED,ESTABLISHED
+    target: ACCEPT
+  - out-interface: lo
+    target: connord-lo-output
+  - out-interface: enp0s25
+    target: connord-lan-output
+  - out-interface: tun+
+    target: connord-vpn-output
+connord-lo-output:
+  policy: None
+  action: create
+  rules:
+  # TODO: create dynamically
+  # - dst: 103.86.96.100/32
+  #   out-interface: lo
+  #   protocol: udp
+  #   target: ACCEPT
+  #   udp:
+  #     dport: '53'
+  # - dst: 103.86.99.100/32
+  #   out-interface: lo
+  #   protocol: udp
+  #   target: ACCEPT
+  #   udp:
+  #     dport: '53'
+  # - dst: 81.92.203.47/32
+  #   out-interface: lo
+  #   target: ACCEPT
+  - dst: 127.0.0.0/8
+    target: ACCEPT
+  - target: ACCEPT
+connord-lan-output:
+  policy: None
+  action: create
+  rules:
+  - protocol: icmp
+    target: connord-icmp-out
+  # TODO: create dynamically
+  # - dst: 81.92.203.47/32
+  #   out-interface: enp0s25
+  #   target: ACCEPT
+  # - dst: 100.86.13.64/27
+  #   out-interface: enp0s25
+  #   target: ACCEPT
+  # - protocol: udp
+  #   target: ACCEPT
+  #   udp:
+  #     dport: '53'
+  # - protocol: tcp
+  #   target: ACCEPT
+  #   tcp:
+  #     dport: '53'
+  # - protocol: udp
+  #   set:
+  #   target: ACCEPT
+  #   udp:
+  #     dport: '1194'
+  # - protocol: tcp
+  #   target: ACCEPT
+  #   tcp:
+  #     dport: 67:68
+  # - protocol: udp
+  #   target: ACCEPT
+  #   udp:
+  #     dport: 67:68
+  - target:
+      LOG:
+        log-prefix: '[LAN_OUT]: '
+  - target:
+      REJECT:
+        reject-with: icmp-port-unreachable
+connord-vpn-output:
+  policy: None
+  action: create
+  rules:
+  - protocol: icmp
+    target: connord-icmp-out
+  # TODO: create dynamically
+  # - dst: 103.86.96.100/32
+  #   protocol: udp
+  #   target: ACCEPT
+  #   udp:
+  #     dport: '53'
+  # - dst: 103.86.99.100/32
+  #   protocol: udp
+  #   target: ACCEPT
+  #   udp:
+  #     dport: '53'
+  # - protocol: udp
+  #   target: ACCEPT
+  #   udp:
+  #     dport: '53'
+  # - protocol: tcp
+  #   target: ACCEPT
+  #   tcp:
+  #     dport: '53'
+  # - protocol: udp
+  #   target: ACCEPT
+  #   udp:
+  #     dport: '1194'
+  # - protocol: tcp
+  #   target: ACCEPT
+  #   tcp:
+  #     dport: 67:68
+  # - protocol: udp
+  #   target: ACCEPT
+  #   udp:
+  #     dport: 67:68
+  - protocol: tcp
+    target: ACCEPT
+    tcp:
+      dport: '80'
+  - protocol: tcp
+    target: ACCEPT
+    tcp:
+      dport: '43'
+  - protocol: tcp
+    target: ACCEPT
+    tcp:
+      dport: '22'
+  - protocol: udp
+    target: ACCEPT
+    udp:
+      dport: '123'
+  - protocol: tcp
+    target: ACCEPT
+    tcp:
+      dport: '443'
+  - protocol: tcp
+    target: ACCEPT
+    tcp:
+      dport: '139'
+  - protocol: tcp
+    target: ACCEPT
+    tcp:
+      dport: '445'
+  - protocol: tcp
+    target: ACCEPT
+    tcp:
+      dport: '143'
+  - protocol: tcp
+    target: ACCEPT
+    tcp:
+      dport: '465'
+  - protocol: tcp
+    target: ACCEPT
+    tcp:
+      dport: '993'
+  - protocol: tcp
+    target: ACCEPT
+    tcp:
+      dport: '587'
+  - target:
+      LOG:
+        log-prefix: '[VPN_OUT]: '
+  - target:
+      REJECT:
+        reject-with: icmp-port-unreachable

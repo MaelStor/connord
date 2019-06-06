@@ -1,0 +1,47 @@
+---
+# vim: set fileencoding=utf-8 :
+
+# connord - connect to nordvpn servers
+# Copyright (C) 2019  Mael Stor <maelstor@posteo.de>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+################################################################################
+# config.yml
+#
+# Configuration for iptables and connord. Any variable/dictionary etc. defined
+# here can be used in fallback and rules files. Current variables in the
+# iptables dictionary are just a reasonable default and can be deleted if not in
+# use.
+# ##############################################################################
+
+iptables:
+  dns:
+    # NordVPN
+    - '103.86.99.100/32'
+    - '103.86.96.100/32'
+  # These variables must be set if you want to use the iptables rules defined in
+  # the config directory
+  #
+  # lan_interface: your_interface here
+  # lan_address: ip address with or without cidr of your lan
+  # vpn_interface: tun+
+
+connord:
+  # A default when this option is not given on the commandline.
+  # possible values: max, min, exact
+  load_match: 'max'
+  # possible values: 0 <= x <= 100
+  load: 10
+

@@ -1,0 +1,240 @@
+# vim: set fileencoding=utf-8 filetype=yaml :
+
+# connord - connect to nordvpn servers
+# Copyright (C) 2019  Mael Stor <maelstor@posteo.de>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+################################################################################
+# 01-filter.rules
+#
+# Jinja2 template for iptables
+# The naming scheme is important. You can prefix the table name with a number
+# to specify the order in which the files are loaded. The name after '-'
+# is the table name the rules are applied upon. If the table is suffixed with a
+# '6' the rules are applied to ip6tables. Recognized file endings are rules
+# and fallback. Rules files are applied before connecting to a nordvpn server
+# if not in daemon mode or else after successfully establishing a connection.
+# Fallback files are applied when disconnecting/reconnecting.
+#
+# Recognized variables which must not be present in the config file:
+# vpn_remote:   the remote ip address of the vpn server
+# vpn_protocol: the protocol in use: udp or tcp
+# vpn_port:     the port to communicate with the vpn server
+#
+# This file is parsed from top to bottom so make sure chains and rules are in
+# right order. Chains are created if they are not present yet.
+#
+# An unindented line defines a chain.
+# policy: Policy like it is described in man iptables
+# action: Not used yet
+# rules:  List of rules in the format which is accepted by python-iptables. See
+#         documentation there.
+################################################################################
+
+connord-icmp-in:
+  policy: None
+  action: create
+  rules:
+  - protocol: icmp
+    conntrack:
+      ctstate: RELATED,ESTABLISHED
+    target: ACCEPT
+  - protocol: icmp
+    icmp:
+      icmp-type: '0'
+    target: ACCEPT
+  - protocol: icmp
+    target:
+      LOG:
+        log-prefix: '[ICMP_I_D]: '
+  - protocol: icmp
+    target: DROP
+connord-lo-input:
+  policy: None
+  action: create
+  rules:
+  - conntrack:
+      ctstate: RELATED,ESTABLISHED
+    target: ACCEPT
+  - src: 127.0.0.0/8
+    target: ACCEPT
+connord-vpn-input:
+  policy: None
+  action: create
+  rules:
+  - protocol: icmp
+    target: connord-icmp-in
+  - conntrack:
+      ctstate: RELATED,ESTABLISHED
+    target: ACCEPT
+connord-lan-input:
+  policy: None
+  action: create
+  rules:
+  - protocol: icmp
+    target: connord-icmp-in
+  - conntrack:
+      ctstate: RELATED,ESTABLISHED
+    target: ACCEPT
+  - target:
+      LOG:
+        log-prefix: '[LAN_I_D]: '
+  - target: DROP
+INPUT:
+  policy: DROP
+  action: None
+  rules:
+  - in-interface: lo
+    target: connord-lo-input
+  - in-interface: "{{ iptables.lan_interface }}"
+    target: connord-lan-input
+  - in-interface: "{{ iptables.vpn_interface }}"
+    target: connord-vpn-input
+  - target:
+      LOG:
+        log-prefix: '[IN_D]: '
+connord-icmp-out:
+  policy: None
+  action: create
+  rules:
+  - protocol: icmp
+    conntrack:
+      ctstate: RELATED,ESTABLISHED
+    target: ACCEPT
+  - icmp:
+      icmp-type: '8'
+    protocol: icmp
+    target: ACCEPT
+  - icmp:
+      icmp-type: '3'
+    protocol: icmp
+    target: ACCEPT
+  - protocol: icmp
+    target:
+      LOG:
+        log-prefix: '[ICMP_O_R]: '
+  - protocol: icmp
+    target:
+      REJECT:
+        reject-with: icmp-port-unreachable
+connord-lo-output:
+  policy: None
+  action: create
+  rules:
+  - conntrack:
+      ctstate: RELATED,ESTABLISHED
+    target: ACCEPT
+{% for server in iptables.dns %}
+  - dst: "{{ server }}"
+    protocol: udp
+    target: ACCEPT
+    udp:
+      dport: '53'
+{% endfor %}
+  - dst: "{{ vpn_remote }}"
+    out-interface: lo
+    target: ACCEPT
+  - dst: 127.0.0.0/8
+    target: ACCEPT
+connord-lan-output:
+  policy: None
+  action: create
+  rules:
+  - protocol: icmp
+    target: connord-icmp-out
+  - conntrack:
+      ctstate: RELATED,ESTABLISHED
+    target: ACCEPT
+  - dst: "{{ iptables.lan_address }}"
+    target: ACCEPT
+{% for server in iptables.dns %}
+  - dst: "{{ server }}"
+    protocol: udp
+    target: ACCEPT
+    udp:
+      dport: '53'
+{% endfor %}
+  - dst: "{{ vpn_remote }}"
+    protocol: "{{ vpn_protocol }}"
+    udp:
+      dport: "{{ vpn_port }}"
+    target: ACCEPT
+  - protocol: tcp
+    target: ACCEPT
+    tcp:
+      dport: 67:68
+  - protocol: udp
+    target: ACCEPT
+    udp:
+      dport: 67:68
+  - target:
+      LOG:
+        log-prefix: '[LAN_O_R]: '
+  - target:
+      REJECT:
+        reject-with: icmp-port-unreachable
+connord-vpn-output:
+  policy: None
+  action: create
+  rules:
+  - protocol: icmp
+    target: connord-icmp-out
+  - conntrack:
+      ctstate: RELATED,ESTABLISHED
+    target: ACCEPT
+{% for server in iptables.dns %}
+  - dst: "{{ server }}"
+    protocol: udp
+    target: ACCEPT
+    udp:
+      dport: '53'
+{% endfor %}
+  - dst: "{{ vpn_remote }}"
+    protocol: "{{ vpn_protocol }}"
+    udp:
+      dport: "{{ vpn_port }}"
+    target: ACCEPT
+  - protocol: tcp
+    target: ACCEPT
+    tcp:
+      dport: 67:68
+  - protocol: udp
+    target: ACCEPT
+    udp:
+      dport: 67:68
+  - target: ACCEPT
+OUTPUT:
+  policy: ACCEPT
+  action: None
+  rules:
+  - out-interface: lo
+    target: connord-lo-output
+  - out-interface: "{{ iptables.lan_interface }}"
+    target: connord-lan-output
+  - out-interface: "{{ iptables.vpn_interface }}"
+    target: connord-vpn-output
+  - target:
+      LOG:
+        log-prefix: '[OUT_D]: '
+  - target:
+      REJECT:
+        reject-with: icmp-port-unreachable
+FORWARD:
+  policy: DROP
+  action: None
+  rules:
+  - target:
+      LOG:
+        log-prefix: '[FORW_D]: '
