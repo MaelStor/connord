@@ -4,7 +4,7 @@
 <p align="center">
 <a href="https://github.com/ambv/black"><img alt="Code Style: Black" src="https://img.shields.io/badge/code%20style-black-black.svg?style=flat-square"></a>
 <a href="https://choosealicense.com/licenses/gpl-3.0/"><img alt="License" src="https://img.shields.io/badge/license-GPL--3.0--or--later-green.svg?style=flat-square"></a>
-<a href="https://docs.python.org/"><img alt="Python Version" src="https://img.shields.io/badge/python-2.7%20%7C%203.2%20%7C%203.3%20%7C%203.4%20%7C%203.5%20%7C%203.6%20%7C%203.7-blue.svg?style=flat-square"></a>
+<a href="https://docs.python.org/"><img alt="Python Version" src="https://img.shields.io/badge/python-3.5%20%7C%203.6%20%7C%203.7-blue.svg?style=flat-square"></a>
 <a href="https://github.com/MaelStor/connord"><img alt="GitHub tag (latest SemVer)" src="https://img.shields.io/github/tag/MaelStor/connord.svg?style=flat-square"></a>
 <a href="https://travis-ci.com/MaelStor/connord/"><img alt="Travis (.com) branch"
 src="https://img.shields.io/travis/com/MaelStor/connord/master.svg?style=flat-square"></a>
@@ -43,12 +43,39 @@ daemon mode.
 
 
 ## Dependencies
-* python
+* python3
 * resolvconf
 * iptables
 * systemd
 * openvpn
-* sudo
+
+## Installation
+First make sure you have all dependencies installed.
+
+#### Ubuntu/Debian
+
+    apt-get install python3 resolvconf iptables systemd openvpn
+
+#### Arch
+
+    pacman -Sy python openresolv iptables systemd openvpn
+
+Installation of C&#xF8;nN&#xF8;rD
+
+    pip install --upgrade connord
+
+or clone the repo
+
+    git clone git@github.com:MaelStor/connord.git
+    cd connord
+
+and install in userspace with
+
+    pip install --user .
+
+or globally with
+
+    sudo pip install .
 
 ## Supported Commandline Options
 
@@ -254,8 +281,19 @@ update_interval     accepts seconds, minutes, hours, days, months, years.
                     any value is set to 0 there's always an update.
 </pre>
 
+## Developing
+
+Clone the repo and install development environment:
+
+    git clone git@github.com:MaelStor/connord.git
+    cd connord
+    make develop
+
+You're good to go from here :)
+
 ## TODO
 
+* [ ] Improve code documentation
 * [ ] Implement different output formats for listings. --pretty --terse --json.
 * [ ] Offer a sorting option to sort the output by different keys.
 * [X] Filter by max-load, load and min-load
