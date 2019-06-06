@@ -35,6 +35,9 @@ version:
 version-verbose:
 	vermin -vv connord/
 
+upload: dist/*
+	twine upload dist/*
+
 test-upload: dist/*
 	twine upload --repository-url https://test.pypi.org/legacy/ dist/*
 
