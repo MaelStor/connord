@@ -6,6 +6,8 @@
 <a href="https://choosealicense.com/licenses/gpl-3.0/"><img alt="License" src="https://img.shields.io/badge/license-GPL--3.0--or--later-green.svg?style=flat-square"></a>
 <a href="https://docs.python.org/"><img alt="Python Version" src="https://img.shields.io/badge/python-2.7%20%7C%203.2%20%7C%203.3%20%7C%203.4%20%7C%203.5%20%7C%203.6%20%7C%203.7-blue.svg?style=flat-square"></a>
 <a href="https://github.com/MaelStor/connord"><img alt="GitHub tag (latest SemVer)" src="https://img.shields.io/github/tag/MaelStor/connord.svg?style=flat-square"></a>
+<a href="https://travis-ci.com/MaelStor/connord/"><img alt="Travis (.com) branch"
+src="https://img.shields.io/travis/com/MaelStor/connord/master.svg?style=flat-square"></a>
 </p>
 ----
 
