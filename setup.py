@@ -15,9 +15,10 @@ def readme():
 setup(
     name="connord",
     version=__version__,
-    description="Command-Line tool to connect to nordvpn.",
+    description="Connect to NordVPN servers secure and fast",
     long_description=readme(),
     long_description_content_type="text/markdown; charset=UTF-8; variant=GFM",
+    keywords="nordvpn vpn secure privacy openvpn iptables",
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Environment :: Console",
