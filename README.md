@@ -9,6 +9,7 @@
 <a href="https://travis-ci.com/MaelStor/connord/"><img alt="Travis (.com) branch"
 src="https://img.shields.io/travis/com/MaelStor/connord/master.svg?style=flat-square"></a>
 </p>
+
 ----
 
 C&#xF8;nN&#xF8;rD is a tool to connect to NordVPN servers and manages DNS through 
@@ -26,6 +27,7 @@ protocol but can be changed to TCP in the configuration or command-line. The def
 changed in /etc/connord/config.yml or in site-packages/connord/config/config.yml when installed through pip.
 
 ----
+
 *Not implemented yet*
 
 The systemd service tries to reconnect if 
@@ -37,10 +39,20 @@ the cli.
 
 ----
 
-C&#xF8;nN&#xF8;rD tries hard to be compatible to the OpenVPN tool, so
-files are stored in OpenVPN directories per default. C&#xF8;nN&#xF8;rD can also be started in
-daemon mode.
+C&#xF8;nN&#xF8;rD tries hard to be compatible to the 
+[OpenVPN](https://openvpn.net/community-resources/#articles) tool, so
+files are stored in OpenVPN directories per default. C&#xF8;nN&#xF8;rD can also 
+be started in daemon mode.
 
+## Notes about alpha state of this repository
+
+This project is in alpha state and there are a lot of changes from version to
+version which are not backward compatible. This may render your configuration
+files in `/etc/connord` incompatible with a new version though I tried hard to
+anticipate as much as possible. So please read
+the release notes carefully and adjust the configuration files accordingly if
+needed. For example changes in version from alpha.0 to alpha.1 were not
+necessarily backwards compatible.
 
 ## Dependencies
 * python3
@@ -49,33 +61,130 @@ daemon mode.
 * systemd
 * openvpn
 
+## Quick start guide
+
+* Follow Installation instructions below
+* Copy everything within your python `site-packages/connord/config/` folder
+   to `/etc/connord`. For example python3.7:
+<pre>
+    sudo cp -r /lib/python3.7/site-packages/connord/config /etc/connord
+    sudoedit /etc/connord/config.yml
+</pre>
+
+* Follow instructions in `config.yml`
+* Execute `$ sudo connord connect`
+
 ## Installation
-First make sure you have all dependencies installed.
+First make sure you have all system dependencies installed.
 
 #### Ubuntu/Debian
 
-    apt-get install python3 resolvconf iptables systemd openvpn
+    $ sudo apt-get install python3 resolvconf iptables systemd openvpn
 
 #### Arch
 
-    pacman -Sy python openresolv iptables systemd openvpn
+    $ sudo pacman -Sy python openresolv iptables systemd openvpn
 
-Installation of C&#xF8;nN&#xF8;rD
+[systemd](https://www.freedesktop.org/wiki/Software/systemd/) is pretty 
+standard nowadays but if it is not present in your linux installation take care 
+not to render your system useless and read about it first before installing it.
 
-    pip install --upgrade connord
+#### Check if systemd is installed
 
-or clone the repo
+    $ systemctl --version
 
-    git clone git@github.com:MaelStor/connord.git
-    cd connord
+should give you a result like 
+
+    systemd 242 (242.29-1-arch)
+    +PAM +AUDIT -SELINUX -IMA -APPARMOR +SMACK -SYSVINIT +UTMP +LIBCRYPTSETUP
+    +GCRYPT +GNUTLS +ACL +XZ +LZ4 +SECCOMP +BLKID +ELFUTILS +KMOD +IDN2 -IDN +PCRE2 default-hierarchy=hybrid
+ 
+and your fine.
+
+#### Installation of C&#xF8;nN&#xF8;rD
+
+    $ pip install --upgrade connord
+
+or globally:
+
+    $ sudo pip install --upgrade connord
+
+You may also clone the repo
+
+    $ git clone git@github.com:MaelStor/connord.git
+    $ cd connord
 
 and install in userspace with
 
-    pip install --user .
+    $ pip install --user .
 
 or globally with
 
-    sudo pip install .
+    $ sudo pip install .
+
+__Important__
+
+You need to edit config.yml in the `site-packages/connord/config/` folder. Read
+Configuration notes in the file itself and below how to create a permanent
+solution for your configuration.
+
+## Configuration
+
+Default configuration files are located in your python 
+`site-packages/connord/config`
+folder. You may wish to create an more permanent location and copy them to 
+`/etc/connord/`. The folder needs to be created if not already done. 
+Configuration files in site-packages don't survive an upgrade in contrast to 
+`/etc/connord` which is untouched by an upgrade through PyPi. If the
+`/etc/connord` folder exists no configuration files in `site-packages` are read.
+
+#### config.yml
+
+The main configuration file in [YAML](https://yaml.org/) format.
+
+Possible values: *Not implemented yet*
+<pre>
+connord:
+  update_interval   accepts seconds, minutes, hours, days, months, years. 
+                    Format as string for example 'days=1' is the default. If 
+                    any value is set to 0 there's always an update.
+  load_match: MATCH may be 'max', 'min', 'exact'
+  load: VALUE       may be a value between 0 and 100
+</pre>
+
+Possibe values: *Implemented*
+<pre>
+iptables
+  dns:
+    # NordVPN
+    - '103.86.99.100/32'
+    - '103.86.96.100/32'
+</pre>
+
+Values to be defined before usage of connord:
+
+<pre>
+iptables:
+  lan_interface: your_interface
+  lan_address: ip_address # (with or without cidr of your lan)
+  vpn_interface: tun+
+</pre>
+
+#### rules and fallback files
+
+These files are [jinja2](http://jinja.pocoo.org/docs/2.10/) templates which are rendered with the `config.yml` file.
+So every variable you define in `config.yml` is available in rules and fallback
+files. `rules` files are applied to iptables before connecting to a nordvpn
+server or in daemon mode after successfully establishing a connection.
+`fallback` files are applied when disconnecting from nordvpn servers. Make sure
+your iptables rules in `fallback` allow establishing a connection to nordvpn
+servers and queries to `https://api.nordvpn.com/`.
+
+Test your dns configuration on `https://www.grc.com/dns/dns.htm` and initiate
+a standard dns spoofabilty test scrolling to the bottom of the page and click
+the Test Button. Don't forget to read the notes on the page to know what this is
+about. You should see only one server in the results with the ip of your
+nordvpn remote address.
 
 ## Supported Commandline Options
 
@@ -220,7 +329,7 @@ optional arguments:
   -h, --help            show this help message and exit
 </pre>
 
-###### Iptables apply
+###### apply
 <pre>
 usage: connord iptables apply [-h] [--udp | --tcp] domain
 
@@ -233,10 +342,10 @@ optional arguments:
   --tcp       Use TCP protocol. Only one of --udp or --tcp may be present
 </pre>
 
-###### Iptables reload
+###### reload
 Reload iptables rules with current configured server after editing them.
 
-###### Iptables flush
+###### flush
 Flush all tables
 
 ## Supported FEATUREs:
@@ -271,25 +380,17 @@ obfuscated                Obfuscated Servers
 onion                     Onion Over VPN
 </pre>
 
-## Configuration
-
-*Not implemented yet*
-Possible values:
-<pre>
-update_interval     accepts seconds, minutes, hours, days, months, years. 
-                    Format as string for example 'days=1' is the default. If 
-                    any value is set to 0 there's always an update.
-</pre>
 
 ## Developing
 
 Clone the repo and install development environment:
 
-    git clone git@github.com:MaelStor/connord.git
-    cd connord
-    make develop
+    $ git clone git@github.com:MaelStor/connord.git
+    $ cd connord
+    $ make develop
+    $ . .venv/bin/activate
 
-You're good to go from here :)
+You should be good to go from here :)
 
 ## TODO
 
