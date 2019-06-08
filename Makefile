@@ -28,6 +28,12 @@ venv:
 test:
 	pytest --cov=connord --cov-report term-missing:skip-covered tests/
 
+.ONESHELL:
+tox: clean
+	eval "`pyenv init -`"
+	pyenv shell py37 py36
+	tox
+
 package: clean
 	python setup.py sdist bdist_wheel
 
