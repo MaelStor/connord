@@ -52,11 +52,14 @@ def test_get_table_name_when_config_is_valid():
 def test_get_table_name_when_config_is_invalid_throws(mocker):
     from connord import iptables
 
+    # import sys
+
     config_file = "/doesnotexist/filter.invalid"
-    mocked_pattern = mocker.patch("connord.iptables.re.Pattern")
-    mocked_pattern.search.return_value = None
+
+    mocked_regex = mocker.Mock()
+    mocked_regex.search.return_value = None
     mocked_re = mocker.patch("connord.iptables.re")
-    mocked_re.compile.return_value = mocked_pattern
+    mocked_re.compile.return_value = mocked_regex
 
     try:
         iptables.get_table_name(config_file)
@@ -65,10 +68,10 @@ def test_get_table_name_when_config_is_invalid_throws(mocker):
         assert (
             str(error)
             == "Error: filter.invalid is not a valid filename \
-for a .rules file."
+for an iptables rules file."
         )
 
-    mocked_pattern.search.assert_called_once_with("filter.invalid")
+    mocked_regex.search.assert_called_once_with("filter.invalid")
 
 
 def test_init_table_from_file_name_when_user_is_not_root(mocker):
@@ -298,7 +301,7 @@ def test_apply_config_good(mocker):
     set_up(mocker)
     from connord import iptables
 
-    iptables.apply_config(None, None, config_file)
+    iptables.apply_config(config_file, None, None)
 
     mocked_init_table.assert_called_once_with(config_file)
     mocked_iptc.easy.flush_table.assert_called_once()
@@ -352,7 +355,7 @@ def test_apply_config_bad(mocker):
     from connord import iptables
 
     try:
-        iptables.apply_config(None, "udp", config_file)
+        iptables.apply_config(config_file, None, "udp")
         assert False
     except iptables.IptablesError as error:
         assert (

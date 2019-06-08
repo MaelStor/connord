@@ -23,10 +23,4 @@ def test_get_config_file_when_global_config_file_not_exists(mocker):
 
     actual_config_file = config.get_config_file()
 
-    import os
-
-    current_file = __file__
-    basedir = os.path.dirname(os.path.dirname(current_file))
-    expected_config_file = basedir + "/connord/config/config.yml"
-
-    assert expected_config_file == actual_config_file
+    assert actual_config_file.endswith("connord/config/config.yml")

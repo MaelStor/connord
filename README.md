@@ -4,20 +4,19 @@
 <p align="center">
 <a href="https://github.com/ambv/black"><img alt="Code Style: Black" src="https://img.shields.io/badge/code%20style-black-black.svg?style=flat-square"></a>
 <a href="https://choosealicense.com/licenses/gpl-3.0/"><img alt="License" src="https://img.shields.io/badge/license-GPL--3.0--or--later-green.svg?style=flat-square"></a>
-<a href="https://docs.python.org/"><img alt="Python Version" src="https://img.shields.io/badge/python-3.5%20%7C%203.6%20%7C%203.7-blue.svg?style=flat-square"></a>
+<a href="https://docs.python.org/"><img alt="Python Version" src="https://img.shields.io/badge/python-3.6%20%7C%203.7-blue.svg?style=flat-square"></a>
 <a href="https://github.com/MaelStor/connord"><img alt="GitHub tag (latest SemVer)" src="https://img.shields.io/github/tag/MaelStor/connord.svg?style=flat-square"></a>
-<a href="https://travis-ci.com/MaelStor/connord/"><img alt="Travis (.com) branch"
-src="https://img.shields.io/travis/com/MaelStor/connord/master.svg?style=flat-square"></a>
+<a href="https://travis-ci.com/MaelStor/connord/"><img alt="Travis (.com) branch" src="https://img.shields.io/travis/com/MaelStor/connord/master.svg?style=flat-square"></a>
 </p>
 
-----
+---
 
-C&#xF8;nN&#xF8;rD is a tool to connect to NordVPN servers and manages DNS through 
+C&#xF8;nN&#xF8;rD is a tool to connect to NordVPN servers and manages DNS through
 resolvconf and the firewall through IPTables to keep your connection secure. It is
 developed with safety and fast processing in mind.
 
 Loading profiles for the firewall is fully supported. You can define rules and
-fallback files for iptables in YAML format and Jinja2 templating. It's totally 
+fallback files for iptables in YAML format and Jinja2 templating. It's totally
 up to you, how you configure your firewall. Defaults are provided for unexperienced
 users who just want to surf the web but can be easily modified to any complexity.
 
@@ -26,22 +25,22 @@ by country, city, load, categories and features provided by NordVPN. UDP is the 
 protocol but can be changed to TCP in the configuration or command-line. The default configuration can be
 changed in /etc/connord/config.yml or in site-packages/connord/config/config.yml when installed through pip.
 
-----
+---
 
-*Not implemented yet*
+_Not implemented yet_
 
-The systemd service tries to reconnect if 
-the connection is dead and can be configured to switch on a time basis or when 
-load is reaching the max\_load variable. The interval to check these values can
-be configured with check\_interval. This feature is implemented using a systemd 
-timer. The servers are automatically updated by the service or manually through 
+The systemd service tries to reconnect if
+the connection is dead and can be configured to switch on a time basis or when
+load is reaching the max_load variable. The interval to check these values can
+be configured with check_interval. This feature is implemented using a systemd
+timer. The servers are automatically updated by the service or manually through
 the cli.
 
-----
+---
 
-C&#xF8;nN&#xF8;rD tries hard to be compatible to the 
+C&#xF8;nN&#xF8;rD tries hard to be compatible to the
 [OpenVPN](https://openvpn.net/community-resources/#articles) tool, so
-files are stored in OpenVPN directories per default. C&#xF8;nN&#xF8;rD can also 
+files are stored in OpenVPN directories per default. C&#xF8;nN&#xF8;rD can also
 be started in daemon mode.
 
 ## Notes about alpha state of this repository
@@ -55,26 +54,29 @@ needed. For example changes in version from alpha.0 to alpha.1 were not
 necessarily backwards compatible.
 
 ## Dependencies
-* python3
-* resolvconf
-* iptables
-* systemd
-* openvpn
+
+-   python3
+-   resolvconf
+-   iptables
+-   systemd
+-   openvpn
 
 ## Quick start guide
 
-* Follow Installation instructions below
-* Copy everything within your python `site-packages/connord/config/` folder
-   to `/etc/connord`. For example python3.7:
-<pre>
-    sudo cp -r /lib/python3.7/site-packages/connord/config /etc/connord
-    sudoedit /etc/connord/config.yml
-</pre>
+-   Follow Installation instructions below
+-   Copy everything within your python `site-packages/connord/config/` folder
+    to `/etc/connord`. For example python3.7:
 
-* Follow instructions in `config.yml`
-* Execute `$ sudo connord connect`
+    <pre>
+        sudo cp -r /lib/python3.7/site-packages/connord/config /etc/connord
+        sudoedit /etc/connord/config.yml
+    </pre>
+
+-   Follow instructions in `config.yml`
+-   Execute `$ sudo connord connect`
 
 ## Installation
+
 First make sure you have all system dependencies installed.
 
 #### Ubuntu/Debian
@@ -85,20 +87,20 @@ First make sure you have all system dependencies installed.
 
     $ sudo pacman -Sy python openresolv iptables systemd openvpn
 
-[systemd](https://www.freedesktop.org/wiki/Software/systemd/) is pretty 
-standard nowadays but if it is not present in your linux installation take care 
+[systemd](https://www.freedesktop.org/wiki/Software/systemd/) is pretty
+standard nowadays but if it is not present in your linux installation take care
 not to render your system useless and read about it first before installing it.
 
 #### Check if systemd is installed
 
     $ systemctl --version
 
-should give you a result like 
+should give you a result like
 
     systemd 242 (242.29-1-arch)
     +PAM +AUDIT -SELINUX -IMA -APPARMOR +SMACK -SYSVINIT +UTMP +LIBCRYPTSETUP
     +GCRYPT +GNUTLS +ACL +XZ +LZ4 +SECCOMP +BLKID +ELFUTILS +KMOD +IDN2 -IDN +PCRE2 default-hierarchy=hybrid
- 
+
 and your fine.
 
 #### Installation of C&#xF8;nN&#xF8;rD
@@ -122,7 +124,7 @@ or globally with
 
     $ sudo pip install .
 
-__Important__
+**Important**
 
 You need to edit config.yml in the `site-packages/connord/config/` folder. Read
 Configuration notes in the file itself and below how to create a permanent
@@ -130,11 +132,11 @@ solution for your configuration.
 
 ## Configuration
 
-Default configuration files are located in your python 
+Default configuration files are located in your python
 `site-packages/connord/config`
-folder. You may wish to create an more permanent location and copy them to 
-`/etc/connord/`. The folder needs to be created if not already done. 
-Configuration files in site-packages don't survive an upgrade in contrast to 
+folder. You may wish to create an more permanent location and copy them to
+`/etc/connord/`. The folder needs to be created if not already done.
+Configuration files in site-packages don't survive an upgrade in contrast to
 `/etc/connord` which is untouched by an upgrade through PyPi. If the
 `/etc/connord` folder exists no configuration files in `site-packages` are read.
 
@@ -142,7 +144,8 @@ Configuration files in site-packages don't survive an upgrade in contrast to
 
 The main configuration file in [YAML](https://yaml.org/) format.
 
-Possible values: *Not implemented yet*
+Possible values: _Not implemented yet_
+
 <pre>
 connord:
   update_interval   accepts seconds, minutes, hours, days, months, years. 
@@ -152,7 +155,8 @@ connord:
   load: VALUE       may be a value between 0 and 100
 </pre>
 
-Possibe values: *Implemented*
+Possibe values: _Implemented_
+
 <pre>
 iptables
   dns:
@@ -191,6 +195,7 @@ nordvpn remote address.
 Commandline options overwrite the configuration.
 
 #### Main options
+
 <pre>
 usage: connord [-h] [-q | -v] {update,list,connect,kill,iptables,version} ...
 
@@ -214,6 +219,7 @@ optional arguments:
 </pre>
 
 #### Listings
+
 <pre>
 usage: connord list [-h] [-c [COUNTRY]] [-a [AREA]] [-f [FEATURE]] [-t [TYPE]]
                     [--netflix]
@@ -248,6 +254,7 @@ optional arguments:
 </pre>
 
 #### Update
+
 <pre>
 usage: connord update [-h] [-f]
 
@@ -257,6 +264,7 @@ optional arguments:
 </pre>
 
 #### Connect
+
 <pre>
 usage: connord connect [-h] [-s SERVER | -b] [-c [COUNTRY]] [-a [AREA]]
                        [-f [FEATURE]] [-t [TYPE]] [--netflix]
@@ -298,6 +306,7 @@ optional arguments:
 </pre>
 
 #### Show version
+
 <pre>
 usage: connord version [-h]
 
@@ -306,7 +315,8 @@ optional arguments:
 </pre>
 
 #### Kill running connord processes
-*Not implemented yet*
+
+_Not implemented yet_
 
 <pre>
 usage: connord kill [-h]
@@ -316,6 +326,7 @@ optional arguments:
 </pre>
 
 #### Manage IPTables
+
 <pre>
 usage: connord iptables [-h] {reload,flush,apply} ...
 
@@ -330,6 +341,7 @@ optional arguments:
 </pre>
 
 ###### apply
+
 <pre>
 usage: connord iptables apply [-h] [--udp | --tcp] domain
 
@@ -343,12 +355,15 @@ optional arguments:
 </pre>
 
 ###### reload
+
 Reload iptables rules with current configured server after editing them.
 
 ###### flush
+
 Flush all tables
 
 ## Supported FEATUREs:
+
 <pre>
 ikev2                     IKEv2/IPSec Protocol
 openvpn_udp               UDP
@@ -370,7 +385,8 @@ openvpn_udp_tls_crypt     UDP TLS encryption
 openvpn_tcp_tls_crypt     TCP TLS encryption
 </pre>
 
-## Supported TYPEs: 
+## Supported TYPEs:
+
 <pre>
 double                    Double VPN
 dedicated                 Dedicated IP
@@ -379,7 +395,6 @@ p2p                       P2P
 obfuscated                Obfuscated Servers
 onion                     Onion Over VPN
 </pre>
-
 
 ## Developing
 
@@ -394,17 +409,17 @@ You should be good to go from here :)
 
 ## TODO
 
-* [ ] Improve code documentation
-* [ ] Implement different output formats for listings. --pretty --terse --json.
-* [ ] Offer a sorting option to sort the output by different keys.
-* [X] Filter by max-load, load and min-load
-* [ ] Filter by max-domain-number, cidr
-* [ ] Offer option to just show --top $number results
-* [ ] Offer option save current location in latitude, long to calculate shortest
-      distance to servers. 
-* [ ] Colorize output if wanted. Load >70 in red 30-69 yellow and rest green. Do
-      offer color=always,auto (respects pipes),never.
-* [ ] create links for openvpn in /etc/openvpn/client to actual configuration 
-      files in nordvpn/
-* [ ] Bash completion
-* [ ] Zsh completion
+-   [ ] Improve code documentation
+-   [ ] Implement different output formats for listings. --pretty --terse --json.
+-   [ ] Offer a sorting option to sort the output by different keys.
+-   [x] Filter by max-load, load and min-load
+-   [ ] Filter by max-domain-number, cidr
+-   [ ] Offer option to just show --top \$number results
+-   [ ] Offer option save current location in latitude, long to calculate shortest
+        distance to servers.
+-   [ ] Colorize output if wanted. Load >70 in red 30-69 yellow and rest green. Do
+        offer color=always,auto (respects pipes),never.
+-   [ ] create links for openvpn in /etc/openvpn/client to actual configuration
+        files in nordvpn/
+-   [ ] Bash completion
+-   [ ] Zsh completion
