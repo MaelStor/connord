@@ -89,6 +89,7 @@ def filter_servers(servers, features=None):
     verify_features(features)
 
     filtered_servers = []
+    servers = servers.copy()
     for server in servers:
         append = True
         for feature in features:

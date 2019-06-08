@@ -85,10 +85,7 @@ def map_types(types):
 
     verify_types(types)
 
-    mapped_types = []
-    for server_type in types:
-        mapped_types.append(TYPES[server_type])
-
+    mapped_types = [TYPES[_type] for _type in types]
     return mapped_types
 
 
@@ -125,6 +122,7 @@ def filter_servers(servers, types=None):
     mapped_types = map_types(types)
 
     filtered_servers = []
+    servers = servers.copy()
     for server in servers:
         append = True
         for mapped_type in mapped_types:

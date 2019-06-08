@@ -140,6 +140,7 @@ def filter_servers(servers, countries=None):
 
     # TODO: test if list comprehension is faster
     filtered_servers = []
+    servers = servers.copy()
     for server in servers:
         flag = server["flag"].lower()
         for country in countries_lower:

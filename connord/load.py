@@ -126,6 +126,7 @@ def filter_servers(servers, load, match="max"):
     :raises ValueError: If value of match is invalid.
     """
 
+    servers = servers.copy()
     if match == "exact":
         return LoadFilter(servers).apply(load)
     elif match == "max":

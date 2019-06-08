@@ -36,6 +36,7 @@ def filter_servers_by_count(_servers, _top):
     :returns: The filtered servers
     """
 
+    _servers = _servers.copy()
     filtered_servers = [server for i, server in enumerate(_servers, 1) if i <= _top]
     return filtered_servers
 

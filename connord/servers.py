@@ -58,6 +58,7 @@ Gecko/20100101 Firefox/60.0"
 
 
 def filter_netflix_servers(servers, _countries):
+    servers = servers.copy()
     servers = countries.filter_servers(servers, NETFLIX)
     return servers
 

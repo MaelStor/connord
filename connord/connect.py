@@ -104,6 +104,7 @@ def filter_servers(
 
 
 def filter_best_servers(_servers):
+    _servers = _servers.copy()
     _servers = sorted(_servers, key=lambda k: k["load"])
     if len(_servers) > 10:
         _servers = _servers[:10]
