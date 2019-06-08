@@ -2,7 +2,11 @@
 """Test types module"""
 
 from connord import types
-from main_test_module import _get_expected_servers_by_domain, _get_servers_stub
+from main_test_module import (
+    _get_expected_servers_by_domain,
+    _get_servers_stub,
+    _get_stub,
+)
 
 
 def test_verify_types_good():
@@ -244,10 +248,9 @@ def test_map_types_reverse_bad():
 
 
 def test_to_string():
-    with open("tests/fixtures/types_to_string_stub.txt", "r") as types_to_string_stub:
-        expected_result = types_to_string_stub.read()
-
+    expected_result = _get_stub("types_to_string_stub.txt").rstrip()
     actual_result = types.to_string()
+
     assert actual_result == expected_result
 
 

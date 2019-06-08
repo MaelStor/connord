@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 
 from connord import features
-from main_test_module import _get_servers_stub, _get_expected_servers_by_domain
+from main_test_module import (
+    _get_servers_stub,
+    _get_expected_servers_by_domain,
+    _get_stub,
+)
 
 
 def test_verify_features_bad():
@@ -237,11 +241,7 @@ def test_filter_servers_with_every_feature():
 
 
 def test_to_string():
-    with open(
-        "tests/fixtures/features_to_string_stub.txt", "r"
-    ) as features_to_string_stub:
-        expected_result = features_to_string_stub.read()
-
+    expected_result = _get_stub("features_to_string_stub.txt").rstrip()
     actual_result = features.to_string()
 
     assert actual_result == expected_result

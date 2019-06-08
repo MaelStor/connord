@@ -139,14 +139,14 @@ def filter_servers(servers, types=None):
 
 
 def to_string():
-    """Assemble all possible types in a printable string
-    :returns: Pretty formatted string designed for output on screen
+    """Assemble all types in a printable string
+    :returns: Simple formatted string designed for output on screen
     """
-    result = "List of server types:\n"
+    result = ""
     for server_type, description in TYPES.items():
-        result += "  {:26}{}\n".format(server_type, description)
+        result += "{:26}{}\n".format(server_type, description)
 
-    return result
+    return result.rstrip()
 
 
 # TODO: delete

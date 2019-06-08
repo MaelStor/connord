@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from connord import servers
-from main_test_module import _get_servers_stub
+from main_test_module import _get_servers_stub, _get_stub
 
 
 def test_get_servers(requests_mock):
@@ -24,11 +24,7 @@ Gecko/20100101 Firefox/60.0"
 def test_to_string():
     # test with server stub
     _servers = _get_servers_stub()
-
-    with open("tests/fixtures/servers_stub_to_string.txt") as file_handle:
-        # use rstrip to strip the final newline which wasn't deletable from the
-        # server_stub_to_string.txt file
-        expected_string = file_handle.read().rstrip()
+    expected_string = _get_stub("servers_stub_to_string.txt").rstrip()
 
     actual_string = servers.to_string(_servers)
     assert actual_string == expected_string

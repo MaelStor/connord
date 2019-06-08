@@ -152,15 +152,15 @@ def filter_servers(servers, countries=None):
 
 def to_string():
     """
-    Assemble all possible countries to a printable string
+    Assemble all countries to a printable string
 
-    : returns: A pretty formatted string for use as output on screen
+    : returns: A simple formatted string for use as output on screen
     """
-    result = "List of countries:\n"
+    result = ""
     for country_code, country in COUNTRIES.items():
-        result += "  {:6}{}\n".format(country_code, country)
+        result += "{:6}{}\n".format(country_code, country)
 
-    return result
+    return result.rstrip()
 
 
 # TODO: delete
