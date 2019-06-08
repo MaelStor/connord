@@ -301,7 +301,7 @@ def test_apply_config_good(mocker):
     set_up(mocker)
     from connord import iptables
 
-    iptables.apply_config(None, None, config_file)
+    iptables.apply_config(config_file, None, None)
 
     mocked_init_table.assert_called_once_with(config_file)
     mocked_iptc.easy.flush_table.assert_called_once()
@@ -355,7 +355,7 @@ def test_apply_config_bad(mocker):
     from connord import iptables
 
     try:
-        iptables.apply_config(None, "udp", config_file)
+        iptables.apply_config(config_file, None, "udp")
         assert False
     except iptables.IptablesError as error:
         assert (

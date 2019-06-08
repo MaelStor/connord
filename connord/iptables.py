@@ -39,7 +39,7 @@ class IptablesError(ConnordError):
 
 
 def get_table_name(config_file):
-    table_regex = re.compile(r"[0-9]*[-]?([a-zA-Z]+[6]?).rules")
+    table_regex = re.compile(r"[0-9]*[-]?([a-zA-Z]+[6]?).(rules|fallback)")
     base = os.path.basename(config_file)
     result = table_regex.search(base)
     if result:
@@ -47,7 +47,7 @@ def get_table_name(config_file):
 
     filename = os.path.basename(config_file)
     raise IptablesError(
-        "Error: {} is not a valid filename for a .rules file.".format(filename)
+        "Error: {} is not a valid filename for an iptables rules file.".format(filename)
     )
 
 
@@ -86,13 +86,15 @@ def flush_tables(ipv6=False):
             iptc.easy.set_policy(table_s, chain_s, policy=policy, ipv6=ipv6)
 
 
-def reset():
+def reset(fallback=True):
     flush_tables()
     flush_tables(ipv6=True)
+    if fallback:
+        apply_config_dir(filetype="fallback")
 
 
 @user.needs_root
-def apply_config(_server, _protocol, config_file):
+def apply_config(config_file, _server=None, _protocol=None):
     table = init_table_from_file_name(config_file)
     table_s = table.name
     is_ipv6 = is_table_v6(table)
@@ -101,7 +103,7 @@ def apply_config(_server, _protocol, config_file):
     for chain_s in iptc.easy.get_chains(table_s, ipv6=is_ipv6):
         iptc.easy.set_policy(table_s, chain_s, policy=policy, ipv6=is_ipv6)
 
-    config_d = read_config(_server, _protocol, config_file)
+    config_d = read_config(config_file, _server, _protocol)
 
     for chain_s in config_d:
         if not iptc.easy.has_chain(table_s, chain_s, ipv6=is_ipv6):
@@ -123,28 +125,17 @@ def apply_config(_server, _protocol, config_file):
 
 
 @user.needs_root
-def apply_config_dir(_server, _protocol):
-    config_files = config.list_config_dir(filetype="rules")
+def apply_config_dir(_server=None, _protocol=None, filetype="rules"):
+    config_files = config.list_config_dir(filetype=filetype)
     retval = True
     for config_file in config_files:
-        if not apply_config(_server, _protocol, config_file):
+        if not apply_config(config_file, _server, _protocol):
             retval = False
 
     return retval
 
 
-@user.needs_root
-def apply_default_config(_server, _protocol):
-    retval = True
-    config_files = config.list_config_dir(filetype="fallback")
-    for config_file in config_files:
-        if not apply_config(_server, _protocol, config_file):
-            retval = False
-
-    return retval
-
-
-def render_template(_server, _protocol, config_file):
+def render_template(config_file, _server=None, _protocol=None):
     config_data_file = config.get_config_file()
     env = Environment(
         loader=FileSystemLoader(os.path.dirname(config_data_file)),
@@ -153,8 +144,17 @@ def render_template(_server, _protocol, config_file):
     )
     with open(config_data_file, "r") as config_data:
         config_data_dict = yaml.safe_load(config_data)
-        config_data_dict["vpn_remote"] = _server["ip_address"]
-        config_data_dict["vpn_protocol"] = _protocol
+        if _server:
+            config_data_dict["vpn_remote"] = _server["ip_address"]
+        else:
+            config_data_dict["vpn_remote"] = "0.0.0.0/0"
+
+        if _protocol:
+            config_data_dict["vpn_protocol"] = _protocol
+        else:
+            config_data_dict["vpn_protocol"] = "udp"
+            _protocol = "udp"
+
         if _protocol == "udp":
             config_data_dict["vpn_port"] = "1194"
         elif _protocol == "tcp":
@@ -167,8 +167,8 @@ def render_template(_server, _protocol, config_file):
 
 
 @user.needs_root
-def read_config(_server, _protocol, config_file):
-    rendered_template = render_template(_server, _protocol, config_file)
+def read_config(config_file, _server=None, _protocol=None):
+    rendered_template = render_template(config_file, _server, _protocol)
     return yaml.safe_load(rendered_template)
 
 
