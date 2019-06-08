@@ -68,7 +68,7 @@ def test_get_table_name_when_config_is_invalid_throws(mocker):
         assert (
             str(error)
             == "Error: filter.invalid is not a valid filename \
-for a .rules file."
+for an iptables rules file."
         )
 
     mocked_regex.search.assert_called_once_with("filter.invalid")
