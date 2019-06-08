@@ -18,16 +18,15 @@
 
 """Defines Formatter classes"""
 
+import sys
 
-class Formatter():
+
+class Formatter:
     """Basic formatter"""
 
     def __init__(self, output=None, max_line_length=80):
         self.max_line_length = max_line_length
-        if output:
-            self.output = output
-        else:
-            self.output = ''
+        self.output = output if output else ""
 
     def format_ruler(self, sep="="):
         return sep * self.max_line_length
@@ -45,3 +44,6 @@ class Formatter():
             return self.output.rstrip()
 
         return self.output
+
+    def get_stream_file(self, stream=False):
+        return sys.stdout if stream else self
