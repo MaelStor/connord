@@ -38,7 +38,7 @@ class ServerTypeError(ConnordError):
 def verify_types(types):
     """Verify if types is are valid
 
-    :types: a list of types from the commandline
+    :types: a list of types from the command-line
     :raises: ServerTypeError if there are invalid types in types
     :returns: True if all types are valid
     """
@@ -77,18 +77,15 @@ def verify_types_description(descriptions):
 
 
 def map_types(types):
-    """Map types from commandline to strings used by nordvpn api.
+    """Map types from command-line to strings used by nordvpn api.
 
-    :types: a list of types from the commandline.
+    :types: a list of types from the command-line.
     :returns: a list of mapped types.
     """
 
     verify_types(types)
 
-    mapped_types = []
-    for server_type in types:
-        mapped_types.append(TYPES[server_type])
-
+    mapped_types = [TYPES[_type] for _type in types]
     return mapped_types
 
 
@@ -125,6 +122,7 @@ def filter_servers(servers, types=None):
     mapped_types = map_types(types)
 
     filtered_servers = []
+    servers = servers.copy()
     for server in servers:
         append = True
         for mapped_type in mapped_types:
@@ -139,14 +137,14 @@ def filter_servers(servers, types=None):
 
 
 def to_string():
-    """Assemble all possible types in a printable string
-    :returns: Pretty formatted string designed for output on screen
+    """Assemble all types in a printable string
+    :returns: Simple formatted string designed for output on screen
     """
-    result = "List of server types:\n"
+    result = ""
     for server_type, description in TYPES.items():
-        result += "  {:26}{}\n".format(server_type, description)
+        result += "{:26}{}\n".format(server_type, description)
 
-    return result
+    return result.rstrip()
 
 
 # TODO: delete

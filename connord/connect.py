@@ -86,6 +86,7 @@ def ping_servers_parallel(_servers):
 def filter_servers(
     _servers, _netflix, _countries, _areas, _features, _types, _load, _match
 ):
+    _servers = _servers.copy()
     if _load:
         _servers = load.filter_servers(_servers, _load, _match)
     if _netflix:
@@ -103,6 +104,7 @@ def filter_servers(
 
 
 def filter_best_servers(_servers):
+    _servers = _servers.copy()
     _servers = sorted(_servers, key=lambda k: k["load"])
     if len(_servers) > 10:
         _servers = _servers[:10]
@@ -116,8 +118,8 @@ def connect_to_specific_server(_domain, _openvpn, _daemon, _protocol):
     _server = servers.get_server_by_domain(_domain)
     if _server:
         return run(_server, _openvpn, _daemon, _protocol)
-    else:
-        raise ConnectError("Could not find server with domain {}.".format(_domain))
+
+    raise ConnectError("Could not find server with domain {}.".format(_domain))
 
 
 @user.needs_root

@@ -21,6 +21,7 @@ from cachetools import cached, TTLCache
 from connord import ConnordError
 from connord.types import map_types_reverse
 from connord import countries
+from connord.formatter import Formatter
 
 __API_URL = "https://api.nordvpn.com/server"
 NETFLIX = ["us", "ca", "jp", "gb", "fr", "it"]
@@ -39,8 +40,8 @@ def get_server_by_domain(domain):
     return None
 
 
-def get_servers_by_domains(servers, domains):
-    filtered_servers = [get_server_by_domain(servers, domain) for domain in domains]
+def get_servers_by_domains(domains):
+    filtered_servers = [get_server_by_domain(domain) for domain in domains]
 
     return filtered_servers
 
@@ -57,32 +58,22 @@ Gecko/20100101 Firefox/60.0"
 
 
 def filter_netflix_servers(servers, _countries):
-    if _countries is None:
-        _countries = NETFLIX
-    else:
-        _countries.extend(NETFLIX)
-
-    servers = countries.filter_servers(servers, _countries)
+    servers = servers.copy()
+    servers = countries.filter_servers(servers, NETFLIX)
     return servers
 
 
-# TODO: May be moved to listings
-def to_string(servers):
-    if not servers:
-        return str()
+class ServersPrettyFormatter(Formatter):
+    def format_headline(self, sep="="):
+        headline = self.format_ruler(sep) + "\n"
+        headline += "      {:25}  {:6}  {:15}  {:>9}  {}\n".format(
+            "Country", "Domain", "IP Address", "Load", "Type"
+        )
+        headline += "      {}\n".format("Features")
+        headline += self.format_ruler(sep)
+        return headline
 
-    sep_sign = "-"
-    sep = 6 * " " + 75 * sep_sign + "\n"
-    header = "      {:25}  {:6}  {:15}  {:>9}  {}\n".format(
-        "Country", "Domain", "IP Address", "Load", "Type"
-    )
-
-    header += "      {}\n".format("Features")
-    header += sep
-
-    string = str()
-    count = 1
-    for server in servers:
+    def format_server(self, server, count, sep="-"):
         ident, _, _ = server["domain"].split(".")
         country = server["country"]
         ip = server["ip_address"]
@@ -96,15 +87,28 @@ def to_string(servers):
         ]
         features = ",".join(features)
 
-        string += "{:4d}: {:25}  {:6}  {:15}  load: {:>3d}  {}\n".format(
+        string = "{:4d}: {:25}  {:6}  {:15}  load: {:>3d}  {}\n".format(
             count, country, ident, ip, load, categories
         )
         string += "      {}\n".format(features)
+        string += self.format_ruler(sep)
 
-        string += sep
+        return string
+
+
+def to_string(servers, stream=False):
+    if not servers:
+        return str()
+
+    formatter = ServersPrettyFormatter()
+    _file = formatter.get_stream_file(stream)
+
+    headline = formatter.format_headline()
+    print(headline, file=_file)
+    count = 1
+    for server in servers:
+        _server_s = formatter.format_server(server, count)
+        print(_server_s, file=_file)
         count += 1
 
-    if string:
-        string = header + string
-
-    return string.rstrip()
+    return formatter.get_output()

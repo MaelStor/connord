@@ -89,6 +89,7 @@ def filter_servers(servers, features=None):
     verify_features(features)
 
     filtered_servers = []
+    servers = servers.copy()
     for server in servers:
         append = True
         for feature in features:
@@ -104,15 +105,16 @@ def filter_servers(servers, features=None):
 
 def to_string():
     """
-    Assemble all possible features as printable string
+    Assemble all features as printable string
 
-    :returns: A pretty formatted string for use as output on screen
+    :returns: A simple formatted string to use as output on screen
     """
-    result = "List of server features:\n"
-    for feature, description in FEATURES.items():
-        result += "  {:26}{}\n".format(feature, description)
 
-    return result
+    result = ""
+    for feature, description in FEATURES.items():
+        result += "{:26}{}\n".format(feature, description)
+
+    return result.rstrip()
 
 
 # TODO: delete
