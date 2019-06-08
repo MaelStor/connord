@@ -26,7 +26,7 @@ class LoadError(ConnordError):
 
 class Filter(metaclass=abc.ABCMeta):
     """
-    Abstract class for different filters applyied to servers.
+    Abstract class for different filters applied to servers.
     """
 
     __MAX = 100
@@ -34,7 +34,7 @@ class Filter(metaclass=abc.ABCMeta):
 
     def __init__(self, servers):
         """
-        Initialize a Filter
+        Initialise a Filter
         :param servers: A list of servers
 
         """

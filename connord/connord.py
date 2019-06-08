@@ -231,7 +231,7 @@ def process_list_cmd(args):
     """
     Process arguments when command is 'list'
 
-    :param args: Commandline arguments
+    :param args: Command-line arguments
     :returns: True if processing was successful
     """
 
@@ -266,7 +266,7 @@ def process_list_cmd(args):
 def process_connect_cmd(args):
     """
     Process arguments for connect command
-    :param object args: Commandline arguments
+    :param object args: Command-line arguments
     :returns: True if processing was successful
     """
 

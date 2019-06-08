@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-"""Update configuratio files of nordvpn
+"""Update configuration files of nordvpn
 """
 # TODO: improve exception handling
 
@@ -39,7 +39,7 @@ class UpdateError(ConnordError):
 
 
 def init():
-    """Initialize directories
+    """Initialise directories
     """
     try:
         os.makedirs(__DESTDIR, mode=0o750, exist_ok=True)

@@ -116,7 +116,7 @@ def verify_countries(countries):
 # should narrow down the results instead of ignoring the double flag.
 def filter_servers(servers, countries=None):
     """
-    Filter a list of servers by country. If multiple countires are given
+    Filter a list of servers by country. If multiple countries are given
     match servers in country1 OR country2 OR ...
 
     :param servers: List of servers as parsed from nordvpn api in json format
