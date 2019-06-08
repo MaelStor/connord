@@ -310,6 +310,8 @@ good-names=i,
 	   f,
            ex,
            Run,
+	   ip,
+           id,
            _
 
 # Include a hint for the correct naming format with invalid-name.
