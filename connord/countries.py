@@ -18,7 +18,11 @@
 
 # here's a one liner to create this dictionary of country codes from
 # nordvpn's api
-# curl https://api.nordvpn.com/server 2>/dev/null | python -m json.tool | grep 'flag\|country' | perl -ne 'print unless $seen{$_}++' | sed -E -e 's/^        //' -e 's/("flag": )(".*")/\1\L\2/' -e 's/^"flag": //' -e 's/^"country": //' | sed 's/,/:/;n' | paste - - -d' ' | tr '"' "'" | sort | head -c -2 | sed -e '$a\'
+# curl https://api.nordvpn.com/server 2>/dev/null | python -m json.tool | \
+# grep 'flag\|country' | perl -ne 'print unless $seen{$_}++' | \
+# sed -E -e 's/^        //' -e 's/("flag": )(".*")/\1\L\2/' -e 's/^"flag": //' \
+# -e 's/^"country": //' | sed 's/,/:/;n' | paste - - -d' ' | tr '"' "'" | sort | \
+# head -c -2 | sed -e '$a\'
 
 from connord import ConnordError
 
@@ -127,11 +131,12 @@ def filter_servers(servers, countries=None):
 
     if servers is None:
         raise TypeError("Servers may not be None")
-    elif countries is None or not countries or not servers:
+
+    if countries is None or not countries or not servers:
         return servers
-    else:
-        countries_lower = [str.lower(country) for country in countries]
-        verify_countries(countries_lower)
+
+    countries_lower = [str.lower(country) for country in countries]
+    verify_countries(countries_lower)
 
     # TODO: test if list comprehension is faster
     filtered_servers = []
@@ -147,15 +152,15 @@ def filter_servers(servers, countries=None):
 
 def to_string():
     """
-    Assemble all possible countries to a printable string
+    Assemble all countries to a printable string
 
-    : returns: A pretty formatted string for use as output on screen
+    : returns: A simple formatted string for use as output on screen
     """
-    result = "List of countries:\n"
+    result = ""
     for country_code, country in COUNTRIES.items():
-        result += "  {:6}{}\n".format(country_code, country)
+        result += "{:6}{}\n".format(country_code, country)
 
-    return result
+    return result.rstrip()
 
 
 # TODO: delete

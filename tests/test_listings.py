@@ -15,7 +15,7 @@ def test_list_iptables(mocker):
 
 
 def test_listings_when_countries_has_a_none_value(capsys):
-    expected_result = _get_stub("countries_to_string_stub.txt")
+    expected_result = _get_stub("countries_pretty_formatted_fixture.txt")
 
     _countries = [None]
     retval = listings.main(_countries, None, None, None, None, None, None, None)
@@ -26,19 +26,8 @@ def test_listings_when_countries_has_a_none_value(capsys):
     assert captured.err == str()
 
 
-def test_listings_when_countries_has_a_none_value_mock(capsys, mocker):
-    _countries = [None]
-    mocked_countries = mocker.patch("connord.listings.countries")
-    mocked_countries.to_string.return_value = "testing"
-    retval = listings.main(_countries, None, None, None, None, None, None, None)
-    captured = capsys.readouterr()
-    mocked_countries.to_string.assert_called_once()
-    assert retval
-    assert captured.out == "testing\n"
-
-
 def test_listings_when_types_has_a_none_value(capsys):
-    expected_result = _get_stub("types_to_string_stub.txt")
+    expected_result = _get_stub("types_pretty_formatted_fixture.txt")
 
     _types = [None]
     retval = listings.main(None, None, _types, None, None, None, None, None)
@@ -50,7 +39,7 @@ def test_listings_when_types_has_a_none_value(capsys):
 
 
 def test_listings_when_features_has_a_none_value(capsys):
-    expected_result = _get_stub("features_to_string_stub.txt")
+    expected_result = _get_stub("features_pretty_formatted_fixture.txt")
 
     _features = [None]
     retval = listings.main(None, None, None, _features, None, None, None, None)
@@ -77,13 +66,13 @@ def test_listings_when_every_option_is_given_and_countries_is_none(capsys, mocke
     mocked_servers.get_servers.return_value = _servers
     mocked_servers.to_string.return_value = "testing"
 
-    retval = listings.main(None, None, None, None, True, 10, "max", 10)
+    retval = listings.main(None, None, None, None, False, 10, "max", 10)
     captured = capsys.readouterr()
 
     mocked_servers.get_servers.assert_called_once()
     mocked_servers.to_string.assert_called_once()
     assert retval
-    assert captured.out == "testing\n"
+    assert captured.out == ""
     assert captured.err == ""
 
 
@@ -92,7 +81,6 @@ def test_listings_when_every_option_is_given_and_countries_is_empty(capsys, mock
 
     mocked_servers = mocker.patch("connord.listings.servers")
     mocked_servers.get_servers.return_value = _servers
-    mocked_servers.to_string.return_value = "testing"
 
     retval = listings.main(list(), None, None, None, True, 10, "max", 10)
     captured = capsys.readouterr()
@@ -100,7 +88,7 @@ def test_listings_when_every_option_is_given_and_countries_is_empty(capsys, mock
     mocked_servers.get_servers.assert_called_once()
     mocked_servers.to_string.assert_called_once()
     assert retval
-    assert captured.out == "testing\n"
+    assert captured.out == ""
     assert captured.err == ""
 
 
@@ -109,7 +97,6 @@ def test_listings_when_every_option_is_given_with_types_features(capsys, mocker)
 
     mocked_servers = mocker.patch("connord.listings.servers")
     mocked_servers.get_servers.return_value = _servers
-    mocked_servers.to_string.return_value = "testing"
 
     _types = ["standard"]
     _features = ["openvpn_udp"]
@@ -119,5 +106,5 @@ def test_listings_when_every_option_is_given_with_types_features(capsys, mocker)
     mocked_servers.get_servers.assert_called_once()
     mocked_servers.to_string.assert_called_once()
     assert retval
-    assert captured.out == "testing\n"
+    assert captured.out == ""
     assert captured.err == ""

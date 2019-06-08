@@ -12,8 +12,13 @@ clean:
 	find . -regex ".*/__pycache__" -exec rm -rf {} +
 	find . -regex ".*\.egg-info" -exec rm -rf {} +
 
-.ONESHELL:
 develop: requirements-devel.txt
+	python -m pip install -U "pip>=18.0" "setuptools>=38.0" wheel
+	python -m pip install -r requirements-devel.txt
+	python -m pip install -e .
+
+.ONESHELL:
+venv:
 	python -m venv .venv
 	. .venv/bin/activate
 	python -m pip install -U "pip>=18.0" "setuptools>=38.0" wheel

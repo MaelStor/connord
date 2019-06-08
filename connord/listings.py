@@ -24,6 +24,7 @@ from connord import types
 from connord import features
 from connord import load
 from connord import iptables
+from connord.formatter import Formatter
 
 
 def filter_servers_by_count(_servers, _top):
@@ -44,8 +45,70 @@ def list_iptables(tables, version):
     return True
 
 
+class OverviewPrettyFormatter(Formatter):
+    def __init__(self, output=None, max_line_length=80, stream=False):
+        super().__init__(output, max_line_length)
+        self.stream = stream
+        self.has_output = False
+
+    def print_countries(self, _countries):
+        if _countries and None in _countries:
+            self.has_output = True
+            _file = self.get_stream_file(self.stream)
+
+            country_header = "Countries"
+            print(self.center_string(country_header, sep="="), file=_file)
+            for country_code, country in countries.COUNTRIES.items():
+                print("  {:6}{}".format(country_code, country), file=_file)
+            print(self.format_ruler(sep="-"), file=_file)
+
+    def print_types(self, _types):
+        if _types and None in _types:
+            self.has_output = True
+            _file = self.get_stream_file(self.stream)
+
+            types_header = self.center_string("Server Types", sep="=")
+            print(types_header, file=_file)
+            for server_type, description in types.TYPES.items():
+                print("  {:26}{}".format(server_type, description), file=_file)
+            print(self.format_ruler(sep="-"), file=_file)
+
+    def print_features(self, _features):
+        if _features and None in _features:
+            self.has_output = True
+            _file = self.get_stream_file(self.stream)
+
+            features_header = "Server Features"
+            print(self.center_string(features_header, sep="="), file=_file)
+            for feature, description in features.FEATURES.items():
+                print("  {:26}{}".format(feature, description), file=_file)
+            print(self.format_ruler(sep="-"), file=_file)
+
+
+def filter_servers(
+    _servers, _netflix, _countries, _areas, _features, _types, _load, _match, _top
+):
+    _servers = _servers.copy()
+    if _load:
+        _servers = load.filter_servers(_servers, _load, _match)
+    if _netflix:
+        _servers = servers.filter_netflix_servers(_servers, _countries)
+    if _countries:
+        _servers = countries.filter_servers(_servers, _countries)
+    if _areas:
+        raise NotImplementedError("Area not implemented yet")
+    if _types:
+        _servers = types.filter_servers(_servers, _types)
+    if _features:
+        _servers = features.filter_servers(_servers, _features)
+    if _top:
+        _servers = filter_servers_by_count(_servers, _top)
+
+    return _servers
+
+
 # TODO: rename to list_servers
-def main(_countries, _area, _types, _features, _netflix, _load, _match, _top):
+def main(_countries, _areas, _types, _features, _netflix, _load, _match, _top):
     """
     Main method to do the actual listing and prints the resulting
     list of servers.
@@ -61,40 +124,28 @@ def main(_countries, _area, _types, _features, _netflix, _load, _match, _top):
     :returns: True
     """
 
-    output = ""
-    if _countries and None in _countries:
-        output += countries.to_string() + "\n"
-    if _area:
+    if _areas:
         raise NotImplementedError("Area filter is not implemented yet.")
-    if _types and None in _types:
-        output += types.to_string() + "\n"
-    if _features and None in _features:
-        output += features.to_string() + "\n"
 
-    if output:
-        print(output.rstrip())
-    else:
+    formatter = OverviewPrettyFormatter(stream=True)
+    formatter.print_countries(_countries)
+    formatter.print_types(_types)
+    formatter.print_features(_features)
+
+    if not formatter.has_output:
         _servers = servers.get_servers()
-        if _netflix:
-            if _countries is None:
-                _countries = servers.NETFLIX
-            else:
-                _countries.extend(servers.NETFLIX)
-        if _load:
-            _servers = load.filter_servers(_servers, _load, _match)
-        if _countries:
-            _servers = countries.filter_servers(_servers, _countries)
-        if _types:
-            _servers = types.filter_servers(_servers, _types)
-        if _features:
-            _servers = features.filter_servers(_servers, _features)
-        # keep this the last filter
-        if _top:
-            _servers = filter_servers_by_count(_servers, _top)
+        _servers = filter_servers(
+            _servers,
+            _netflix,
+            _countries,
+            _areas,
+            _features,
+            _types,
+            _load,
+            _match,
+            _top,
+        )
 
-        output += servers.to_string(_servers)
-
-        if output:
-            print(output)
+        servers.to_string(_servers, stream=True)
 
     return True
