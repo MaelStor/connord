@@ -33,6 +33,7 @@ from connord import servers
 from connord import config
 
 
+# pylint: disable=too-many-statements
 def parse_args(argv):
     """Parse arguments
     :returns: list of args
