@@ -47,7 +47,8 @@ def get_table_name(config_file):
 
     filename = os.path.basename(config_file)
     raise IptablesError(
-        "Error: {} is not a valid filename for a .rules file.".format(filename))
+        "Error: {} is not a valid filename for a .rules file.".format(filename)
+    )
 
 
 @user.needs_root
@@ -187,7 +188,7 @@ class IptablesPrettyFormatter(Formatter):
         if policy:
             policy_s = policy.name
         else:
-            policy_s = 'None'
+            policy_s = "None"
 
         string = "{} ({:^6})".format(chain.name, policy_s)
         return self.center_string(string, sep)
