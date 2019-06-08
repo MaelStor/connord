@@ -58,12 +58,7 @@ Gecko/20100101 Firefox/60.0"
 
 
 def filter_netflix_servers(servers, _countries):
-    if _countries is None:
-        _countries = NETFLIX
-    else:
-        _countries.extend(NETFLIX)
-
-    servers = countries.filter_servers(servers, _countries)
+    servers = countries.filter_servers(servers, NETFLIX)
     return servers
 
 

@@ -86,6 +86,7 @@ def ping_servers_parallel(_servers):
 def filter_servers(
     _servers, _netflix, _countries, _areas, _features, _types, _load, _match
 ):
+    _servers = _servers.copy()
     if _load:
         _servers = load.filter_servers(_servers, _load, _match)
     if _netflix:
