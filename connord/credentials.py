@@ -55,12 +55,12 @@ def get_credentials_file():
         if os.path.exists(os.path.expanduser(credential_file)):
             if verify_permissions(credential_file):
                 return credential_file
-            else:
-                raise CredentialsError(
-                    "Unsafe permissions on '{}'.".format(credential_file)
-                )
-    else:
-        return None
+
+            raise CredentialsError(
+                "Unsafe permissions on '{}'.".format(credential_file)
+            )
+
+    return None
 
 
 def create_credentials_file():
