@@ -52,11 +52,14 @@ def test_get_table_name_when_config_is_valid():
 def test_get_table_name_when_config_is_invalid_throws(mocker):
     from connord import iptables
 
+    # import sys
+
     config_file = "/doesnotexist/filter.invalid"
-    mocked_pattern = mocker.patch("connord.iptables.re.Pattern")
-    mocked_pattern.search.return_value = None
+
+    mocked_regex = mocker.Mock()
+    mocked_regex.search.return_value = None
     mocked_re = mocker.patch("connord.iptables.re")
-    mocked_re.compile.return_value = mocked_pattern
+    mocked_re.compile.return_value = mocked_regex
 
     try:
         iptables.get_table_name(config_file)
@@ -68,7 +71,7 @@ def test_get_table_name_when_config_is_invalid_throws(mocker):
 for a .rules file."
         )
 
-    mocked_pattern.search.assert_called_once_with("filter.invalid")
+    mocked_regex.search.assert_called_once_with("filter.invalid")
 
 
 def test_init_table_from_file_name_when_user_is_not_root(mocker):
