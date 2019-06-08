@@ -16,6 +16,7 @@ install:
   - python -m pip install -U "pip>=18.0" "setuptools>=38.0" wheel
   - python -m pip install -r requirements-devel.txt
   - python -m pip install -e .
+  - python -m pip install --upgrade coveralls
 
 before_script:
   # stop the build if there are Python syntax errors or undefined names
@@ -26,6 +27,9 @@ before_script:
 script:
   - make test
   - make package
+
+after_success:
+  - coveralls
 
 notifications:
   on_success: change

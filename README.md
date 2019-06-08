@@ -7,6 +7,7 @@
 <a href="https://docs.python.org/"><img alt="Python Version" src="https://img.shields.io/badge/python-3.6%20%7C%203.7-blue.svg?style=flat-square"></a>
 <a href="https://github.com/MaelStor/connord"><img alt="GitHub tag (latest SemVer)" src="https://img.shields.io/github/tag/MaelStor/connord.svg?style=flat-square"></a>
 <a href="https://travis-ci.com/MaelStor/connord/"><img alt="Travis (.com) branch" src="https://img.shields.io/travis/com/MaelStor/connord/master.svg?style=flat-square"></a>
+<a href="https://github.com/MaelStor/connord"><img alt="Coveralls github" src="https://img.shields.io/coveralls/github/MaelStor/connord.svg?style=flat-square"></a>
 </p>
 
 ---
