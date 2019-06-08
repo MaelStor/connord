@@ -38,7 +38,7 @@ class ServerTypeError(ConnordError):
 def verify_types(types):
     """Verify if types is are valid
 
-    :types: a list of types from the commandline
+    :types: a list of types from the command-line
     :raises: ServerTypeError if there are invalid types in types
     :returns: True if all types are valid
     """
@@ -77,9 +77,9 @@ def verify_types_description(descriptions):
 
 
 def map_types(types):
-    """Map types from commandline to strings used by nordvpn api.
+    """Map types from command-line to strings used by nordvpn api.
 
-    :types: a list of types from the commandline.
+    :types: a list of types from the command-line.
     :returns: a list of mapped types.
     """
 

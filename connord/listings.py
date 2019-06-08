@@ -117,7 +117,7 @@ def main(_countries, _areas, _types, _features, _netflix, _load, _match, _top):
     :param _area: List of areas
     :param _types: List of types
     :param _features: List of features
-    :param _netflix: If set filter servers optimized for netflix
+    :param _netflix: If set filter servers optimised for netflix
     :param _load: An integer to filter servers by load.
     :param _match: Apply load filter with 'max', 'min' or 'exact' match
     :param _top: Show just _top count results.

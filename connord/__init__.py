@@ -27,7 +27,7 @@ class ConnordError(Exception):
     """Main Exception class for connord module"""
 
 
-# TODO: Introduce VerificationError to be used verifying commandline arguments
+# TODO: Introduce VerificationError to be used verifying command-line arguments
 # in filters
 
 
