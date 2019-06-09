@@ -71,12 +71,10 @@ def test_main_when_command_is_list(mocker):
 def test_main_when_command_is_kill(mocker):
     argv = ["connord", "kill"]
     mocker.patch.object(connord.sys, "argv", argv)
+    mocked_connect = mocker.patch("connord.connect.kill_openvpn")
 
-    try:
-        connord.main()
-        assert False
-    except NotImplementedError:
-        assert True
+    connord.main()
+    mocked_connect.assert_called_once()
 
 
 class ArgumentFixture:
@@ -179,7 +177,7 @@ def test_process_list_cmd_when_load_is_default(mocker):
     connord.process_list_cmd(args)
 
     mocked_list.main.assert_called_once_with(
-        None, None, None, None, None, 10, "max", None
+        None, None, None, None, None, 100, "max", None
     )
 
 

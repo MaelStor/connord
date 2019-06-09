@@ -31,6 +31,6 @@ class ConnordError(Exception):
 # in filters
 
 
-__version__ = "0.1.0-alpha.4"
+__version__ = "0.1.0-beta"
 __license__ = "GNU General Public License v3 or later (GPLv3+)"
 __basepath__ = os.path.dirname(os.path.abspath(__file__))

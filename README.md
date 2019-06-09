@@ -26,33 +26,10 @@ by country, city, load, categories and features provided by NordVPN. UDP is the 
 protocol but can be changed to TCP in the configuration or command-line. The default configuration can be
 changed in /etc/connord/config.yml or in site-packages/connord/config/config.yml when installed through pip.
 
----
-
-_Not implemented yet_
-
-The systemd service tries to reconnect if
-the connection is dead and can be configured to switch on a time basis or when
-load is reaching the max_load variable. The interval to check these values can
-be configured with check_interval. This feature is implemented using a systemd
-timer. The servers are automatically updated by the service or manually through
-the cli.
-
----
-
 C&#xF8;nN&#xF8;rD tries hard to be compatible to the
 [OpenVPN](https://openvpn.net/community-resources/#articles) tool, so
 files are stored in OpenVPN directories per default. C&#xF8;nN&#xF8;rD can also
 be started in daemon mode.
-
-## Notes about alpha state of this repository
-
-This project is in alpha state and there are a lot of changes from version to
-version which are not backward compatible. This may render your configuration
-files in `/etc/connord` incompatible with a new version though I tried hard to
-anticipate as much as possible. So please read
-the release notes carefully and adjust the configuration files accordingly if
-needed. For example changes in version from alpha.0 to alpha.1 were not
-necessarily backwards compatible.
 
 ## Dependencies
 
@@ -82,27 +59,11 @@ First make sure you have all system dependencies installed.
 
 #### Ubuntu/Debian
 
-    $ sudo apt-get install python3 resolvconf iptables systemd openvpn
+    $ sudo apt-get install python3 resolvconf iptables openvpn
 
 #### Arch
 
-    $ sudo pacman -Sy python openresolv iptables systemd openvpn
-
-[systemd](https://www.freedesktop.org/wiki/Software/systemd/) is pretty
-standard nowadays but if it is not present in your linux installation take care
-not to render your system useless and read about it first before installing it.
-
-#### Check if systemd is installed
-
-    $ systemctl --version
-
-should give you a result like
-
-    systemd 242 (242.29-1-arch)
-    +PAM +AUDIT -SELINUX -IMA -APPARMOR +SMACK -SYSVINIT +UTMP +LIBCRYPTSETUP
-    +GCRYPT +GNUTLS +ACL +XZ +LZ4 +SECCOMP +BLKID +ELFUTILS +KMOD +IDN2 -IDN +PCRE2 default-hierarchy=hybrid
-
-and your fine.
+    $ sudo pacman -Sy python openresolv iptables openvpn
 
 #### Installation of C&#xF8;nN&#xF8;rD
 
@@ -209,7 +170,7 @@ positional arguments:
     update              Update nordvpn configuration files.
     list                Prints all servers if no argument is given.
     connect             Connect to a server.
-    kill                Kill all processes of connord. Useful in daemon mode.
+    kill                Kill all processes of openvpn. Useful in daemon mode.
     iptables            Wrapper around iptables.
     version             Show version
 
@@ -233,7 +194,7 @@ optional arguments:
                         select a specific country. may be specified multiple
                         times. if one of these arguments has no specifier then
                         all country codes are printed.
-  Not implemented yet -a [AREA], --area [AREA]
+  -a [AREA], --area [AREA]
                         select a specific area.may be specified multiple
                         times. if one of these arguments has no specifier then
                         all areas are printed.
@@ -283,7 +244,7 @@ optional arguments:
   -c [COUNTRY], --country [COUNTRY]
                         Select a specific country. May be specified multiple
                         times.
-   Not implemented yet -a [AREA], --area [AREA]
+  -a [AREA], --area [AREA]
                         Select a specific area. May be specified multiple
                         times.
   -f [FEATURE], --feature [FEATURE]
@@ -297,8 +258,6 @@ optional arguments:
   --min-load MIN_LOAD   Filter servers by minimum load.
   --load LOAD           Filter servers by exact load match.
   -d, --daemon          Start in daemon mode.
-  Not implemented yet -i [CONFIG], --config [CONFIG]
-                        Take config from /path/to/config.{yml|ini}.
   -o OPENVPN_OPTIONS, --openvpn OPENVPN_OPTIONS
                         Options to pass through to openvpn as single string
   --udp                 Use UDP protocol. This is the default
@@ -315,9 +274,7 @@ optional arguments:
   -h, --help  show this help message and exit
 </pre>
 
-#### Kill running connord processes
-
-_Not implemented yet_
+#### Kill running openvpn processes
 
 <pre>
 usage: connord kill [-h]

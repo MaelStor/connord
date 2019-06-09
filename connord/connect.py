@@ -23,11 +23,13 @@ from multiprocessing import cpu_count
 import time
 import os
 import re
+import signal
 from connord import ConnordError
 from connord import iptables
 from connord import servers
 from connord import load
 from connord import countries
+from connord import areas
 from connord import types
 from connord import features
 from connord import user
@@ -94,7 +96,7 @@ def filter_servers(
     if _countries:
         _servers = countries.filter_servers(_servers, _countries)
     if _areas:
-        raise NotImplementedError("Area not implemented yet")
+        _servers = areas.filter_servers(_servers, _areas)
     if _types:
         _servers = types.filter_servers(_servers, _types)
     if _features:
@@ -230,3 +232,15 @@ def run(_server, _openvpn, _daemon, _protocol):
 
     domain = _server["domain"]
     return run_openvpn(domain, _openvpn, _daemon, _protocol)
+
+
+@user.needs_root
+def kill_openvpn():
+    cmd = ["ps"]
+    cmd.append("-A")
+    with subprocess.Popen(cmd, stdout=subprocess.PIPE) as proc:
+        out, _ = proc.communicate()
+        for line in out.decode().splitlines():
+            if "openvpn" in line:
+                pid = int(line.split(None, 1)[0])
+                os.kill(pid, signal.SIGTERM)

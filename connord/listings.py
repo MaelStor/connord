@@ -24,6 +24,7 @@ from connord import types
 from connord import features
 from connord import load
 from connord import iptables
+from connord import areas
 from connord.formatter import Formatter
 
 
@@ -85,6 +86,11 @@ class OverviewPrettyFormatter(Formatter):
                 print("  {:26}{}".format(feature, description), file=_file)
             print(self.format_ruler(sep="-"), file=_file)
 
+    def print_areas(self, _areas):
+        if _areas and None in _areas:
+            self.has_output = True
+            areas.print_areas()
+
 
 def filter_servers(
     _servers, _netflix, _countries, _areas, _features, _types, _load, _match, _top
@@ -97,7 +103,7 @@ def filter_servers(
     if _countries:
         _servers = countries.filter_servers(_servers, _countries)
     if _areas:
-        raise NotImplementedError("Area not implemented yet")
+        _servers = areas.filter_servers(_servers, _areas)
     if _types:
         _servers = types.filter_servers(_servers, _types)
     if _features:
@@ -125,11 +131,9 @@ def main(_countries, _areas, _types, _features, _netflix, _load, _match, _top):
     :returns: True
     """
 
-    if _areas:
-        raise NotImplementedError("Area filter is not implemented yet.")
-
     formatter = OverviewPrettyFormatter(stream=True)
     formatter.print_countries(_countries)
+    formatter.print_areas(_areas)
     formatter.print_types(_types)
     formatter.print_features(_features)
 
