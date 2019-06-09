@@ -41,6 +41,7 @@ setup(
         "netaddr>=0.7.19,<1.0.0",
         "PyYAML>=5.1,<6.0",
         "python-iptables>=0.14.0,<1.0.0",
+        "progress>=1.5,<2.0",
     ],
     tests_require=["pytest", "pytest-cov", "vermin", "mock"],
     python_requires=">=3.6",

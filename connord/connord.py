@@ -256,7 +256,7 @@ def process_list_cmd(args):
         _load = args.load
         _match = "exact"
     else:  # apply defaults
-        _load = 10
+        _load = 100
         _match = "max"
 
     return listings.main(
