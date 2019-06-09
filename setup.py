@@ -20,7 +20,7 @@ setup(
     long_description_content_type="text/markdown; charset=UTF-8; variant=GFM",
     keywords="nordvpn vpn secure privacy openvpn iptables",
     classifiers=[
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 4 - Beta",
         "Environment :: Console",
         "Intended Audience :: System Administrators",
         "Intended Audience :: End Users/Desktop",
