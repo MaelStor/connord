@@ -71,12 +71,10 @@ def test_main_when_command_is_list(mocker):
 def test_main_when_command_is_kill(mocker):
     argv = ["connord", "kill"]
     mocker.patch.object(connord.sys, "argv", argv)
+    mocked_connect = mocker.patch("connord.connect.kill_openvpn")
 
-    try:
-        connord.main()
-        assert False
-    except NotImplementedError:
-        assert True
+    connord.main()
+    mocked_connect.assert_called_once()
 
 
 class ArgumentFixture:

@@ -372,23 +372,26 @@ def main():
         sys.argv.extend(["-h"])
 
     args = parse_args(sys.argv[1:])
-
-    if args.command == "update":
-        # Check user is root instead of catching the PermissionError late.
-        try:
+    try:
+        if args.command == "update":
             update.update(force=args.force)
-        except PermissionError:
-            print('Permission Denied: You need to run "connord update" as root')
-            sys.exit(1)
-    elif args.command == "version":
-        version.print_version()
-    elif args.command == "list":
-        process_list_cmd(args)
-    elif args.command == "connect":
-        process_connect_cmd(args)
-    elif args.command == "kill":
-        raise NotImplementedError("'kill' is not implemented yet.")
-    elif args.command == "iptables":
-        process_iptables_cmd(args)
-    else:
-        raise NotImplementedError("Could not process commandline arguments.")
+        elif args.command == "version":
+            version.print_version()
+        elif args.command == "list":
+            process_list_cmd(args)
+        elif args.command == "connect":
+            process_connect_cmd(args)
+        elif args.command == "kill":
+            connect.kill_openvpn()
+        elif args.command == "iptables":
+            process_iptables_cmd(args)
+        else:
+            raise NotImplementedError("Could not process commandline arguments.")
+    except PermissionError:
+        print(
+            'Permission Denied: You need to run "connord {}" as root'.format(
+                args.command
+            ),
+            file=sys.stderr,
+        )
+        sys.exit(1)
