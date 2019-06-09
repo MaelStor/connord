@@ -207,7 +207,10 @@ your connection safe.
     iptables_cmd = command.add_parser("iptables", help="Wrapper around iptables.")
     iptables_cmd_subparsers = iptables_cmd.add_subparsers(dest="iptables_sub")
     iptables_cmd_subparsers.add_parser("reload", help="Reload iptables")
-    iptables_cmd_subparsers.add_parser("flush", help="Flush iptables")
+    flush_cmd = iptables_cmd_subparsers.add_parser("flush", help="Flush iptables")
+    flush_cmd.add_argument(
+        "--force", action="store_true", help="Flush tables ignoring fallback files"
+    )
     apply_cmd = iptables_cmd_subparsers.add_parser(
         "apply", help="Apply iptables rules defined in configuration"
     )
@@ -327,7 +330,11 @@ def process_connect_cmd(args):
 @user.needs_root
 def process_iptables_cmd(args):
     if args.iptables_sub == "flush":
-        iptables.reset()
+        if args.force:
+            iptables.flush_tables()
+            iptables.flush_tables(ipv6=True)
+        else:
+            iptables.reset()
     elif args.iptables_sub == "apply":
         iptables.reset()
         if args.tcp:
