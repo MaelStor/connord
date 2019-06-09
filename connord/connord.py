@@ -40,9 +40,9 @@ def parse_args(argv):
 
     """
     description = """
-connord is a script/service to connect to nordvpn servers. It manages dns
-through resolvconf and the firewall through iptables to keep your connection
-safe.
+Connect to NordVPN servers secure and fast.
+DNS is managed with resolvconf and the firewall through iptables to keep
+your connection safe.
 """
     parser = argparse.ArgumentParser(description=description)
     verbosity = parser.add_mutually_exclusive_group()
@@ -202,7 +202,7 @@ safe.
         help="Use TCP protocol. Only one of --udp or --tcp may be present.",
     )
     command.add_parser(
-        "kill", help="Kill all processes of connord. Useful in daemon mode."
+        "kill", help="Kill all processes of openvpn. Useful in daemon mode."
     )
     iptables_cmd = command.add_parser("iptables", help="Wrapper around iptables.")
     iptables_cmd_subparsers = iptables_cmd.add_subparsers(dest="iptables_sub")
