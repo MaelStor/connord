@@ -179,7 +179,7 @@ def test_process_list_cmd_when_load_is_default(mocker):
     connord.process_list_cmd(args)
 
     mocked_list.main.assert_called_once_with(
-        None, None, None, None, None, 10, "max", None
+        None, None, None, None, None, 100, "max", None
     )
 
 

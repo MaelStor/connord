@@ -50,13 +50,18 @@ def test_listings_when_features_has_a_none_value(capsys):
     assert captured.err == str()
 
 
-def test_listings_when_area_has_a_none_value():
-    try:
-        _area = [None]
-        listings.main(None, _area, None, None, None, None, None, None)
-        assert False
-    except NotImplementedError as error:
-        assert str(error) == "Area filter is not implemented yet."
+def test_listings_when_area_has_a_none_value(capsys):
+    header_fixture = """================================================================================
+Mini ID :    Latitude        Longitude     City                                    
+Address
+================================================================================
+"""
+
+    _area = [None]
+    listings.main(None, _area, None, None, None, None, None, None)
+
+    captured = capsys.readouterr()
+    assert str(captured.out).startswith(header_fixture)
 
 
 def test_listings_when_every_option_is_given_and_countries_is_none(capsys, mocker):
