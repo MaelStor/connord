@@ -33,7 +33,8 @@ from connord import areas
 from connord import types
 from connord import features
 from connord import user
-from connord import credentials
+from connord import resources
+from connord import update
 
 
 class ConnectError(ConnordError):
@@ -177,6 +178,7 @@ def add_openvpn_cmd_option(openvpn_cmd, flag, option=None):
 
 @user.needs_root
 def run_openvpn(_domain, _openvpn, _daemon, _protocol):
+    # TODO: Validate domain when it is an user input
     openvpn_options = []
     if _openvpn:
         openvpn_options = _openvpn.split()
@@ -188,13 +190,15 @@ def run_openvpn(_domain, _openvpn, _daemon, _protocol):
     if _daemon:
         cmd = add_openvpn_cmd_option(cmd, "--daemon")
 
-    config_dir = "/etc/openvpn/client/nordvpn/ovpn_" + _protocol
-    config_file = config_dir + "/" + _domain + "." + _protocol + ".ovpn"
+    try:
+        config_file = resources.get_ovpn_config(_domain, _protocol)
+    except resources.ResourceNotFoundError:
+        update.update(force=True)  # give updating a try else let the error pass through
+        config_file = resources.get_ovpn_config(_domain, _protocol)
+
     cmd = add_openvpn_cmd_option(cmd, "--config", option=config_file)
 
-    credentials_file = credentials.get_credentials_file()
-    if not credentials_file:
-        credentials_file = credentials.create_credentials_file()
+    credentials_file = resources.get_credentials_file(create=True)
     cmd = add_openvpn_cmd_option(cmd, "--auth-user-pass", option=credentials_file)
     cmd = add_openvpn_cmd_option(cmd, "--auth-nocache")
     cmd = add_openvpn_cmd_option(cmd, "--auth-retry", option="nointeract")
@@ -214,6 +218,7 @@ def run_openvpn(_domain, _openvpn, _daemon, _protocol):
         with subprocess.Popen(cmd) as ovpn:
             _, _ = ovpn.communicate()
     except KeyboardInterrupt:
+        # TODO: value is too high
         time.sleep(3)
         return True
 

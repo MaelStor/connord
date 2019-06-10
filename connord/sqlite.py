@@ -19,18 +19,19 @@
 import sqlite3
 from sqlite3 import Error
 from cachetools import cached, TTLCache
-from pkg_resources import resource_filename
 from connord import ConnordError
-
-DATABASE_FILE = resource_filename(__name__, "db/connord.sqlite3")
+from connord import resources
 
 
 class SqliteError(ConnordError):
     """Thrown within this module"""
 
 
-def create_connection(db_file=DATABASE_FILE):
+def create_connection(db_file=None):
     """Create a database connection"""
+    if not db_file:
+        db_file = resources.get_database_file()
+
     try:
         connection = sqlite3.connect(db_file)
         return connection
@@ -38,10 +39,6 @@ def create_connection(db_file=DATABASE_FILE):
         print(error)
 
     return None
-
-
-def get_database_file():
-    return DATABASE_FILE
 
 
 def create_table(connection, create_table_sql):

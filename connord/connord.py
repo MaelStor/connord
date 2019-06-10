@@ -30,7 +30,7 @@ from connord import connect
 from connord import iptables
 from connord import user
 from connord import servers
-from connord import config
+from connord import resources
 
 
 # pylint: disable=too-many-statements
@@ -338,13 +338,13 @@ def process_iptables_cmd(args):
         domain = args.domain[0]
         _server = servers.get_server_by_domain(domain)
         if iptables.apply_config_dir(_server, _protocol):
-            stats_dict = config.get_stats()
+            stats_dict = resources.get_stats()
             stats_dict["last_server"] = {}
             stats_dict["last_server"]["domain"] = domain
             stats_dict["last_server"]["protocol"] = _protocol
-            config.write_stats(stats_dict)
+            resources.write_stats(stats_dict)
     elif args.iptables_sub == "reload":
-        stats_dict = config.get_stats()
+        stats_dict = resources.get_stats()
         domain = str()
         _protocol = str()
         try:
@@ -394,4 +394,7 @@ def main():
             ),
             file=sys.stderr,
         )
+        sys.exit(1)
+    except resources.ResourceNotFoundError as error:
+        print(error)
         sys.exit(1)
