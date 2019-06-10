@@ -109,16 +109,20 @@ def apply_config(config_file, _server=None, _protocol=None):
         if not iptc.easy.has_chain(table_s, chain_s, ipv6=is_ipv6):
             iptc.easy.add_chain(table_s, chain_s, ipv6=is_ipv6)
 
+        # TODO: Check for KeyErrors
         if config_d[chain_s]["policy"] != "None":
             policy = iptc.Policy(config_d[chain_s]["policy"])
             iptc.easy.set_policy(table_s, chain_s, policy=policy, ipv6=is_ipv6)
+        # TODO: Check if rules are None
         for rule_d in config_d[chain_s]["rules"]:
             if iptc.easy.test_rule(rule_d, ipv6=is_ipv6):
                 try:
                     iptc.easy.add_rule(table_s, chain_s, rule_d, ipv6=is_ipv6)
+                # TODO: Why does this happen? test_rule already succeeded
                 except ValueError:
                     raise IptablesError("Malformed rule: {}".format(rule_d))
             else:
+                # TODO: raise ValueError instead ?
                 raise IptablesError("Malformed rule: {}".format(rule_d))
 
     return True
@@ -143,6 +147,7 @@ def render_template(config_file, _server=None, _protocol=None):
         lstrip_blocks=True,
     )
     with open(config_data_file, "r") as config_data:
+        # TODO: What happens when YAML format is wrong
         config_data_dict = yaml.safe_load(config_data)
         if _server:
             config_data_dict["vpn_remote"] = _server["ip_address"]
@@ -162,6 +167,7 @@ def render_template(config_file, _server=None, _protocol=None):
         else:
             raise TypeError("Unknown protocol '{}'.".format(_protocol))
 
+        # TODO: What happens when rendering and fetching the template fails
         template = env.get_template(os.path.basename(config_file))
         return template.render(config_data_dict)
 

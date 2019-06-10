@@ -28,6 +28,7 @@ RUN_DIR = "/var/run/connord"
 STATS_FILE = RUN_DIR + "/stats"
 
 
+# TODO: delete?
 class ConfigError(ConnordError):
     """Thrown within this module"""
 
@@ -41,7 +42,8 @@ def get_config_dir():
 
     return config_dir
 
-# TODO: has_config(filetype=None)
+
+# TODO: has_config(filetype=None) or has_config(file=CONFIG_FILE)
 
 
 def list_config_dir(filetype=None):
@@ -60,6 +62,7 @@ def list_config_dir(filetype=None):
     return full_path_files
 
 
+# TODO: Add parameter file with default CONFIG_FILE
 def get_config_file():
     config_file = ""
     if os.path.exists(CONFIG_FILE):
