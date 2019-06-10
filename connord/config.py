@@ -24,12 +24,11 @@ from pkg_resources import resource_filename, resource_listdir
 from connord import ConnordError
 from connord import user
 
-# TODO: make private ?
-NORDVPN_DIR = "/etc/openvpn/client/nordvpn"
-SCRIPTS_DIR = "/etc/openvpn/client/scripts"
-CONFIG_DIR = "/etc/connord"
-CONFIG_FILE = CONFIG_DIR + "/config.yml"
-RUN_DIR = "/var/run/connord"
+__NORDVPN_DIR = "/etc/openvpn/client/nordvpn"
+__SCRIPTS_DIR = "/etc/openvpn/client/scripts"
+__CONFIG_DIR = "/etc/connord"
+__CONFIG_FILE = __CONFIG_DIR + "/config.yml"
+__RUN_DIR = "/var/run/connord"
 
 
 class ResourceNotFoundError(ConnordError):
@@ -65,7 +64,7 @@ def verify_file_permissions(path, permissions=0o600):
 
 @user.needs_root
 def get_credentials_file(file_name="credentials"):
-    creds_file = "{}/{}".format(NORDVPN_DIR, file_name)
+    creds_file = "{}/{}".format(__NORDVPN_DIR, file_name)
     if os.path.exists(creds_file):
         if verify_file_permissions(creds_file):
             return creds_file
@@ -74,14 +73,14 @@ def get_credentials_file(file_name="credentials"):
 
 
 def get_ovpn_dir():
-    if os.path.exists(NORDVPN_DIR):
-        return NORDVPN_DIR
+    if os.path.exists(__NORDVPN_DIR):
+        return __NORDVPN_DIR
 
-    raise ResourceNotFoundError(NORDVPN_DIR)
+    raise ResourceNotFoundError(__NORDVPN_DIR)
 
 
 def get_ovpn_protocol_dir(protocol="udp"):
-    config_dir = "{}/ovpn_{}".format(NORDVPN_DIR, protocol)
+    config_dir = "{}/ovpn_{}".format(__NORDVPN_DIR, protocol)
 
     if os.path.exists(config_dir):
         return config_dir
@@ -102,8 +101,8 @@ def get_ovpn_config(domain, protocol="udp"):
 
 
 def get_scripts_dir():
-    if os.path.exists(SCRIPTS_DIR):
-        scripts_dir = SCRIPTS_DIR
+    if os.path.exists(__SCRIPTS_DIR):
+        scripts_dir = __SCRIPTS_DIR
     else:
         scripts_dir = resource_filename(__name__, "scripts")
 
@@ -120,8 +119,8 @@ def get_scripts_file(script_name="openvpn_up_down.bash"):
 
 
 def get_config_dir():
-    if os.path.exists(CONFIG_DIR):
-        config_dir = CONFIG_DIR
+    if os.path.exists(__CONFIG_DIR):
+        config_dir = __CONFIG_DIR
     else:
         config_dir = resource_filename(__name__, "config")
 
@@ -133,8 +132,8 @@ def get_config_dir():
 
 def list_config_dir(filetype=None):
     files = []
-    if os.path.exists(CONFIG_DIR):
-        files = os.listdir(CONFIG_DIR)
+    if os.path.exists(__CONFIG_DIR):
+        files = os.listdir(__CONFIG_DIR)
     else:
         files = resource_listdir(__name__, "config")
 
@@ -170,7 +169,7 @@ def write_config(config_dict):
 
 @user.needs_root
 def get_stats_dir(create=True):
-    stats_dir = RUN_DIR
+    stats_dir = __RUN_DIR
     if create:
         if not os.path.exists(stats_dir):
             os.makedirs(stats_dir, mode=0o750)
