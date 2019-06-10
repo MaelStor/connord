@@ -54,7 +54,7 @@ def query_location(latitude, longitude):
         url += "{}={}&".format(k, v)
 
     url = url.rstrip("&")
-    with requests.get(url, headers=header) as response:
+    with requests.get(url, headers=header, timeout=1) as response:
         time.sleep(1)
         return response.json()
 
