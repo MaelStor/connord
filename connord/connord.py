@@ -395,3 +395,6 @@ def main():
             file=sys.stderr,
         )
         sys.exit(1)
+    except resources.ResourceNotFoundError as error:
+        print(error)
+        sys.exit(1)
