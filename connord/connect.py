@@ -33,7 +33,7 @@ from connord import areas
 from connord import types
 from connord import features
 from connord import user
-from connord import credentials
+from connord import resources
 
 
 class ConnectError(ConnordError):
@@ -192,9 +192,7 @@ def run_openvpn(_domain, _openvpn, _daemon, _protocol):
     config_file = config_dir + "/" + _domain + "." + _protocol + ".ovpn"
     cmd = add_openvpn_cmd_option(cmd, "--config", option=config_file)
 
-    credentials_file = credentials.get_credentials_file()
-    if not credentials_file:
-        credentials_file = credentials.create_credentials_file()
+    credentials_file = resources.get_credentials_file(create=True)
     cmd = add_openvpn_cmd_option(cmd, "--auth-user-pass", option=credentials_file)
     cmd = add_openvpn_cmd_option(cmd, "--auth-nocache")
     cmd = add_openvpn_cmd_option(cmd, "--auth-retry", option="nointeract")

@@ -17,6 +17,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import os
+import getpass
 import yaml
 from pkg_resources import resource_filename, resource_listdir
 from connord import ConnordError
@@ -60,14 +61,44 @@ def verify_file_permissions(path, permissions=0o600):
     return True
 
 
-@user.needs_root
-def get_credentials_file(file_name="credentials"):
-    creds_file = "{}/{}".format(__NORDVPN_DIR, file_name)
-    if os.path.exists(creds_file):
-        if verify_file_permissions(creds_file):
-            return creds_file
+def get_credentials_dir(create=True):
+    creds_dir = __NORDVPN_DIR
+    if create:
+        if not os.path.exists(__NORDVPN_DIR):
+            os.makedirs(__NORDVPN_DIR, mode=0o755)
+    else:
+        if not os.path.exists(creds_dir):
+            raise ResourceNotFoundError(__NORDVPN_DIR)
 
-    raise ResourceNotFoundError(creds_file)
+    return creds_dir
+
+
+@user.needs_root
+def get_credentials_file(file_name="credentials", create=True):
+    creds_dir = get_credentials_dir()
+    creds_file = "{}/{}".format(creds_dir, file_name)
+    if create:
+        if not os.path.exists(creds_file):
+            create_credentials_file(creds_file)
+    else:
+        if not os.path.exists(creds_file):
+            raise ResourceNotFoundError(creds_file)
+
+    verify_file_permissions(creds_file)
+    return creds_file
+
+
+def create_credentials_file(credentials_file):
+    username = input("Enter username: ")
+    password = getpass.getpass("Enter password: ")
+
+    with open(credentials_file, "w") as creds_fd:
+        creds_fd.write(username + "\n")
+        creds_fd.write(password + "\n")
+
+    password = None
+    os.chmod(credentials_file, mode=0o600)
+    return credentials_file
 
 
 def get_ovpn_dir():
