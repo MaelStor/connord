@@ -29,6 +29,8 @@ __CONFIG_DIR = "/etc/connord"
 __CONFIG_FILE = __CONFIG_DIR + "/config.yml"
 __RUN_DIR = "/var/run/connord"
 
+__DATABASE_FILE = resource_filename(__name__, "db/connord.sqlite3")
+
 
 class ResourceNotFoundError(ConnordError):
     """Throw when a resource is not available"""
@@ -40,6 +42,19 @@ class ResourceNotFoundError(ConnordError):
             super().__init__("Resource does not exist: {!r}".format(resource_file))
 
         self.resource_file = resource_file
+
+
+def get_database_file(create=True):
+    database_file = __DATABASE_FILE
+    if create:
+        if not os.path.exists(database_file):
+            with open(database_file, "w"):
+                pass
+    else:
+        if not os.path.exists(database_file):
+            raise ResourceNotFoundError(database_file)
+
+    return database_file
 
 
 def file_has_permissions(path, permissions=0o600):
