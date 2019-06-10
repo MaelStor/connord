@@ -390,7 +390,7 @@ def test_apply_config_dir_when_apply_config_bad(mocker):
     _config_files = ["testing", "config"]
     _config_dir = "testdir"
 
-    mocked_find = mocker.patch("connord.iptables.config.list_config_dir")
+    mocked_find = mocker.patch("connord.iptables.resources.list_config_dir")
     mocked_find.return_value = _config_files
     mocked_apply = mocker.patch("connord.iptables.apply_config")
     mocked_apply.return_value = False

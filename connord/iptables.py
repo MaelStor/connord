@@ -30,7 +30,7 @@ from jinja2 import Environment, FileSystemLoader
 
 from connord import ConnordError
 from connord import user
-from connord import config
+from connord import resources
 from connord.formatter import Formatter
 
 
@@ -126,7 +126,7 @@ def apply_config(config_file, _server=None, _protocol=None):
 
 @user.needs_root
 def apply_config_dir(_server=None, _protocol=None, filetype="rules"):
-    config_files = config.list_config_dir(filetype=filetype)
+    config_files = resources.list_config_dir(filetype=filetype)
     retval = True
     for config_file in config_files:
         if not apply_config(config_file, _server, _protocol):
@@ -136,7 +136,7 @@ def apply_config_dir(_server=None, _protocol=None, filetype="rules"):
 
 
 def render_template(config_file, _server=None, _protocol=None):
-    config_data_file = config.get_config_file()
+    config_data_file = resources.get_config_file()
     env = Environment(
         loader=FileSystemLoader(os.path.dirname(config_data_file)),
         trim_blocks=True,
