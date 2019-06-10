@@ -27,6 +27,7 @@ from datetime import datetime, timedelta
 import requests
 from connord import ConnordError
 from connord import resources
+from connord import user
 
 __URL = "https://downloads.nordcdn.com/configs/archives/servers/ovpn.zip"
 TIMEOUT = timedelta(days=1)
@@ -36,14 +37,14 @@ class UpdateError(ConnordError):
     """Raised during update"""
 
 
+@user.needs_root
 def update_orig():
     """
     Move the original file to make room for the newly downloaded file
     """
 
     zip_file = resources.get_zip_file(create_dirs=True)
-    if os.path.exists(zip_file):
-        move(zip_file, zip_file + ".orig")
+    move(zip_file, zip_file + ".orig")
 
 
 def get():
