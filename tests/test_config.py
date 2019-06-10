@@ -17,10 +17,14 @@ def test_get_config_file_when_global_config_file_exists(mocker):
     assert expected_config_file == actual_config_file
 
 
-def test_get_config_file_when_global_config_file_not_exists(mocker):
+def test_get_config_file_when_config_file_not_exists(mocker):
     mocked_os = mocker.patch("connord.config.os")
     mocked_os.path.exists.return_value = False
 
-    actual_config_file = config.get_config_file()
+    try:
+        config.get_config_file()
+        assert False
+    except config.ResourceNotFoundError as error:
+        actual_message = str(error)
 
-    assert actual_config_file.endswith("connord/config/config.yml")
+    assert actual_message.startswith("Resource does not exist:")
