@@ -46,24 +46,36 @@ class ResourceNotFoundError(ConnordError):
 
 def get_zip_dir(create=True):
     zip_dir = __NORDVPN_DIR
-    if create:
-        if not os.path.exists(zip_dir):
+    if not os.path.exists(zip_dir):
+        if create:
             os.makedirs(zip_dir)
-    else:
-        if not os.path.exists(zip_dir):
+        else:
             raise ResourceNotFoundError(zip_dir)
 
     return zip_dir
 
 
+def get_zip_path(zip_name="ovpn.zip"):
+    zip_dir = get_zip_dir(create=False)
+    return zip_dir + "/" + zip_name
+
+
+def get_zip_file(zip_name="ovpn.zip", create_dirs=True):
+    zip_dir = get_zip_dir(create_dirs)
+    zip_path = zip_dir + "/" + zip_name
+    if os.path.exists(zip_path):
+        return zip_path
+
+    raise ResourceNotFoundError(zip_path)
+
+
 def get_database_file(create=True):
     database_file = __DATABASE_FILE
-    if create:
-        if not os.path.exists(database_file):
+    if not os.path.exists(database_file):
+        if create:
             with open(database_file, "w"):
                 pass
-    else:
-        if not os.path.exists(database_file):
+        else:
             raise ResourceNotFoundError(database_file)
 
     return database_file
@@ -90,11 +102,10 @@ def verify_file_permissions(path, permissions=0o600):
 
 def get_credentials_dir(create=True):
     creds_dir = __NORDVPN_DIR
-    if create:
-        if not os.path.exists(__NORDVPN_DIR):
+    if not os.path.exists(__NORDVPN_DIR):
+        if create:
             os.makedirs(__NORDVPN_DIR, mode=0o755)
-    else:
-        if not os.path.exists(creds_dir):
+        else:
             raise ResourceNotFoundError(__NORDVPN_DIR)
 
     return creds_dir
@@ -104,11 +115,10 @@ def get_credentials_dir(create=True):
 def get_credentials_file(file_name="credentials", create=True):
     creds_dir = get_credentials_dir()
     creds_file = "{}/{}".format(creds_dir, file_name)
-    if create:
-        if not os.path.exists(creds_file):
+    if not os.path.exists(creds_file):
+        if create:
             create_credentials_file(creds_file)
-    else:
-        if not os.path.exists(creds_file):
+        else:
             raise ResourceNotFoundError(creds_file)
 
     verify_file_permissions(creds_file)
@@ -226,11 +236,10 @@ def write_config(config_dict):
 @user.needs_root
 def get_stats_dir(create=True):
     stats_dir = __RUN_DIR
-    if create:
-        if not os.path.exists(stats_dir):
+    if not os.path.exists(stats_dir):
+        if create:
             os.makedirs(stats_dir, mode=0o750)
-    else:
-        if not os.path.exists(stats_dir):
+        else:
             raise ResourceNotFoundError(stats_dir)
 
     return stats_dir
@@ -240,12 +249,11 @@ def get_stats_dir(create=True):
 def get_stats_file(stats_name="stats", create=True):
     stats_dir = get_stats_dir(create)
     stats_file = "{}/{}".format(stats_dir, stats_name)
-    if create:
-        if not os.path.exists(stats_file):
+    if not os.path.exists(stats_file):
+        if create:
             with open(stats_file, "w"):
                 pass
-    else:
-        if not os.path.exists(stats_file):
+        else:
             raise ResourceNotFoundError(stats_file)
 
     return stats_file
