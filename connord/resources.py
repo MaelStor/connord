@@ -44,6 +44,18 @@ class ResourceNotFoundError(ConnordError):
         self.resource_file = resource_file
 
 
+def get_zip_dir(create=True):
+    zip_dir = __NORDVPN_DIR
+    if create:
+        if not os.path.exists(zip_dir):
+            os.makedirs(zip_dir)
+    else:
+        if not os.path.exists(zip_dir):
+            raise ResourceNotFoundError(zip_dir)
+
+    return zip_dir
+
+
 def get_database_file(create=True):
     database_file = __DATABASE_FILE
     if create:

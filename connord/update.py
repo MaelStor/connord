@@ -26,9 +26,10 @@ from zipfile import ZipFile
 from datetime import datetime, timedelta
 import requests
 from connord import ConnordError
+from connord import resources
 
 __URL = "https://downloads.nordcdn.com/configs/archives/servers/ovpn.zip"
-__DESTDIR = "/etc/openvpn/client/nordvpn"
+__DESTDIR = resources.get_zip_dir(create=True)
 __ZIP_PATH = __DESTDIR + "/ovpn.zip"
 __ORIG_PATH = __DESTDIR + "/ovpn.orig.zip"
 TIMEOUT = timedelta(days=1)
@@ -36,15 +37,6 @@ TIMEOUT = timedelta(days=1)
 
 class UpdateError(ConnordError):
     """Raised during update"""
-
-
-def init():
-    """Initialise directories
-    """
-    try:
-        os.makedirs(__DESTDIR, mode=0o750, exist_ok=True)
-    except OSError as error:
-        raise UpdateError("Error creating {}: '{!s}'".format(__DESTDIR, error))
 
 
 def update_orig():
@@ -65,7 +57,9 @@ def get():
         return False
 
     print("Downloading {} ...".format(__ZIP_PATH))
-    with requests.get(__URL, stream=True) as response, open(__ZIP_PATH, "wb") as handle:
+    with requests.get(__URL, stream=True, timeout=0.5) as response, open(
+        __ZIP_PATH, "wb"
+    ) as handle:
         for chunk in response.iter_content(chunk_size=512):
             handle.write(chunk)
 
@@ -93,7 +87,6 @@ def unzip():
 def update(force=False):
     """Update the nordvpn configuration files
     """
-    init()
     if force:
         get()
         unzip()

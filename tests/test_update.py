@@ -3,30 +3,6 @@
 from connord import update
 
 
-def test_init_when_good(mocker):
-    destdir = "/etc/openvpn/client/nordvpn"
-    mocked_os = mocker.patch("connord.update.os")
-
-    update.init()
-
-    mocked_os.makedirs.assert_called_once_with(destdir, mode=0o750, exist_ok=True)
-
-
-def test_init_when_error(mocker):
-    destdir = "/etc/openvpn/client/nordvpn"
-    mocked_os = mocker.patch("connord.update.os")
-    mocked_os = mocker.patch("connord.update.os")
-    mocked_os.makedirs.side_effect = OSError()
-
-    try:
-        update.init()
-        assert False
-    except update.UpdateError as error:
-        assert str(error) == "Error creating {}: ''".format(destdir)
-
-    mocked_os.makedirs.assert_called_once_with(destdir, mode=0o750, exist_ok=True)
-
-
 def test_update_orig_when_zip_file_not_exists(mocker):
     zippath = "/etc/openvpn/client/nordvpn/ovpn.zip"
     mocked_os = mocker.patch("connord.update.os")
@@ -220,13 +196,11 @@ def test_update_needed_when_zipfile_exists(mocker):
 
 
 def test_update_when_force_is_true(mocker):
-    mocked_init = mocker.patch.object(update, "init")
     mocked_get = mocker.patch.object(update, "get")
     mocked_unzip = mocker.patch.object(update, "unzip")
 
     retval = update.update(True)
 
-    mocked_init.assert_called_once()
     mocked_get.assert_called_once()
     mocked_unzip.assert_called_once()
     assert retval
@@ -236,7 +210,6 @@ def test_update_when_force_is_false_files_are_updated(mocker):
     zippath = "/etc/openvpn/client/nordvpn/ovpn.zip"
     origpath = "/etc/openvpn/client/nordvpn/ovpn.orig.zip"
 
-    mocked_init = mocker.patch.object(update, "init")
     mocked_get = mocker.patch.object(update, "get")
     mocked_update_needed = mocker.patch.object(update, "update_needed")
     mocked_update_needed.return_value = True
@@ -246,7 +219,6 @@ def test_update_when_force_is_false_files_are_updated(mocker):
 
     retval = update.update(False)
 
-    mocked_init.assert_called_once()
     mocked_get.assert_called_once()
     mocked_update_needed.assert_called_once()
     mocked_file_equals.assert_called_once_with(origpath, zippath)
@@ -258,7 +230,6 @@ def test_update_when_force_is_false_files_are_uptodate(mocker):
     zippath = "/etc/openvpn/client/nordvpn/ovpn.zip"
     origpath = "/etc/openvpn/client/nordvpn/ovpn.orig.zip"
 
-    mocked_init = mocker.patch.object(update, "init")
     mocked_get = mocker.patch.object(update, "get")
     mocked_update_needed = mocker.patch.object(update, "update_needed")
     mocked_update_needed.return_value = True
@@ -268,7 +239,6 @@ def test_update_when_force_is_false_files_are_uptodate(mocker):
 
     retval = update.update(False)
 
-    mocked_init.assert_called_once()
     mocked_get.assert_called_once()
     mocked_update_needed.assert_called_once()
     mocked_file_equals.assert_called_once_with(origpath, zippath)
@@ -279,7 +249,6 @@ def test_update_when_force_is_false_files_are_uptodate(mocker):
 def test_update_when_force_is_false_no_update_needed(capsys, mocker):
     zippath = "/etc/openvpn/client/nordvpn/ovpn.zip"
 
-    mocked_init = mocker.patch.object(update, "init")
     mocked_update_needed = mocker.patch.object(update, "update_needed")
     mocked_update_needed.return_value = False
     mocked_datetime = mocker.patch("connord.update.datetime")
@@ -290,7 +259,6 @@ def test_update_when_force_is_false_no_update_needed(capsys, mocker):
 
     retval = update.update(False)
 
-    mocked_init.assert_called_once()
     mocked_update_needed.assert_called_once()
     mocked_os.path.getctime.assert_called_once_with(zippath)
     mocked_datetime.fromtimestamp.assert_called_once_with(5)
