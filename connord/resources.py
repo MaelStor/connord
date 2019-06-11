@@ -19,7 +19,7 @@
 import os
 import getpass
 import yaml
-from pkg_resources import resource_filename, resource_listdir
+from pkg_resources import resource_filename
 from connord import ConnordError
 from connord import user
 
@@ -33,18 +33,42 @@ __DATABASE_FILE = resource_filename(__name__, "db/connord.sqlite3")
 
 
 class ResourceNotFoundError(ConnordError):
-    """Throw when a resource is not available"""
+    """Raised when a resource is requested but doesn't exist"""
 
     def __init__(self, resource_file, message=None):
+
+        # if a message is given use it else use the one defined here
         if message:
             super().__init__(message)
         else:
             super().__init__("Resource does not exist: {!r}".format(resource_file))
 
+        #: A string representing a file path
         self.resource_file = resource_file
 
 
+class MalformedResourceError(ConnordError):
+    def __init__(self, resource_file, problem, problem_mark):
+        super().__init__(
+            "Malformed resource: {!r}\n{!s}\n{!s}".format(
+                resource_file, problem, problem_mark
+            )
+        )
+
+        self.resource_file = resource_file
+        self.problem = problem
+        self.problem_mark = problem_mark
+
+
 def get_zip_dir(create=True):
+    """Returns the directory where nordvpn related zip files are stored
+
+    :param create: if True create the directory
+    :returns: the zip directory
+    :rtype: string
+    :raises: ``ResourceNotFoundError`` when `zip_dir` does not exist
+    """
+
     zip_dir = __NORDVPN_DIR
     if not os.path.exists(zip_dir):
         if create:
@@ -55,12 +79,40 @@ def get_zip_dir(create=True):
     return zip_dir
 
 
-def get_zip_path(zip_name="ovpn.zip"):
+def get_zip_path(zip_name=None):
+    """Return the absolute path to `zip_name` with the output of the
+    ``get_zip_dir()`` as base directory. Does not check if the path
+    exists.
+
+    :param zip_name: name of the zip file
+    :ptype: string
+    :default: None
+    :returns: the path to the zip file
+    :rtype: string
+    """
+
+    if not zip_name:
+        zip_name = "ovpn.zip"
+
     zip_dir = get_zip_dir(create=False)
     return zip_dir + "/" + zip_name
 
 
-def get_zip_file(zip_name="ovpn.zip", create_dirs=True):
+def get_zip_file(zip_name=None, create_dirs=True):
+    """Return the absolute path to `zip_name` with the output of the
+    ``get_zip_dir()`` as base directory. Verifies if the file exists.
+
+    :param zip_name: name of the zip file
+    :ptype: string
+    :default: None
+    :returns: the path to the zip file
+    :rtype: string
+    :raises: ResourceNotFoundError if the `zip_path` does not exist
+    """
+
+    if not zip_name:
+        zip_name = "ovpn.zip"
+
     zip_dir = get_zip_dir(create_dirs)
     zip_path = zip_dir + "/" + zip_name
     if os.path.exists(zip_path):
@@ -70,6 +122,12 @@ def get_zip_file(zip_name="ovpn.zip", create_dirs=True):
 
 
 def get_database_file(create=True):
+    """Return the database file path
+
+    :param create: if True create the database file (not the directory)
+    :returns: the file path as string
+    """
+
     database_file = __DATABASE_FILE
     if not os.path.exists(database_file):
         if create:
@@ -85,6 +143,7 @@ def file_has_permissions(path, permissions=0o600):
     """Check file permissions"""
 
     stats = os.stat(path)
+    print(stats)
     return stats.st_mode & 0o777 == permissions
 
 
@@ -94,7 +153,7 @@ def verify_file_permissions(path, permissions=0o600):
     if not file_has_permissions(path, permissions):
         raise PermissionError(
             "Unsafe file permissions: {!r} should have mode: {!r}.".format(
-                path, permissions
+                path, oct(permissions)
             )
         )
     return True
@@ -125,8 +184,12 @@ def get_credentials_file(file_name="credentials", create=True):
     return creds_file
 
 
+def _get_username():
+    return input("Enter username: ")
+
+
 def create_credentials_file(credentials_file):
-    username = input("Enter username: ")
+    username = _get_username()
     password = getpass.getpass("Enter password: ")
 
     with open(credentials_file, "w") as creds_fd:
@@ -138,15 +201,18 @@ def create_credentials_file(credentials_file):
     return credentials_file
 
 
-def get_ovpn_dir():
+@user.needs_root
+def get_ovpn_dir(create=True):
     if os.path.exists(__NORDVPN_DIR):
         return __NORDVPN_DIR
 
     raise ResourceNotFoundError(__NORDVPN_DIR)
 
 
+@user.needs_root
 def get_ovpn_protocol_dir(protocol="udp"):
-    config_dir = "{}/ovpn_{}".format(__NORDVPN_DIR, protocol)
+    base_dir = get_ovpn_dir()
+    config_dir = "{}/ovpn_{}".format(base_dir, protocol)
 
     if os.path.exists(config_dir):
         return config_dir
@@ -154,6 +220,7 @@ def get_ovpn_protocol_dir(protocol="udp"):
     raise ResourceNotFoundError(config_dir)
 
 
+@user.needs_root
 def get_ovpn_config(domain, protocol="udp"):
     config_dir = get_ovpn_protocol_dir(protocol)
     if ".nordvpn.com" not in domain:
@@ -197,16 +264,12 @@ def get_config_dir():
 
 
 def list_config_dir(filetype=None):
-    files = []
-    if os.path.exists(__CONFIG_DIR):
-        files = os.listdir(__CONFIG_DIR)
-    else:
-        files = resource_listdir(__name__, "config")
+    config_dir = get_config_dir()
+    files = os.listdir(config_dir)
 
     if filetype:
         files = [_file for _file in files if _file.endswith("." + filetype)]
 
-    config_dir = get_config_dir()
     full_path_files = [config_dir + "/" + _file for _file in files]
 
     return full_path_files
@@ -223,12 +286,25 @@ def get_config_file(config_name="config.yml"):
 
 def get_config():
     config_file = get_config_file()
-    with open(config_file, "r") as config_fd:
-        return yaml.safe_load(config_fd)
+    try:
+        with open(config_file, "r") as config_fd:
+            return yaml.safe_load(config_fd)
+    except yaml.parser.ParserError as error:
+        raise MalformedResourceError(
+            config_file, error.problem, str(error.problem_mark)
+        )
 
 
 def write_config(config_dict):
     config_file = get_config_file()
+    if not isinstance(config_dict, dict):
+        raise TypeError(
+            # pylint: disable=line-too-long
+            "Could not write to {!r}: Invalid type: Found {!s} but expected {!s}.".format(
+                config_file, type(config_dict), dict
+            )
+        )
+
     with open(config_file, "w") as config_fd:
         yaml.dump(config_dict, config_fd, default_flow_style=False)
 
@@ -246,7 +322,10 @@ def get_stats_dir(create=True):
 
 
 @user.needs_root
-def get_stats_file(stats_name="stats", create=True):
+def get_stats_file(stats_name=None, create=True):
+    if not stats_name:
+        stats_name = "stats"
+
     stats_dir = get_stats_dir(create)
     stats_file = "{}/{}".format(stats_dir, stats_name)
     if not os.path.exists(stats_file):
@@ -262,16 +341,27 @@ def get_stats_file(stats_name="stats", create=True):
 @user.needs_root
 def get_stats():
     stats_file = get_stats_file()
-    with open(stats_file, "r") as stats_fd:
-        stats_dict = yaml.safe_load(stats_fd)
-        if not stats_dict:
-            stats_dict = {}
+    try:
+        with open(stats_file, "r") as stats_fd:
+            stats_dict = yaml.safe_load(stats_fd)
+            if not stats_dict:
+                stats_dict = {}
 
-        return stats_dict
+            return stats_dict
+    except yaml.parser.ParserError as error:
+        raise MalformedResourceError(stats_file, error.problem, str(error.problem_mark))
 
 
 @user.needs_root
 def write_stats(stats_dict):
     stats_file = get_stats_file()
+    if not isinstance(stats_dict, dict):
+        raise TypeError(
+            # pylint: disable=line-too-long
+            "Could not write to {!r}: Invalid type: Found {!s} but expected {!s}.".format(
+                stats_file, type(stats_dict), dict
+            )
+        )
+
     with open(stats_file, "w") as stats_fd:
         yaml.dump(stats_dict, stats_fd, default_flow_style=False)

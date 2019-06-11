@@ -31,6 +31,7 @@ from connord import iptables
 from connord import user
 from connord import servers
 from connord import resources
+from connord import areas
 
 
 # pylint: disable=too-many-statements
@@ -403,5 +404,11 @@ def main():
         )
         sys.exit(1)
     except resources.ResourceNotFoundError as error:
+        print(error)
+        sys.exit(1)
+    except resources.MalformedResourceError as error:
+        print(error)
+        sys.exit(1)
+    except areas.AreaError as error:
         print(error)
         sys.exit(1)
