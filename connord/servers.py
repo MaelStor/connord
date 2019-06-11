@@ -53,7 +53,7 @@ def get_servers():
 Gecko/20100101 Firefox/60.0"
     }
 
-    with requests.get(__API_URL, headers=header) as response:
+    with requests.get(__API_URL, headers=header, timeout=1) as response:
         return response.json()
 
 

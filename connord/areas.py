@@ -54,7 +54,7 @@ def query_location(latitude, longitude):
         url += "{}={}&".format(k, v)
 
     url = url.rstrip("&")
-    with requests.get(url, headers=header) as response:
+    with requests.get(url, headers=header, timeout=1) as response:
         time.sleep(1)
         return response.json()
 
@@ -139,7 +139,7 @@ def verify_areas(_areas):
 
     if ambigous_areas:
         error_string = ""
-        for area, cities in ambigous_areas:
+        for area, cities in ambigous_areas.items():
             error_string += " {}: {},".format(area, cities)
 
         error_string = error_string.rstrip(",")

@@ -3,3 +3,4 @@ include requirements-devel.txt
 include LICENSE
 recursive-include connord/scripts *
 recursive-include connord/config *
+recursive-include connord/db *

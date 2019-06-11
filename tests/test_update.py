@@ -3,113 +3,63 @@
 from connord import update
 
 
-def test_init_when_good(mocker):
-    destdir = "/etc/openvpn/client/nordvpn"
-    mocked_os = mocker.patch("connord.update.os")
-
-    update.init()
-
-    mocked_os.makedirs.assert_called_once_with(destdir, mode=0o750, exist_ok=True)
-
-
-def test_init_when_error(mocker):
-    destdir = "/etc/openvpn/client/nordvpn"
-    mocked_os = mocker.patch("connord.update.os")
-    mocked_os = mocker.patch("connord.update.os")
-    mocked_os.makedirs.side_effect = OSError()
-
-    try:
-        update.init()
-        assert False
-    except update.UpdateError as error:
-        assert str(error) == "Error creating {}: ''".format(destdir)
-
-    mocked_os.makedirs.assert_called_once_with(destdir, mode=0o750, exist_ok=True)
+def set_up(mocker):
+    mocked_user = mocker.patch("connord.iptables.user.is_root")
+    mocked_user.return_value = True
 
 
 def test_update_orig_when_zip_file_not_exists(mocker):
     zippath = "/etc/openvpn/client/nordvpn/ovpn.zip"
-    mocked_os = mocker.patch("connord.update.os")
+    set_up(mocker)
+
+    import importlib
+
+    importlib.reload(update)
+
     mocked_shutil = mocker.patch("connord.update.move")
+    mocked_zip_file = mocker.patch("connord.update.resources.get_zip_file")
+    from connord import resources
 
-    mocked_os.path.exists.return_value = False
-    update.update_orig()
+    mocked_zip_file.side_effect = resources.ResourceNotFoundError(zippath)
 
-    mocked_os.path.exists.assert_called_once_with(zippath)
+    try:
+        update.update_orig()
+        assert False
+    except resources.ResourceNotFoundError as error:
+        assert error.resource_file == zippath
+
     mocked_shutil.assert_not_called()
 
 
 def test_update_orig_when_zip_file_exists(mocker):
     zippath = "/etc/openvpn/client/nordvpn/ovpn.zip"
-    origpath = "/etc/openvpn/client/nordvpn/ovpn.orig.zip"
+    origpath = "/etc/openvpn/client/nordvpn/ovpn.zip.orig"
+    set_up(mocker)
+    import importlib
 
-    mocked_os = mocker.patch("connord.update.os")
+    importlib.reload(update)
+
     mocked_shutil = mocker.patch("connord.update.move")
+    mocked_zip_file = mocker.patch("connord.update.resources.get_zip_file")
 
-    mocked_os.path.exists_return_value = True
-    mocked_shutil.return_value = True
+    mocked_zip_file.return_value = zippath
 
     update.update_orig()
 
-    mocked_os.path.exists.assert_called_once_with(zippath)
     mocked_shutil.assert_called_once_with(zippath, origpath)
-
-
-def test_update_orig_when_zip_file_exists_move_is_success(mocker):
-    zippath = "/etc/openvpn/client/nordvpn/ovpn.zip"
-    origpath = "/etc/openvpn/client/nordvpn/ovpn.orig.zip"
-
-    mocked_os = mocker.patch("connord.update.os")
-    mocked_shutil = mocker.patch("connord.update.move")
-
-    mocked_os.path.exists_return_value = True
-    mocked_shutil.return_value = True
-
-    retval = update.update_orig()
-
-    mocked_os.path.exists.assert_called_once_with(zippath)
-    mocked_shutil.assert_called_once_with(zippath, origpath)
-    assert retval
-
-
-def test_get_when_update_orig_is_false(mocker):
-    mocked_update = mocker.patch("connord.update.update_orig")
-    mocked_update.return_value = False
-
-    retval = update.get()
-
-    mocked_update.assert_called_once()
-    assert not retval
-
-
-# def _setup_mock_response(status=200, content='testing', json_data=None,
-#                          raise_for_status=None):
-#     '''Helper function to create a mocked_response'''
-#
-#     mock_response = mock.MagicMock()
-#     mock_response.raise_for_status = mock.Mock()
-#     if raise_for_status:
-#         mock_response.raise_for_status.side_effect = raise_for_status
-#
-#     mock_response.status_code = status
-#     mock_response.content = content
-#     mock_response.iter_content.return_value = content
-#
-#     if json_data:
-#         mock_response.json = mock.Mock(return_value=json_data)
-#
-#     return mock_response
 
 
 def test_get(requests_mock, mocker):
     url = "https://downloads.nordcdn.com/configs/archives/servers/ovpn.zip"
     zippath = "/etc/openvpn/client/nordvpn/ovpn.zip"
 
-    mocked_update_orig = mocker.patch("connord.update.update_orig")
-    mocked_update_orig.return_value = True
+    mocker.patch("connord.update.update_orig")
     requests_mock.get(url, text="testing")
 
     mocked_open = mocker.patch("connord.update.open", mocker.mock_open(), create=True)
+
+    mocked_zip_path = mocker.patch("connord.update.resources.get_zip_path")
+    mocked_zip_path.return_value = zippath
 
     update.get()
 
@@ -117,7 +67,7 @@ def test_get(requests_mock, mocker):
 
 
 def test_uptodate_when_orig_zipfile_not_exists(mocker):
-    origpath = "/etc/openvpn/client/nordvpn/ovpn.orig.zip"
+    origpath = "/etc/openvpn/client/nordvpn/ovpn.zip.orig"
     zippath = "/etc/openvpn/client/nordvpn/ovpn.zip"
     mocked_os = mocker.patch("connord.update.os")
     mocked_os.path.exists.side_effect = [False, True]
@@ -146,7 +96,7 @@ def test_uptodate_when_orig_file_exists_zip_file_not_exists(mocker):
 
 def test_uptodate_when_both_files_exist_sizes_are_not_equal(mocker):
     zippath = "/etc/openvpn/client/nordvpn/ovpn.zip"
-    origpath = "/etc/openvpn/client/nordvpn/ovpn.orig.zip"
+    origpath = "/etc/openvpn/client/nordvpn/ovpn.zip.orig"
     mocked_os = mocker.patch("connord.update.os")
     mocked_os.path.exists.side_effect = [True, True]
     mocked_os.path.getsize.side_effect = [100, 99]
@@ -179,22 +129,18 @@ def test_uptodate_when_both_files_exist_sizes_are_equal(mocker):
     assert retval
 
 
-# def test_unzip(mocker):
-#     destdir = "/etc/openvpn/client/nordvpn"
-#     mocked_zipfile = mocker.patch.object(update.ZipFile, "extractall")
-#
-#     update.unzip()
-#     mocked_zipfile.assert_called_with(destdir)
-
-
 def test_update_needed_when_zipfile_not_exists(mocker):
     zippath = "/etc/openvpn/client/nordvpn/ovpn.zip"
     mocked_os = mocker.patch("connord.update.os")
     mocked_os.path.exists.return_value = False
+    mocked_zip_file = mocker.patch("connord.update.resources.get_zip_file")
+    from connord import resources
+
+    mocked_zip_file.side_effect = resources.ResourceNotFoundError(zippath)
 
     retval = update.update_needed()
 
-    mocked_os.path.exists.assert_called_with(zippath)
+    mocked_zip_file.assert_called_once()
     assert retval
 
 
@@ -202,8 +148,10 @@ def test_update_needed_when_zipfile_exists(mocker):
     zippath = "/etc/openvpn/client/nordvpn/ovpn.zip"
     mocker.patch("connord.update.TIMEOUT", 4)
 
+    mocked_zip_file = mocker.patch("connord.update.resources.get_zip_file")
+    mocked_zip_file.return_value = zippath
+
     mocked_os = mocker.patch("connord.update.os")
-    mocked_os.path.exists.return_value = True
     mocked_os.path.getctime.return_value = 5
 
     mocked_datetime = mocker.patch("connord.update.datetime")
@@ -212,7 +160,6 @@ def test_update_needed_when_zipfile_exists(mocker):
 
     retval = update.update_needed()
 
-    mocked_os.path.exists.assert_called_once_with(zippath)
     mocked_datetime.now.assert_called_once()
     mocked_os.path.getctime.assert_called_with(zippath)
     mocked_datetime.fromtimestamp.assert_called_once_with(5)
@@ -220,13 +167,11 @@ def test_update_needed_when_zipfile_exists(mocker):
 
 
 def test_update_when_force_is_true(mocker):
-    mocked_init = mocker.patch.object(update, "init")
     mocked_get = mocker.patch.object(update, "get")
     mocked_unzip = mocker.patch.object(update, "unzip")
 
     retval = update.update(True)
 
-    mocked_init.assert_called_once()
     mocked_get.assert_called_once()
     mocked_unzip.assert_called_once()
     assert retval
@@ -234,9 +179,11 @@ def test_update_when_force_is_true(mocker):
 
 def test_update_when_force_is_false_files_are_updated(mocker):
     zippath = "/etc/openvpn/client/nordvpn/ovpn.zip"
-    origpath = "/etc/openvpn/client/nordvpn/ovpn.orig.zip"
+    origpath = "/etc/openvpn/client/nordvpn/ovpn.zip.orig"
 
-    mocked_init = mocker.patch.object(update, "init")
+    mocked_zip_file = mocker.patch("connord.update.resources.get_zip_file")
+    mocked_zip_file.side_effect = [zippath, origpath]
+
     mocked_get = mocker.patch.object(update, "get")
     mocked_update_needed = mocker.patch.object(update, "update_needed")
     mocked_update_needed.return_value = True
@@ -246,7 +193,6 @@ def test_update_when_force_is_false_files_are_updated(mocker):
 
     retval = update.update(False)
 
-    mocked_init.assert_called_once()
     mocked_get.assert_called_once()
     mocked_update_needed.assert_called_once()
     mocked_file_equals.assert_called_once_with(origpath, zippath)
@@ -254,11 +200,13 @@ def test_update_when_force_is_false_files_are_updated(mocker):
     assert retval
 
 
-def test_update_when_force_is_false_files_are_uptodate(mocker):
+def test_update_when_force_is_false_files_are_uptodate(capsys, mocker):
     zippath = "/etc/openvpn/client/nordvpn/ovpn.zip"
-    origpath = "/etc/openvpn/client/nordvpn/ovpn.orig.zip"
+    origpath = "/etc/openvpn/client/nordvpn/ovpn.zip.orig"
 
-    mocked_init = mocker.patch.object(update, "init")
+    mocked_zip_file = mocker.patch("connord.update.resources.get_zip_file")
+    mocked_zip_file.side_effect = [zippath, origpath]
+
     mocked_get = mocker.patch.object(update, "get")
     mocked_update_needed = mocker.patch.object(update, "update_needed")
     mocked_update_needed.return_value = True
@@ -268,18 +216,23 @@ def test_update_when_force_is_false_files_are_uptodate(mocker):
 
     retval = update.update(False)
 
-    mocked_init.assert_called_once()
+    captured = capsys.readouterr()
+
     mocked_get.assert_called_once()
     mocked_update_needed.assert_called_once()
     mocked_file_equals.assert_called_once_with(origpath, zippath)
     mocked_unzip.assert_not_called()
     assert retval
+    assert captured.out == zippath + " already up-to-date\n"
 
 
 def test_update_when_force_is_false_no_update_needed(capsys, mocker):
     zippath = "/etc/openvpn/client/nordvpn/ovpn.zip"
+    origpath = "/etc/openvpn/client/nordvpn/ovpn.zip.orig"
 
-    mocked_init = mocker.patch.object(update, "init")
+    mocked_zip_file = mocker.patch("connord.update.resources.get_zip_file")
+    mocked_zip_file.side_effect = [zippath, origpath]
+
     mocked_update_needed = mocker.patch.object(update, "update_needed")
     mocked_update_needed.return_value = False
     mocked_datetime = mocker.patch("connord.update.datetime")
@@ -290,7 +243,6 @@ def test_update_when_force_is_false_no_update_needed(capsys, mocker):
 
     retval = update.update(False)
 
-    mocked_init.assert_called_once()
     mocked_update_needed.assert_called_once()
     mocked_os.path.getctime.assert_called_once_with(zippath)
     mocked_datetime.fromtimestamp.assert_called_once_with(5)

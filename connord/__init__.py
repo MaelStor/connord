@@ -20,17 +20,14 @@
 Init file
 """
 
-import os
-
 
 class ConnordError(Exception):
     """Main Exception class for connord module"""
 
 
-# TODO: Introduce VerificationError to be used verifying command-line arguments
+# TODO: Introduce ValidationError to be used verifying command-line arguments
 # in filters
 
 
-__version__ = "0.1.0-beta"
+__version__ = "0.1.0-beta.1"
 __license__ = "GNU General Public License v3 or later (GPLv3+)"
-__basepath__ = os.path.dirname(os.path.abspath(__file__))

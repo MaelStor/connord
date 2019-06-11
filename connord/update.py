@@ -26,11 +26,10 @@ from zipfile import ZipFile
 from datetime import datetime, timedelta
 import requests
 from connord import ConnordError
+from connord import resources
+from connord import user
 
 __URL = "https://downloads.nordcdn.com/configs/archives/servers/ovpn.zip"
-__DESTDIR = "/etc/openvpn/client/nordvpn"
-__ZIP_PATH = __DESTDIR + "/ovpn.zip"
-__ORIG_PATH = __DESTDIR + "/ovpn.orig.zip"
 TIMEOUT = timedelta(days=1)
 
 
@@ -38,36 +37,28 @@ class UpdateError(ConnordError):
     """Raised during update"""
 
 
-def init():
-    """Initialise directories
-    """
-    try:
-        os.makedirs(__DESTDIR, mode=0o750, exist_ok=True)
-    except OSError as error:
-        raise UpdateError("Error creating {}: '{!s}'".format(__DESTDIR, error))
-
-
+@user.needs_root
 def update_orig():
     """
     Move the original file to make room for the newly downloaded file
     """
 
-    if os.path.exists(__ZIP_PATH):
-        return move(__ZIP_PATH, __ORIG_PATH)
-
-    return True
+    zip_file = resources.get_zip_file(create_dirs=True)
+    move(zip_file, zip_file + ".orig")
 
 
 def get():
     """Get the zip file
     """
-    if not update_orig():
-        return False
+    zip_path = resources.get_zip_path()
+    update_orig()
 
-    print("Downloading {} ...".format(__ZIP_PATH))
-    with requests.get(__URL, stream=True) as response, open(__ZIP_PATH, "wb") as handle:
+    print("Downloading {} ...".format(zip_path))
+    with requests.get(__URL, stream=True, timeout=1) as response, open(
+        zip_path, "wb"
+    ) as zip_fd:
         for chunk in response.iter_content(chunk_size=512):
-            handle.write(chunk)
+            zip_fd.write(chunk)
 
     return True
 
@@ -85,27 +76,30 @@ def file_equals(_file, _other):
 def unzip():
     """Unzip the configuration files
     """
-    print("Unzipping {} ...".format(__ZIP_PATH))
-    with ZipFile(__ZIP_PATH) as zip_file:
-        zip_file.extractall(__DESTDIR)
+    zip_dir = resources.get_zip_dir()
+    zip_file = resources.get_zip_file()
+    print("Unzipping {} ...".format(zip_file))
+    with ZipFile(zip_file) as zip_stream:
+        zip_stream.extractall(zip_dir)
 
 
 def update(force=False):
     """Update the nordvpn configuration files
     """
-    init()
     if force:
         get()
         unzip()
     else:
+        zip_file = resources.get_zip_file()
+        orig_file = resources.get_zip_file("ovpn.zip.orig")
         if update_needed():
             get()
-            if not file_equals(__ORIG_PATH, __ZIP_PATH):
+            if not file_equals(orig_file, zip_file):
                 unzip()
             else:
-                print(__ZIP_PATH + " already up-to-date")
+                print(zip_file + " already up-to-date")
         else:
-            next_update = datetime.fromtimestamp(os.path.getctime(__ZIP_PATH)) + TIMEOUT
+            next_update = datetime.fromtimestamp(os.path.getctime(zip_file)) + TIMEOUT
             print("No update needed. Next update needed at {!s}".format(next_update))
 
     return True
@@ -116,9 +110,10 @@ def update_needed():
     : returns: False if the zip file's creation time hasn't reached the timeout
                else True.
     """
-    if os.path.exists(__ZIP_PATH):
+    try:
+        zip_file = resources.get_zip_file()
         now = datetime.now()
-        time_created = datetime.fromtimestamp(os.path.getctime(__ZIP_PATH))
+        time_created = datetime.fromtimestamp(os.path.getctime(zip_file))
         return now - TIMEOUT > time_created
-
-    return True
+    except resources.ResourceNotFoundError:
+        return True

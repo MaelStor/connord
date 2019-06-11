@@ -49,3 +49,60 @@ def measure_time(func):
         return result
 
     return wrapper
+
+
+class MockBase:
+    def __init__(self, module_under_test):
+        self.module_under_test = module_under_test
+
+    def _get_base_mock(self, module_s):
+        return "connord." + self.module_under_test + "." + module_s
+
+    def mock_os_any(self, mocker, func, return_value):
+        if func:
+            basemock = self._get_base_mock("os." + func)
+            return mocker.patch(basemock, return_value=return_value)
+
+        basemock = self._get_base_mock("os")
+        return mocker.patch(basemock)
+
+    def mock_os(self, mocker):
+        basemock = self._get_base_mock("os")
+        return mocker.patch(basemock)
+
+    def mock_open(self, mocker):
+        basemock = self._get_base_mock("open")
+        return mocker.patch(basemock, mocker.mock_open(), create=True)
+
+    def setup(self, module, create_tmpdir=False):
+        import importlib
+
+        importlib.reload(module)
+        if create_tmpdir:
+            self.create_tmpdir()
+
+    def create_tmpdir(self):
+        import os
+
+        tempdir = "tests/tmp/" + self.module_under_test
+
+        os.makedirs(tempdir, exist_ok=True)
+
+    def get_tmpdir(self):
+        return "tests/tmp/" + self.module_under_test
+
+    def tear_down(self):
+        from os import path
+        from shutil import rmtree
+
+        tempdir = "tests/tmp/" + self.module_under_test
+        if path.exists(tempdir):
+            rmtree(tempdir)
+
+    def mock_user_is_root(self, mocker, return_value):
+        basemock = self._get_base_mock("user.is_root")
+        return mocker.patch(basemock, return_value=return_value)
+
+    def mock_resource_filename(self, mocker, return_value):
+        basemock = self._get_base_mock("resource_filename")
+        return mocker.patch(basemock, return_value=return_value)
