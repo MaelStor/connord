@@ -412,3 +412,6 @@ def main():
     except areas.AreaError as error:
         print(error)
         sys.exit(1)
+    except iptables.IptablesError as error:
+        print(error)
+        sys.exit(1)
