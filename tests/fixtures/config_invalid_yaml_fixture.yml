@@ -1,0 +1,4 @@
+
+connord:
+  var: 'value'
+  - 'invalid_list'
