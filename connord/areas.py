@@ -139,7 +139,7 @@ def verify_areas(_areas):
 
     if ambigous_areas:
         error_string = ""
-        for area, cities in ambigous_areas:
+        for area, cities in ambigous_areas.items():
             error_string += " {}: {},".format(area, cities)
 
         error_string = error_string.rstrip(",")
