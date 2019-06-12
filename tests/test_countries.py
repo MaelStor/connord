@@ -9,37 +9,37 @@ from main_test_module import (
 
 
 def test_verify_coutries_bad():
-    # test param with string should throw CountryError
+    # test param with string should raise an error
     country = "some string"
     try:
         countries.verify_countries(country)
         assert False
-    except countries.CountryError as error:
-        assert str(error) == "Wrong countries: some string"
+    except TypeError:
+        assert True
 
-    # test param with integer should throw CountryError
+    # test param with integer should raise an error
     country = 123
     try:
         countries.verify_countries(country)
         assert False
-    except countries.CountryError as error:
-        assert str(error) == "Wrong countries: 123"
+    except TypeError:
+        assert True
 
     # test param with mix of correct and wrong countries
     _countries = ["gb", "de", "kk", "zz"]
     try:
         countries.verify_countries(_countries)
         assert False
-    except countries.CountryError as error:
-        assert str(error) == "Wrong countries: ['kk', 'zz']"
+    except countries.CountryError:
+        assert True
 
     # test param with all countries are wrong should throw
     _countries = ["uk", "kk", "zz"]
     try:
         countries.verify_countries(_countries)
         assert False
-    except countries.CountryError as error:
-        assert str(error) == "Wrong countries: ['uk', 'kk', 'zz']"
+    except countries.CountryError:
+        assert True
 
 
 def test_verify_coutries_good():

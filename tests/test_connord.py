@@ -43,7 +43,11 @@ def test_main_when_command_is_version(mocker):
     mocked_version = mocker.patch("connord.connord.version")
     mocked_version.print_version.return_value = True
 
-    connord.main()
+    try:
+        connord.main()
+        assert False
+    except SystemExit as error:
+        assert error.code == 0
 
 
 def test_main_when_command_is_list(mocker):
@@ -53,19 +57,13 @@ def test_main_when_command_is_list(mocker):
     mocked_list = mocker.patch("connord.connord.listings")
     mocked_list.main.return_value = True
 
-    connord.main()
+    try:
+        connord.main()
+        assert False
+    except SystemExit as error:
+        assert error.code == 0
+
     mocked_list.main.assert_called_once()
-
-
-# def test_main_when_command_is_connect(mocker):
-#     argv = ['connord', 'connect']
-#     mocker.patch.object(connord.sys, 'argv', argv)
-#
-#     try:
-#         connord.main()
-#         assert False
-#     except NotImplementedError:
-#         assert True
 
 
 def test_main_when_command_is_kill(mocker):
@@ -73,7 +71,12 @@ def test_main_when_command_is_kill(mocker):
     mocker.patch.object(connord.sys, "argv", argv)
     mocked_connect = mocker.patch("connord.connect.kill_openvpn")
 
-    connord.main()
+    try:
+        connord.main()
+        assert False
+    except SystemExit as error:
+        assert error.code == 0
+
     mocked_connect.assert_called_once()
 
 

@@ -8,7 +8,7 @@ install: connord/scripts/openvpn_up_down.bash
 	pip install .
 
 clean:
-	rm -rf dist pip-wheel-metadata
+	rm -rf dist pip-wheel-metadata build
 	find . -regex ".*/__pycache__" -exec rm -rf {} +
 	find . -regex ".*\.egg-info" -exec rm -rf {} +
 

@@ -118,11 +118,8 @@ def filter_best_servers(_servers):
 
 @user.needs_root
 def connect_to_specific_server(_domain, _openvpn, _daemon, _protocol):
-    _server = servers.get_server_by_domain(_domain)
-    if _server:
-        return run(_server, _openvpn, _daemon, _protocol)
-
-    raise ConnectError("Could not find server with domain {}.".format(_domain))
+    _server = servers.get_server_by_domain(_domain[0])
+    run(_server, _openvpn, _daemon, _protocol)
 
 
 @user.needs_root
@@ -218,9 +215,10 @@ def run_openvpn(_domain, _openvpn, _daemon, _protocol):
         with subprocess.Popen(cmd) as ovpn:
             _, _ = ovpn.communicate()
     except KeyboardInterrupt:
-        # TODO: value is too high
-        time.sleep(3)
-        return True
+        time.sleep(1)
+
+    if not _daemon:
+        iptables.reset(fallback=True)
 
     return True
 

@@ -22,7 +22,8 @@
 import argparse
 import sys
 
-# from .connord import update
+from requests.exceptions import RequestException
+
 from connord import update
 from connord import version
 from connord import listings
@@ -32,9 +33,10 @@ from connord import user
 from connord import servers
 from connord import resources
 from connord import areas
+from connord import countries
 
 
-# pylint: disable=too-many-statements
+# pylint: disable=too-many-statements,too-many-locals
 def parse_args(argv):
     """Parse arguments
     :returns: list of args
@@ -374,6 +376,7 @@ def process_iptables_cmd(args):
     return True
 
 
+# pylint: disable=too-many-branches
 def main():
     """Entry Point for the program.
     """
@@ -397,6 +400,7 @@ def main():
             process_iptables_cmd(args)
         else:
             raise NotImplementedError("Could not process commandline arguments.")
+        sys.exit(0)
     except PermissionError:
         print(
             'Permission Denied: You need to run "connord {}" as root'.format(
@@ -404,16 +408,21 @@ def main():
             ),
             file=sys.stderr,
         )
-        sys.exit(1)
     except resources.ResourceNotFoundError as error:
         print(error)
-        sys.exit(1)
     except resources.MalformedResourceError as error:
         print(error)
-        sys.exit(1)
     except areas.AreaError as error:
         print(error)
-        sys.exit(1)
     except iptables.IptablesError as error:
         print(error)
-        sys.exit(1)
+    except countries.CountryError as error:
+        print(error)
+    except servers.DomainNotFoundError as error:
+        print(error)
+    except servers.MalformedDomainError as error:
+        print(error)
+    except RequestException as error:
+        print(error)
+
+    sys.exit(1)
