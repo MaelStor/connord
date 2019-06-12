@@ -248,28 +248,28 @@ def process_list_cmd(args):
     if args.iptables:
         return listings.list_iptables(["filter"], "4")
 
-    _countries = args.country
-    _area = args.area
-    _types = args.type
-    _features = args.feature
-    _netflix = args.netflix
-    _top = args.top
+    countries_ = args.country
+    area_ = args.area
+    types_ = args.type
+    features_ = args.feature
+    netflix = args.netflix
+    top = args.top
 
     if args.max_load:
-        _load = args.max_load
-        _match = "max"
+        load_ = args.max_load
+        match = "max"
     elif args.min_load:
-        _load = args.min_load
-        _match = "min"
+        load_ = args.min_load
+        match = "min"
     elif args.load:
-        _load = args.load
-        _match = "exact"
+        load_ = args.load
+        match = "exact"
     else:  # apply defaults
-        _load = 100
-        _match = "max"
+        load_ = 100
+        match = "max"
 
     return listings.main(
-        _countries, _area, _types, _features, _netflix, _load, _match, _top
+        countries_, area_, types_, features_, netflix, load_, match, top
     )
 
 
@@ -281,55 +281,55 @@ def process_connect_cmd(args):
     """
 
     if args.server:
-        _server = args.server
+        server = args.server
     elif args.best:
-        _server = "best"
+        server = "best"
     else:  # apply default
-        _server = "best"
+        server = "best"
 
-    _countries = args.country
-    _areas = args.area
-    _features = args.feature
-    _types = args.type
-    _netflix = args.netflix
+    countries_ = args.country
+    areas_ = args.area
+    features_ = args.feature
+    types_ = args.type
+    netflix = args.netflix
 
     if args.max_load:
-        _load = args.max_load
-        _match = "max"
+        load_ = args.max_load
+        match = "max"
     elif args.min_load:
-        _load = args.min_load
-        _match = "min"
+        load_ = args.min_load
+        match = "min"
     elif args.load:
-        _load = args.load
-        _match = "exact"
+        load_ = args.load
+        match = "exact"
     else:  # apply defaults
-        _load = 10
-        _match = "max"
+        load_ = 10
+        match = "max"
 
-    _daemon = args.daemon
-    _config = args.config
-    _openvpn = args.openvpn_options
+    daemon = args.daemon
+    config_ = args.config
+    openvpn = args.openvpn_options
 
     if args.udp:
-        _protocol = "udp"
+        protocol = "udp"
     elif args.tcp:
-        _protocol = "tcp"
+        protocol = "tcp"
     else:  # apply default
-        _protocol = "udp"
+        protocol = "udp"
 
     return connect.connect(
-        _server,
-        _countries,
-        _areas,
-        _features,
-        _types,
-        _netflix,
-        _load,
-        _match,
-        _daemon,
-        _config,
-        _openvpn,
-        _protocol,
+        server,
+        countries_,
+        areas_,
+        features_,
+        types_,
+        netflix,
+        load_,
+        match,
+        daemon,
+        config_,
+        openvpn,
+        protocol,
     )
 
 
@@ -343,33 +343,33 @@ def process_iptables_cmd(args):
     elif args.iptables_sub == "apply":
         iptables.reset()
         if args.tcp:
-            _protocol = "tcp"
+            protocol = "tcp"
         else:
-            _protocol = "udp"
+            protocol = "udp"
 
         domain = args.domain[0]
-        _server = servers.get_server_by_domain(domain)
-        if iptables.apply_config_dir(_server, _protocol):
+        server = servers.get_server_by_domain(domain)
+        if iptables.apply_config_dir(server, protocol):
             stats_dict = resources.get_stats()
             stats_dict["last_server"] = {}
             stats_dict["last_server"]["domain"] = domain
-            stats_dict["last_server"]["protocol"] = _protocol
+            stats_dict["last_server"]["protocol"] = protocol
             resources.write_stats(stats_dict)
     elif args.iptables_sub == "reload":
         stats_dict = resources.get_stats()
         domain = str()
-        _protocol = str()
+        protocol = str()
         try:
             domain = stats_dict["last_server"]["domain"]
-            _protocol = stats_dict["last_server"]["protocol"]
+            protocol = stats_dict["last_server"]["protocol"]
         except KeyError:
             print("Could not reload iptables. Apply iptables first.")
             return False
 
-        _server = servers.get_server_by_domain(domain)
+        server = servers.get_server_by_domain(domain)
 
         iptables.reset()
-        iptables.apply_config_dir(_server, _protocol)
+        iptables.apply_config_dir(server, protocol)
     else:
         raise NotImplementedError("Not implemented")
 

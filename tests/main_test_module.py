@@ -6,18 +6,18 @@ import functools
 import time
 
 
-def _get_stub(stub):
+def get_stub(stub):
     with open("tests/fixtures/" + stub) as file_handle:
         return file_handle.read()
 
 
-def _get_servers_stub():
+def get_servers_stub():
     with open("tests/fixtures/servers_stub.json") as json_file:
         return json.load(json_file)
 
 
-def _get_expected_servers_by_id(ids):
-    servers_stub = _get_servers_stub()
+def get_expected_servers_by_id(ids):
+    servers_stub = get_servers_stub()
     expected_servers = []
     for server_id in ids:
         for server in servers_stub:
@@ -27,8 +27,8 @@ def _get_expected_servers_by_id(ids):
     return expected_servers
 
 
-def _get_expected_servers_by_domain(domains):
-    servers_stub = _get_servers_stub()
+def get_expected_servers_by_domain(domains):
+    servers_stub = get_servers_stub()
     expected_servers = []
     for domain in domains:
         for server in servers_stub:

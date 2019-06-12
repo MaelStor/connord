@@ -94,7 +94,7 @@ def reset(fallback=True):
 
 
 @user.needs_root
-def apply_config(config_file, _server=None, _protocol=None):
+def apply_config(config_file, server=None, protocol=None):
     table = init_table_from_file_name(config_file)
     table_s = table.name
     is_ipv6 = is_table_v6(table)
@@ -103,7 +103,7 @@ def apply_config(config_file, _server=None, _protocol=None):
     for chain_s in iptc.easy.get_chains(table_s, ipv6=is_ipv6):
         iptc.easy.set_policy(table_s, chain_s, policy=policy, ipv6=is_ipv6)
 
-    config_d = read_config(config_file, _server, _protocol)
+    config_d = read_config(config_file, server, protocol)
 
     for chain_s in config_d:
         if not iptc.easy.has_chain(table_s, chain_s, ipv6=is_ipv6):
@@ -125,17 +125,17 @@ def apply_config(config_file, _server=None, _protocol=None):
 
 
 @user.needs_root
-def apply_config_dir(_server=None, _protocol=None, filetype="rules"):
+def apply_config_dir(server=None, protocol=None, filetype="rules"):
     config_files = resources.list_config_dir(filetype=filetype)
     retval = True
     for config_file in config_files:
-        if not apply_config(config_file, _server, _protocol):
+        if not apply_config(config_file, server, protocol):
             retval = False
 
     return retval
 
 
-def render_template(config_file, _server=None, _protocol=None):
+def render_template(config_file, server=None, protocol=None):
     config_data_file = resources.get_config_file()
     env = Environment(
         loader=FileSystemLoader(os.path.dirname(config_data_file)),
@@ -144,31 +144,31 @@ def render_template(config_file, _server=None, _protocol=None):
     )
     with open(config_data_file, "r") as config_data:
         config_data_dict = yaml.safe_load(config_data)
-        if _server:
-            config_data_dict["vpn_remote"] = _server["ip_address"]
+        if server:
+            config_data_dict["vpn_remote"] = server["ip_address"]
         else:
             config_data_dict["vpn_remote"] = "0.0.0.0/0"
 
-        if _protocol:
-            config_data_dict["vpn_protocol"] = _protocol
+        if protocol:
+            config_data_dict["vpn_protocol"] = protocol
         else:
             config_data_dict["vpn_protocol"] = "udp"
-            _protocol = "udp"
+            protocol = "udp"
 
-        if _protocol == "udp":
+        if protocol == "udp":
             config_data_dict["vpn_port"] = "1194"
-        elif _protocol == "tcp":
+        elif protocol == "tcp":
             config_data_dict["vpn_port"] = "443"
         else:
-            raise TypeError("Unknown protocol '{}'.".format(_protocol))
+            raise TypeError("Unknown protocol '{}'.".format(protocol))
 
         template = env.get_template(os.path.basename(config_file))
         return template.render(config_data_dict)
 
 
 @user.needs_root
-def read_config(config_file, _server=None, _protocol=None):
-    rendered_template = render_template(config_file, _server, _protocol)
+def read_config(config_file, server=None, protocol=None):
+    rendered_template = render_template(config_file, server, protocol)
     return yaml.safe_load(rendered_template)
 
 

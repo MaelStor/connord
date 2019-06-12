@@ -124,7 +124,7 @@ def get_servers():
         return response.json()
 
 
-def filter_netflix_servers(servers, _countries):
+def filter_netflix_servers(servers, countries_):
     servers = servers.copy()
     servers = countries.filter_servers(servers, NETFLIX)
     return servers
@@ -168,14 +168,14 @@ def to_string(servers, stream=False):
         return str()
 
     formatter = ServersPrettyFormatter()
-    _file = formatter.get_stream_file(stream)
+    file_ = formatter.get_stream_file(stream)
 
     headline = formatter.format_headline()
-    print(headline, file=_file)
+    print(headline, file=file_)
     count = 1
     for server in servers:
-        _server_s = formatter.format_server(server, count)
-        print(_server_s, file=_file)
+        server_s = formatter.format_server(server, count)
+        print(server_s, file=file_)
         count += 1
 
     return formatter.get_output()

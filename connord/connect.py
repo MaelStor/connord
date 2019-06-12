@@ -55,9 +55,9 @@ def ping(server):
         ["ping", "-q", "-n", "-c", "1", "-l", "1", "-W", "1", ip_address],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-    ) as _ping:
+    ) as ping_:
 
-        out, _ = _ping.communicate()
+        out, _ = ping_.communicate()
         mat = pattern.search(out.decode())
         if mat:
             server_copy["ping"] = float(mat.group(2))
@@ -67,16 +67,16 @@ def ping(server):
         return server_copy
 
 
-def ping_servers_parallel(_servers):
+def ping_servers_parallel(servers_):
     """
     Ping a list of servers
-    :param list _servers: List of servers
+    :param list servers_: List of servers
     :returns: List of servers with ping time
     """
     worker_count = cpu_count() + 1
     with ThreadPool(processes=worker_count) as pool:
         results = []
-        for server in _servers:
+        for server in servers_:
             results.append(pool.apply_async(ping, (server,)))
 
         pinged_servers = []
@@ -87,80 +87,83 @@ def ping_servers_parallel(_servers):
 
 
 def filter_servers(
-    _servers, _netflix, _countries, _areas, _features, _types, _load, _match
+    servers_, netflix, countries_, areas_, features_, types_, load_, match
 ):
-    _servers = _servers.copy()
-    if _load:
-        _servers = load.filter_servers(_servers, _load, _match)
-    if _netflix:
-        _servers = servers.filter_netflix_servers(_servers, _countries)
-    if _countries:
-        _servers = countries.filter_servers(_servers, _countries)
-    if _areas:
-        _servers = areas.filter_servers(_servers, _areas)
-    if _types:
-        _servers = types.filter_servers(_servers, _types)
-    if _features:
-        _servers = features.filter_servers(_servers, _features)
+    servers_ = servers_.copy()
+    if load_:
+        servers_ = load.filter_servers(servers_, load_, match)
+    if netflix:
+        servers_ = servers.filter_netflix_servers(servers_, countries_)
+    if countries_:
+        servers_ = countries.filter_servers(servers_, countries_)
+    if areas_:
+        servers_ = areas.filter_servers(servers_, areas_)
+    if types_:
+        servers_ = types.filter_servers(servers_, types_)
+    if features_:
+        servers_ = features.filter_servers(servers_, features_)
 
-    return _servers
+    return servers_
 
 
-def filter_best_servers(_servers):
-    _servers = _servers.copy()
-    _servers = sorted(_servers, key=lambda k: k["load"])
-    if len(_servers) > 10:
-        _servers = _servers[:10]
-    _servers = ping_servers_parallel(_servers)
-    _servers = sorted(_servers, key=lambda k: k["ping"])
-    return _servers
+def filter_best_servers(servers_):
+    servers_ = servers_.copy()
+    servers_ = sorted(servers_, key=lambda k: k["load"])
+    if len(servers_) > 10:
+        servers_ = servers_[:10]
+    servers_ = ping_servers_parallel(servers_)
+    servers_ = sorted(servers_, key=lambda k: k["ping"])
+    return servers_
 
 
 @user.needs_root
-def connect_to_specific_server(_domain, _openvpn, _daemon, _protocol):
-    _server = servers.get_server_by_domain(_domain[0])
-    run(_server, _openvpn, _daemon, _protocol)
+def connect_to_specific_server(domain, openvpn, daemon, protocol):
+    server = servers.get_server_by_domain(domain)
+    if server:
+        return run(server, openvpn, daemon, protocol)
+
+    raise ConnectError("Could not find server with domain {}.".format(domain))
 
 
 @user.needs_root
 def connect(
-    _domain,
-    _countries,
-    _areas,
-    _features,
-    _types,
-    _netflix,
-    _load,
-    _match,
-    _daemon,
-    _config,
-    _openvpn,
-    _protocol,
+    domain,
+    countries_,
+    areas_,
+    features_,
+    types_,
+    netflix,
+    load_,
+    match,
+    daemon,
+    config_,
+    openvpn,
+    protocol,
 ):
 
     iptables.reset()
 
-    if _domain != "best":
-        return connect_to_specific_server(_domain, _openvpn, _daemon, _protocol)
+    if domain != "best":
+        return connect_to_specific_server(domain, openvpn, daemon, protocol)
 
-    if _protocol:
-        feature = "openvpn_" + _protocol
-        if _features is None:
-            _features = [feature]
-        elif feature in _features:
+    if protocol:
+        feature = "openvpn" + protocol
+        if features_ is None:
+            features_ = [feature]
+        elif feature in features_:
             pass
         else:
-            _features.append("openvpn_" + _protocol)
+            features_.append("openvpn" + protocol)
 
-    _servers = servers.get_servers()
-    _servers = filter_servers(
-        _servers, _netflix, _countries, _areas, _features, _types, _load, _match
+    servers_ = servers.get_servers()
+    servers_ = filter_servers(
+        servers_, netflix, countries_, areas_, features_, types_, load_, match
     )
 
-    best_servers = filter_best_servers(_servers)
-    for _server in best_servers:
-        if _server["ping"] is not None:
-            return run(_server, _openvpn, _daemon, _protocol)
+    best_servers = filter_best_servers(servers_)
+    for server in best_servers:
+        if server["ping"] is not None:
+            return run(server, openvpn, daemon, protocol)
 
     raise ConnectError("No server found to establish a connection.")
 
@@ -174,24 +177,26 @@ def add_openvpn_cmd_option(openvpn_cmd, flag, option=None):
 
 
 @user.needs_root
-def run_openvpn(_domain, _openvpn, _daemon, _protocol):
-    # TODO: Validate domain when it is an user input
+def run_openvpn(domain, openvpn, daemon, protocol):
+    chroot_dir = "/var/openvpn"
+    os.makedirs(chroot_dir, mode=0o700, exist_ok=True)
+
     openvpn_options = []
-    if _openvpn:
-        openvpn_options = _openvpn.split()
+    if openvpn:
+        openvpn_options = openvpn.split()
 
     cmd = ["openvpn"]
     for option in openvpn_options:
         cmd.append(option)
 
-    if _daemon:
+    if daemon:
         cmd = add_openvpn_cmd_option(cmd, "--daemon")
 
     try:
-        config_file = resources.get_ovpn_config(_domain, _protocol)
+        config_file = resources.get_ovpn_config(domain, protocol)
     except resources.ResourceNotFoundError:
         update.update(force=True)  # give updating a try else let the error pass through
-        config_file = resources.get_ovpn_config(_domain, _protocol)
+        config_file = resources.get_ovpn_config(domain, protocol)
 
     cmd = add_openvpn_cmd_option(cmd, "--config", option=config_file)
 
@@ -217,18 +222,18 @@ def run_openvpn(_domain, _openvpn, _daemon, _protocol):
     except KeyboardInterrupt:
         time.sleep(1)
 
-    if not _daemon:
+    if not daemon:
         iptables.reset(fallback=True)
 
     return True
 
 
 @user.needs_root
-def run(_server, _openvpn, _daemon, _protocol):
-    iptables.apply_config_dir(_server, _protocol)
+def run(server, openvpn, daemon, protocol):
+    iptables.apply_config_dir(server, protocol)
 
-    domain = _server["domain"]
-    return run_openvpn(domain, _openvpn, _daemon, _protocol)
+    domain = server["domain"]
+    return run_openvpn(domain, openvpn, daemon, protocol)
 
 
 @user.needs_root

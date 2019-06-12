@@ -2,9 +2,9 @@
 
 from connord import countries
 from main_test_module import (
-    _get_servers_stub,
-    _get_expected_servers_by_domain,
-    _get_stub,
+    get_servers_stub,
+    get_expected_servers_by_domain,
+    get_stub,
 )
 
 
@@ -26,17 +26,17 @@ def test_verify_coutries_bad():
         assert True
 
     # test param with mix of correct and wrong countries
-    _countries = ["gb", "de", "kk", "zz"]
+    countries_ = ["gb", "de", "kk", "zz"]
     try:
-        countries.verify_countries(_countries)
+        countries.verify_countries(countries_)
         assert False
     except countries.CountryError:
         assert True
 
     # test param with all countries are wrong should throw
-    _countries = ["uk", "kk", "zz"]
+    countries_ = ["uk", "kk", "zz"]
     try:
-        countries.verify_countries(_countries)
+        countries.verify_countries(countries_)
         assert False
     except countries.CountryError:
         assert True
@@ -44,23 +44,23 @@ def test_verify_coutries_bad():
 
 def test_verify_coutries_good():
     # test param with one item
-    _countries = ["gb"]
+    countries_ = ["gb"]
     try:
-        rc = countries.verify_countries(_countries)
+        rc = countries.verify_countries(countries_)
         assert rc
     except countries.CountryError:
         assert False
 
     # test param with multiple items
-    _countries = ["gb", "de", "us"]
+    countries_ = ["gb", "de", "us"]
     try:
-        rc = countries.verify_countries(_countries)
+        rc = countries.verify_countries(countries_)
         assert rc
     except countries.CountryError:
         assert False
 
     # test param with all possible countries
-    _countries = [
+    countries_ = [
         "ae",
         "al",
         "ar",
@@ -123,14 +123,14 @@ def test_verify_coutries_good():
         "za",
     ]
     try:
-        rc = countries.verify_countries(_countries)
+        rc = countries.verify_countries(countries_)
         assert rc
     except countries.CountryError:
         assert False
 
 
 def test_filter_servers_good():
-    servers_stub = _get_servers_stub()
+    servers_stub = get_servers_stub()
 
     # test param when param is not given
     try:
@@ -151,7 +151,7 @@ def test_filter_servers_good():
     # test param with multiple valid countries
     try:
         actual_servers = countries.filter_servers(servers_stub, ["de", "nl"])
-        expected_servers = _get_expected_servers_by_domain(
+        expected_servers = get_expected_servers_by_domain(
             ["de111", "de112", "de113", "nl80", "nl81", "nl82"]
         )
         assert actual_servers == expected_servers
@@ -161,7 +161,7 @@ def test_filter_servers_good():
     # test with uppercase country code
     try:
         actual_servers = countries.filter_servers(servers_stub, ["DE"])
-        expected_servers = _get_expected_servers_by_domain(["de111", "de112", "de113"])
+        expected_servers = get_expected_servers_by_domain(["de111", "de112", "de113"])
         assert actual_servers == expected_servers
     except countries.CountryError:
         assert False
@@ -169,7 +169,7 @@ def test_filter_servers_good():
     # test with mixedcase country code
     try:
         actual_servers = countries.filter_servers(servers_stub, ["De"])
-        expected_servers = _get_expected_servers_by_domain(["de111", "de112", "de113"])
+        expected_servers = get_expected_servers_by_domain(["de111", "de112", "de113"])
         assert actual_servers == expected_servers
     except countries.CountryError:
         assert False
@@ -177,7 +177,7 @@ def test_filter_servers_good():
     # test with multiple mixedcase country codes
     try:
         actual_servers = countries.filter_servers(servers_stub, ["De", "nL"])
-        expected_servers = _get_expected_servers_by_domain(
+        expected_servers = get_expected_servers_by_domain(
             ["de111", "de112", "de113", "nl80", "nl81", "nl82"]
         )
         assert actual_servers == expected_servers
@@ -202,7 +202,7 @@ def test_filter_servers_bad():
 
 
 def test_to_string():
-    expected_result = _get_stub("countries_to_string_stub.txt").rstrip()
+    expected_result = get_stub("countries_to_string_stub.txt").rstrip()
 
     actual_result = countries.to_string()
     assert actual_result == expected_result

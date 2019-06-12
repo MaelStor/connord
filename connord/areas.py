@@ -69,9 +69,9 @@ def update_database():
     with connection:
         init_database(connection)
 
-    _servers = servers.get_servers()
-    for server in IncrementalBar("Updating locations", max=len(_servers)).iter(
-        _servers
+    servers_ = servers.get_servers()
+    for server in IncrementalBar("Updating locations", max=len(servers_)).iter(
+        servers_
     ):
 
         longitude = str(server["location"]["long"])
@@ -110,15 +110,15 @@ def get_server_angulars(server):
     return (latitude, longitude)
 
 
-def verify_areas(_areas):
-    if not isinstance(_areas, list):
-        raise AreaError("Wrong areas: {!s}".format(_areas))
+def verify_areas(areas_):
+    if not isinstance(areas_, list):
+        raise AreaError("Wrong areas: {!s}".format(areas_))
 
     locations = get_locations()
 
     areas_not_found = []
-    # side effect: get rid of double entries in _areas from command-line
-    areas_found = {area: list() for area in _areas}
+    # side effect: get rid of double entries in areas_ from command-line
+    areas_found = {area: list() for area in areas_}
     for area in areas_found.keys():
         for location in locations:
             city = location["city"]
@@ -152,23 +152,23 @@ def get_translation_table():
     return str.maketrans("áãčëéşșť", "aaceesst")
 
 
-def filter_servers(_servers, _areas):
+def filter_servers(servers_, areas_):
     """Filter servers by areas"""
 
-    if _servers is None:
+    if servers_ is None:
         raise TypeError("Servers may not be None")
 
-    if _areas is None or not _areas or not _servers:
-        return _servers
+    if areas_ is None or not areas_ or not servers_:
+        return servers_
 
-    areas_lower = [str.lower(area) for area in _areas]
+    areas_lower = [str.lower(area) for area in areas_]
     areas_found = verify_areas(areas_lower)
 
     filtered_servers = []
     connection = sqlite.create_connection()
     with connection:
         translation_table = get_translation_table()
-        for server in _servers:
+        for server in servers_:
             lat, lon = get_server_angulars(server)
             if not sqlite.location_exists(connection, lat, lon):
                 update_database()
@@ -240,16 +240,16 @@ class AreasPrettyFormatter(Formatter):
 
 def to_string(stream=False):
     formatter = AreasPrettyFormatter()
-    _file = formatter.get_stream_file(stream)
+    file_ = formatter.get_stream_file(stream)
 
     locations = get_locations()
 
     headline = formatter.format_headline()
-    print(headline, file=_file)
+    print(headline, file=file_)
 
     for location in locations:
         area = formatter.format_area(location)
-        print(area, file=_file)
+        print(area, file=file_)
 
     return formatter.get_output()
 

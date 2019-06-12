@@ -28,17 +28,17 @@ from connord import areas
 from connord.formatter import Formatter
 
 
-def filter_servers_by_count(_servers, _top):
+def filter_servers_by_count(servers_, top):
     """
-    Filter servers to just show _top count results
+    Filter servers to just show top count results
 
-    :param _servers: List of servers
-    :param _top: Integer to show count servers
+    :param servers_: List of servers
+    :param top: Integer to show count servers
     :returns: The filtered servers
     """
 
-    _servers = _servers.copy()
-    filtered_servers = [server for i, server in enumerate(_servers, 1) if i <= _top]
+    servers_ = servers_.copy()
+    filtered_servers = [server for i, server in enumerate(servers_, 1) if i <= top]
     return filtered_servers
 
 
@@ -53,104 +53,104 @@ class OverviewPrettyFormatter(Formatter):
         self.stream = stream
         self.has_output = False
 
-    def print_countries(self, _countries):
-        if _countries and None in _countries:
+    def print_countries(self, countries_):
+        if countries_ and None in countries_:
             self.has_output = True
-            _file = self.get_stream_file(self.stream)
+            file_ = self.get_stream_file(self.stream)
 
             country_header = "Countries"
-            print(self.center_string(country_header, sep="="), file=_file)
+            print(self.center_string(country_header, sep="="), file=file_)
             for country_code, country in countries.COUNTRIES.items():
-                print("  {:6}{}".format(country_code, country), file=_file)
-            print(self.format_ruler(sep="-"), file=_file)
+                print("  {:6}{}".format(country_code, country), file=file_)
+            print(self.format_ruler(sep="-"), file=file_)
 
-    def print_types(self, _types):
-        if _types and None in _types:
+    def print_types(self, types_):
+        if types_ and None in types_:
             self.has_output = True
-            _file = self.get_stream_file(self.stream)
+            file_ = self.get_stream_file(self.stream)
 
             types_header = self.center_string("Server Types", sep="=")
-            print(types_header, file=_file)
+            print(types_header, file=file_)
             for server_type, description in types.TYPES.items():
-                print("  {:26}{}".format(server_type, description), file=_file)
-            print(self.format_ruler(sep="-"), file=_file)
+                print("  {:26}{}".format(server_type, description), file=file_)
+            print(self.format_ruler(sep="-"), file=file_)
 
-    def print_features(self, _features):
-        if _features and None in _features:
+    def print_features(self, features_):
+        if features_ and None in features_:
             self.has_output = True
-            _file = self.get_stream_file(self.stream)
+            file_ = self.get_stream_file(self.stream)
 
             features_header = "Server Features"
-            print(self.center_string(features_header, sep="="), file=_file)
+            print(self.center_string(features_header, sep="="), file=file_)
             for feature, description in features.FEATURES.items():
-                print("  {:26}{}".format(feature, description), file=_file)
-            print(self.format_ruler(sep="-"), file=_file)
+                print("  {:26}{}".format(feature, description), file=file_)
+            print(self.format_ruler(sep="-"), file=file_)
 
-    def print_areas(self, _areas):
-        if _areas and None in _areas:
+    def print_areas(self, areas_):
+        if areas_ and None in areas_:
             self.has_output = True
             areas.print_areas()
 
 
 def filter_servers(
-    _servers, _netflix, _countries, _areas, _features, _types, _load, _match, _top
+    servers_, netflix, countries_, areas_, features_, types_, load_, match, top
 ):
-    _servers = _servers.copy()
-    if _load:
-        _servers = load.filter_servers(_servers, _load, _match)
-    if _netflix:
-        _servers = servers.filter_netflix_servers(_servers, _countries)
-    if _countries:
-        _servers = countries.filter_servers(_servers, _countries)
-    if _areas:
-        _servers = areas.filter_servers(_servers, _areas)
-    if _types:
-        _servers = types.filter_servers(_servers, _types)
-    if _features:
-        _servers = features.filter_servers(_servers, _features)
-    if _top:
-        _servers = filter_servers_by_count(_servers, _top)
+    servers_ = servers_.copy()
+    if load_:
+        servers_ = load.filter_servers(servers_, load_, match)
+    if netflix:
+        servers_ = servers.filter_netflix_servers(servers_, countries_)
+    if countries_:
+        servers_ = countries.filter_servers(servers_, countries_)
+    if areas_:
+        servers_ = areas.filter_servers(servers_, areas_)
+    if types_:
+        servers_ = types.filter_servers(servers_, types_)
+    if features_:
+        servers_ = features.filter_servers(servers_, features_)
+    if top:
+        servers_ = filter_servers_by_count(servers_, top)
 
-    return _servers
+    return servers_
 
 
 # TODO: rename to list_servers
-def main(_countries, _areas, _types, _features, _netflix, _load, _match, _top):
+def main(countries_, areas_, types_, features_, netflix, load_, match, top):
     """
     Main method to do the actual listing and prints the resulting
     list of servers.
 
-    :param _countries: List of countries
-    :param _area: List of areas
-    :param _types: List of types
-    :param _features: List of features
-    :param _netflix: If set filter servers optimised for netflix
-    :param _load: An integer to filter servers by load.
-    :param _match: Apply load filter with 'max', 'min' or 'exact' match
-    :param _top: Show just _top count results.
+    :param countries_: List of countries
+    :param area_: List of areas
+    :param types_: List of types
+    :param features_: List of features
+    :param netflix: If set filter servers optimised for netflix
+    :param load_: An integer to filter servers by load.
+    :param match: Apply load filter with 'max', 'min' or 'exact' match
+    :param top: Show just top count results.
     :returns: True
     """
 
     formatter = OverviewPrettyFormatter(stream=True)
-    formatter.print_countries(_countries)
-    formatter.print_areas(_areas)
-    formatter.print_types(_types)
-    formatter.print_features(_features)
+    formatter.print_countries(countries_)
+    formatter.print_areas(areas_)
+    formatter.print_types(types_)
+    formatter.print_features(features_)
 
     if not formatter.has_output:
-        _servers = servers.get_servers()
-        _servers = filter_servers(
-            _servers,
-            _netflix,
-            _countries,
-            _areas,
-            _features,
-            _types,
-            _load,
-            _match,
-            _top,
+        servers_ = servers.get_servers()
+        servers_ = filter_servers(
+            servers_,
+            netflix,
+            countries_,
+            areas_,
+            features_,
+            types_,
+            load_,
+            match,
+            top,
         )
 
-        servers.to_string(_servers, stream=True)
+        servers.to_string(servers_, stream=True)
 
     return True

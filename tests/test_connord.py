@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
 from connord import connord
-from main_test_module import _get_stub
+from main_test_module import get_stub
 
 
 def test_main_when_sys_argv_has_no_arguments(capsys, mocker):
     argv = ["connord"]
-    help_stub = _get_stub("help_message_stub.txt")
+    help_stub = get_stub("help_message_stub.txt")
 
     mocker.patch.object(connord.sys, "argv", argv)
 
@@ -85,7 +85,7 @@ class ArgumentFixture:
         self,
         country=None,
         area=None,
-        _type=None,
+        type_=None,
         feature=None,
         netflix=None,
         iptables=None,
@@ -93,7 +93,7 @@ class ArgumentFixture:
     ):
         self.country = country
         self.area = area
-        self.type = _type
+        self.type = type_
         self.feature = feature
         self.netflix = netflix
         self.top = top

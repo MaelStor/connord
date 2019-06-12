@@ -63,12 +63,12 @@ def get():
     return True
 
 
-def file_equals(_file, _other):
+def file_equals(file_, other_):
     """Compares the orig.zip file to the downloaded file
     : returns: False if file sizes differ
     """
-    if os.path.exists(_file) and os.path.exists(_other):
-        return os.path.getsize(_file) == os.path.getsize(_other)
+    if os.path.exists(file_) and os.path.exists(other_):
+        return os.path.getsize(file_) == os.path.getsize(other_)
     else:
         return False
 
