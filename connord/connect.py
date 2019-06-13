@@ -118,7 +118,7 @@ def filter_best_servers(servers_):
 
 @user.needs_root
 def connect_to_specific_server(domain, openvpn, daemon, protocol):
-    server = servers.get_server_by_domain(domain)
+    server = servers.get_server_by_domain(domain[0])
     return run(server, openvpn, daemon, protocol)
 
 
