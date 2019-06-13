@@ -144,7 +144,7 @@ def connect(
         return connect_to_specific_server(domain, openvpn, daemon, protocol)
 
     if protocol:
-        feature = "openvpn" + protocol
+        feature = "openvpn_" + protocol
         if features_ is None:
             features_ = [feature]
         elif feature in features_:

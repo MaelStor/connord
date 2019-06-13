@@ -34,6 +34,7 @@ from connord import servers
 from connord import resources
 from connord import areas
 from connord import countries
+from .features import FeatureError
 
 
 # pylint: disable=too-many-statements,too-many-locals
@@ -417,6 +418,8 @@ def main():
     except iptables.IptablesError as error:
         print(error)
     except countries.CountryError as error:
+        print(error)
+    except FeatureError as error:
         print(error)
     except servers.DomainNotFoundError as error:
         print(error)
