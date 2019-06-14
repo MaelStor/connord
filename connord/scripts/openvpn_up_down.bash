@@ -17,9 +17,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+# Ensure running script in openvpn environment
+# shellcheck disable=2154
 [[ "$script_type" ]] || exit 1
-[[ "$dev" ]] || exit 1
 
+this_dir="$(dirname "$0")"
 resolvconf='/sbin/resolvconf'
 [[ -x "$resolvconf" ]] || exit 1
 
@@ -36,15 +38,19 @@ case "$script_type" in
       [[ "${opt}" == "dhcp-option" ]] || continue
       if [[ "${_type}" == "DOMAIN" ]] || [[ "${_type}" == "DOMAIN-SEARCH" ]]; then
         result="search ${remote}\n${result}"
-        echo "search ${remote}"
       elif [ "${_type}" = "DNS" ]; then
         result+="nameserver ${remote}\n"
-        echo "nameserver ${remote}"
       fi
     done
     echo -ne "$result" | "$resolvconf" -a "${dev}.openvpn"
+
+    # shellcheck disable=1090
+    source "${this_dir}/dump_openvpn_env.bash"
     ;;
   down)
     "$resolvconf" -d "${dev}.openvpn"
+
+    # shellcheck disable=1090
+    source "${this_dir}/dump_openvpn_env.bash"
     ;;
 esac

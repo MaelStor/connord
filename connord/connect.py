@@ -62,7 +62,7 @@ def ping(server):
         if mat:
             server_copy["ping"] = float(mat.group(2))
         else:
-            server_copy["ping"] = None
+            server_copy["ping"] = float("inf")
 
         return server_copy
 
@@ -119,7 +119,7 @@ def filter_best_servers(servers_):
 @user.needs_root
 def connect_to_specific_server(domain, openvpn, daemon, protocol):
     server = servers.get_server_by_domain(domain[0])
-    return run(server, openvpn, daemon, protocol)
+    return run_openvpn(server, openvpn, daemon, protocol)
 
 
 @user.needs_root
@@ -138,7 +138,7 @@ def connect(
     protocol,
 ):
 
-    iptables.reset()
+    iptables.reset(fallback=True)
 
     if domain != "best":
         return connect_to_specific_server(domain, openvpn, daemon, protocol)
@@ -158,25 +158,34 @@ def connect(
     )
 
     best_servers = filter_best_servers(servers_)
-    for server in best_servers:
-        if server["ping"] is not None:
-            return run(server, openvpn, daemon, protocol)
+    max_retries = 3
+    for i, server in enumerate(best_servers):
+        if i == max_retries:
+            raise ConnectError("Maximum retries reached.")
+
+        if server["ping"] is not float("inf"):
+            if run_openvpn(server, openvpn, daemon, protocol):
+                return True
+            # else give the next server a try
+        else:
+            raise ConnectError("No server left with a valid ping.")
 
     raise ConnectError("No server found to establish a connection.")
 
 
-def add_openvpn_cmd_option(openvpn_cmd, flag, option=None):
+def add_openvpn_cmd_option(openvpn_cmd, flag, *args):
     if flag not in openvpn_cmd:
         openvpn_cmd.append(flag)
-        if option:
-            openvpn_cmd.append(option)
+        for arg in args:
+            openvpn_cmd.append(arg)
     return openvpn_cmd
 
 
 @user.needs_root
-def run_openvpn(domain, openvpn, daemon, protocol):
+def run_openvpn(server, openvpn, daemon, protocol):
     chroot_dir = "/var/openvpn"
     os.makedirs(chroot_dir, mode=0o700, exist_ok=True)
+    domain = server["domain"]
 
     openvpn_options = []
     if openvpn:
@@ -195,27 +204,58 @@ def run_openvpn(domain, openvpn, daemon, protocol):
         update.update(force=True)  # give updating a try else let the error pass through
         config_file = resources.get_ovpn_config(domain, protocol)
 
-    cmd = add_openvpn_cmd_option(cmd, "--config", option=config_file)
+    cmd = add_openvpn_cmd_option(cmd, "--config", config_file)
 
     credentials_file = resources.get_credentials_file(create=True)
-    cmd = add_openvpn_cmd_option(cmd, "--auth-user-pass", option=credentials_file)
+    cmd = add_openvpn_cmd_option(cmd, "--auth-user-pass", credentials_file)
     cmd = add_openvpn_cmd_option(cmd, "--auth-nocache")
-    cmd = add_openvpn_cmd_option(cmd, "--auth-retry", option="nointeract")
+    cmd = add_openvpn_cmd_option(cmd, "--auth-retry", "nointeract")
 
-    cmd = add_openvpn_cmd_option(cmd, "--script-security", option="2")
-    cmd = add_openvpn_cmd_option(
-        cmd, "--up", option="/etc/openvpn/client/openvpn_up_down.bash"
-    )
+    cmd = add_openvpn_cmd_option(cmd, "--script-security", "2")
 
-    cmd = add_openvpn_cmd_option(
-        cmd, "--down", option="/etc/openvpn/client/openvpn_up_down.bash"
-    )
+    up_down_script = resources.get_scripts_file(script_name="openvpn_up_down.bash")
+    up_output_path = resources.get_stats_file(stats_name="up.env", create=True)
+    up_arg = "{} {}".format(up_down_script, up_output_path)
+    cmd = add_openvpn_cmd_option(cmd, "--up", up_arg)
+    down_output_path = resources.get_stats_file(stats_name="down.env", create=True)
+    down_arg = "{} {}".format(up_down_script, down_output_path)
+    cmd = add_openvpn_cmd_option(cmd, "--down", down_arg)
+
     cmd = add_openvpn_cmd_option(cmd, "--down-pre")
     cmd = add_openvpn_cmd_option(cmd, "--redirect-gateway")
+    ipchange_script = resources.get_scripts_file(script_name="openvpn_ipchange.bash")
+    ipchange_output_path = resources.get_stats_file(
+        stats_name="ipchange.env", create=True
+    )
+    flag = "{} {}".format(ipchange_script, ipchange_output_path)
+    cmd = add_openvpn_cmd_option(cmd, "--ipchange", flag)
 
     try:
-        with subprocess.Popen(cmd) as ovpn:
-            _, _ = ovpn.communicate()
+        with subprocess.Popen(
+            cmd, stdin=subprocess.PIPE, stderr=subprocess.PIPE
+        ) as ovpn:
+            # pylint: disable=unused-variable
+            for i in range(50):  # give openvpn a maximum of 10 seconds to startup
+                try:
+                    if not ovpn.poll():
+                        # delay initialization of iptables until resource files are
+                        # created
+                        resources.get_stats_file(
+                            stats_name="ipchange.env", create=False
+                        )
+                        resources.get_stats_file(stats_name="up.env", create=False)
+                    # safety gap
+                    time.sleep(0.5)
+                    iptables.apply_config_dir(server, protocol)
+                    break
+                except resources.ResourceNotFoundError:
+                    time.sleep(0.2)
+            else:
+                ovpn.kill()
+                return False
+
+            if not ovpn.poll():
+                ovpn.wait()
     except KeyboardInterrupt:
         time.sleep(1)
 
@@ -223,14 +263,6 @@ def run_openvpn(domain, openvpn, daemon, protocol):
         iptables.reset(fallback=True)
 
     return True
-
-
-@user.needs_root
-def run(server, openvpn, daemon, protocol):
-    iptables.apply_config_dir(server, protocol)
-
-    domain = server["domain"]
-    return run_openvpn(domain, openvpn, daemon, protocol)
 
 
 @user.needs_root

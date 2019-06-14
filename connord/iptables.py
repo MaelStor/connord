@@ -135,6 +135,26 @@ def apply_config_dir(server=None, protocol=None, filetype="rules"):
     return retval
 
 
+@user.needs_root
+def merge_environment(config_data_dict=None):
+    """Merge environment files with the configuration file
+
+    Configuration file variables overwrite variables from environment
+    """
+    env_dict = dict()
+
+    files = resources.list_stats_dir(filetype="env")
+    for file_ in files:
+        with open(file_, "r") as file_fd:
+            yaml_dict = yaml.safe_load(file_fd)
+            env_dict.update(yaml_dict)
+
+    if config_data_dict:
+        env_dict.update(config_data_dict)
+
+    return env_dict
+
+
 def render_template(config_file, server=None, protocol=None):
     config_data_file = resources.get_config_file()
     env = Environment(
@@ -162,6 +182,7 @@ def render_template(config_file, server=None, protocol=None):
         else:
             raise TypeError("Unknown protocol '{}'.".format(protocol))
 
+        config_data_dict = merge_environment(config_data_dict)
         template = env.get_template(os.path.basename(config_file))
         return template.render(config_data_dict)
 

@@ -425,6 +425,8 @@ def main():
         print(error)
     except servers.MalformedDomainError as error:
         print(error)
+    except connect.ConnectError as error:
+        print(error)
     except RequestException as error:
         print(error)
 

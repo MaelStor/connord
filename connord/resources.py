@@ -60,6 +60,18 @@ class MalformedResourceError(ConnordError):
         self.problem_mark = problem_mark
 
 
+def list_dir(directory, filetype=None):
+    files = os.listdir(directory)
+
+    if filetype:
+        files = [_file for _file in files if _file.endswith("." + filetype)]
+
+    full_path_files = [directory + "/" + _file for _file in files]
+
+    return full_path_files
+
+
+@user.needs_root
 def get_zip_dir(create=True):
     """Returns the directory where nordvpn related zip files are stored
 
@@ -143,7 +155,6 @@ def file_has_permissions(path, permissions=0o600):
     """Check file permissions"""
 
     stats = os.stat(path)
-    print(stats)
     return stats.st_mode & 0o777 == permissions
 
 
@@ -265,14 +276,7 @@ def get_config_dir():
 
 def list_config_dir(filetype=None):
     config_dir = get_config_dir()
-    files = os.listdir(config_dir)
-
-    if filetype:
-        files = [_file for _file in files if _file.endswith("." + filetype)]
-
-    full_path_files = [config_dir + "/" + _file for _file in files]
-
-    return full_path_files
+    return list_dir(config_dir, filetype)
 
 
 def get_config_file(config_name="config.yml"):
@@ -321,8 +325,14 @@ def get_stats_dir(create=True):
     return stats_dir
 
 
+def list_stats_dir(filetype=None):
+    stats_dir = get_stats_dir()
+    return list_dir(stats_dir, filetype)
+
+
 @user.needs_root
 def get_stats_file(stats_name=None, create=True):
+    """Get stats file"""
     if not stats_name:
         stats_name = "stats"
 
