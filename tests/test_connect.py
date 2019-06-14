@@ -47,7 +47,9 @@ def test_ping_bad(mocker):
     server = connect.ping(test_server)
 
     mocked_popen.assert_called()
-    assert server["ping"] is None
+    import math
+
+    assert server["ping"] == math.inf
 
 
 def test_ping_servers_parallelness(mocker):

@@ -71,7 +71,6 @@ def list_dir(directory, filetype=None):
     return full_path_files
 
 
-@user.needs_root
 def get_zip_dir(create=True):
     """Returns the directory where nordvpn related zip files are stored
 

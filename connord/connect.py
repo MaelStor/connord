@@ -20,6 +20,7 @@
 import subprocess
 from multiprocessing.pool import ThreadPool
 from multiprocessing import cpu_count
+from math import inf
 import time
 import os
 import re
@@ -163,7 +164,7 @@ def connect(
         if i == max_retries:
             raise ConnectError("Maximum retries reached.")
 
-        if server["ping"] is not float("inf"):
+        if server["ping"] != inf:
             if run_openvpn(server, openvpn, daemon, protocol):
                 return True
             # else give the next server a try
@@ -231,9 +232,7 @@ def run_openvpn(server, openvpn, daemon, protocol):
     cmd = add_openvpn_cmd_option(cmd, "--ipchange", flag)
 
     try:
-        with subprocess.Popen(
-            cmd, stdin=subprocess.PIPE, stderr=subprocess.PIPE
-        ) as ovpn:
+        with subprocess.Popen(cmd) as ovpn:
             # pylint: disable=unused-variable
             for i in range(50):  # give openvpn a maximum of 10 seconds to startup
                 try:

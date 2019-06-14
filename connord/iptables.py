@@ -109,17 +109,24 @@ def apply_config(config_file, server=None, protocol=None):
         if not iptc.easy.has_chain(table_s, chain_s, ipv6=is_ipv6):
             iptc.easy.add_chain(table_s, chain_s, ipv6=is_ipv6)
 
-        if config_d[chain_s]["policy"] != "None":
-            policy = iptc.Policy(config_d[chain_s]["policy"])
-            iptc.easy.set_policy(table_s, chain_s, policy=policy, ipv6=is_ipv6)
-        for rule_d in config_d[chain_s]["rules"]:
-            if iptc.easy.test_rule(rule_d, ipv6=is_ipv6):
-                try:
-                    iptc.easy.add_rule(table_s, chain_s, rule_d, ipv6=is_ipv6)
-                except ValueError:
+        try:
+            if config_d[chain_s]["policy"] != "None":
+                policy = iptc.Policy(config_d[chain_s]["policy"])
+                iptc.easy.set_policy(table_s, chain_s, policy=policy, ipv6=is_ipv6)
+        except KeyError:
+            pass
+
+        try:
+            for rule_d in config_d[chain_s]["rules"]:
+                if iptc.easy.test_rule(rule_d, ipv6=is_ipv6):
+                    try:
+                        iptc.easy.add_rule(table_s, chain_s, rule_d, ipv6=is_ipv6)
+                    except ValueError:
+                        raise IptablesError("Malformed rule: {}".format(rule_d))
+                else:
                     raise IptablesError("Malformed rule: {}".format(rule_d))
-            else:
-                raise IptablesError("Malformed rule: {}".format(rule_d))
+        except KeyError:
+            pass
 
     return True
 
