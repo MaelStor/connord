@@ -18,6 +18,7 @@
 
 import os
 import getpass
+import tempfile
 from shutil import rmtree
 import yaml
 from pkg_resources import resource_filename
@@ -392,3 +393,13 @@ def read_pid(pid_name="openvpn.pid"):
     pid_file = get_stats_file(stats_name=pid_name)
     with open(pid_file, "r") as pid_fd:
         return int(pid_fd.readline())
+
+
+def get_ovpn_tmp_path():
+    temp_dir = tempfile.gettempdir()
+    return "{}/{}".format(temp_dir, "ovpn.conf")
+
+
+def remove_ovpn_tmp_file():
+    temp_dir = tempfile.gettempdir()
+    os.remove("{}/{}".format(temp_dir, "ovpn.conf"))
