@@ -25,6 +25,7 @@ import time
 import os
 import re
 import signal
+import tempfile
 from connord import ConnordError
 from connord import iptables
 from connord import servers
@@ -141,8 +142,6 @@ def connect(
     protocol,
 ):
 
-    iptables.reset(fallback=True)
-
     if domain != "best":
         return connect_to_specific_server(domain, openvpn, daemon, protocol)
 
@@ -192,7 +191,7 @@ class OpenvpnCommand:
         self.openvpn_options = openvpn
         self.daemon = daemon
         self.protocol = protocol
-        self.cmd = ["openvpn"]
+        self.cmd = ["/usr/bin/openvpn"]
 
     def _add_openvpn_cmd_option(self, flag, *args):
         if flag.startswith("-"):
@@ -288,21 +287,49 @@ class OpenvpnCommand:
                 self._forge_string(k, v)
 
     def has_flag(self, flag):
-        return flag in self.cmd
+        if flag.startswith("--"):
+            return flag in self.cmd
+
+        return "--{}".format(flag) in self.cmd
+
+    def forge_ovpn_config(self, config_file=None):
+        if not config_file:
+            config_file = resources.get_ovpn_config(self.domain, self.protocol)
+
+        config_tmp = resources.get_ovpn_tmp_path()
+
+        with open(config_file, "r") as config_fd:
+            lines = config_fd.readlines()
+        with open(config_tmp, "w") as config_fd:
+            for line in lines:
+                if line != "\n":
+                    fake_line = line.rstrip() + " $"
+                    flag, _ = fake_line.split(maxsplit=1)
+                    if not self.has_flag(flag):
+                        config_fd.write(line)
+                else:
+                    config_fd.write(line)
+
+        os.chmod(config_tmp, mode=0o640)
+        self._add_openvpn_cmd_option("--config", config_tmp)
 
     def forge(self):
         self._forge_command_line()
         self._forge_config()
         if "--config" not in self.cmd:
             try:
-                config_file = resources.get_ovpn_config(self.domain, self.protocol)
-                self._add_openvpn_cmd_option("--config", config_file)
+                self.forge_ovpn_config()
             except resources.ResourceNotFoundError:
                 update.update(
                     force=True
                 )  # give updating a try else let the error happen
-                config_file = resources.get_ovpn_config(self.domain, self.protocol)
-                self._add_openvpn_cmd_option("--config", config_file)
+                self.forge_ovpn_config()
+        else:
+            index = self.cmd.index("--config")
+            config_file = self.cmd[index + 1]
+            self.cmd.remove("--config")
+            self.cmd.remove(config_file)
+            self.forge_ovpn_config(config_file=config_file)
 
         if not self.has_flag("--writepid"):
             pid_dir = resources.get_stats_dir(create=True)
@@ -326,11 +353,13 @@ class OpenvpnCommand:
             process.kill()
 
         self.cleanup()
+        resources.remove_ovpn_tmp_file()
         raise OpenvpnCommandPanic(problem)
 
     def run(self):
         config_dict = resources.get_config()["openvpn"]
         self.cleanup()
+
         with subprocess.Popen(self.cmd) as ovpn:
             # give openvpn a maximum of 60 seconds to startup. A lower value is bad if
             # asked for username/password.
@@ -389,6 +418,7 @@ def run_openvpn(server, openvpn, daemon, protocol):
         time.sleep(1)
 
     if not openvpn_cmd.is_daemon():
+        resources.remove_ovpn_tmp_file()
         openvpn_cmd.cleanup()
 
     return retval
