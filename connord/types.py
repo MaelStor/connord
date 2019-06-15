@@ -147,9 +147,6 @@ def to_string():
     return result.rstrip()
 
 
-# TODO: delete
-
-
 def print_types():
     """Prints all possible types"""
     print(to_string())

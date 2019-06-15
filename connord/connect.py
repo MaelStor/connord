@@ -176,6 +176,15 @@ def connect(
     raise ConnectError("No server found to establish a connection.")
 
 
+class OpenvpnCommandPanic(ConnectError):
+    def __init__(self, problem, message=None):
+        if not message:
+            message = "Running openvpn failed: {}".format(problem)
+
+        super().__init__(message)
+        self.problem = problem
+
+
 class OpenvpnCommand:
     def __init__(self, server, openvpn, daemon, protocol):
         self.server = server
@@ -295,15 +304,39 @@ class OpenvpnCommand:
                 config_file = resources.get_ovpn_config(self.domain, self.protocol)
                 self._add_openvpn_cmd_option("--config", config_file)
 
+    def is_daemon(self):
+        return "--daemon" in self.cmd
+
+    @staticmethod
+    def cleanup():
+        resources.remove_stats_dir()
+        iptables.reset(fallback=True)
+
+    @staticmethod
+    def is_running(process):
+        return not bool(process.poll())
+
+    def panic(self, process, problem):
+        if self.is_running(process):
+            process.kill()
+
+        self.cleanup()
+        raise OpenvpnCommandPanic(problem)
+
     def run(self):
         config_dict = resources.get_config()["openvpn"]
+        self.cleanup()
         with subprocess.Popen(self.cmd) as ovpn:
+            # give openvpn a maximum of 60 seconds to startup. A lower value is bad if
+            # asked for username/password.
             # pylint: disable=unused-variable
-            for i in range(50):  # give openvpn a maximum of 10 seconds to startup
+            for i in range(300):
                 try:
-                    if not ovpn.poll():
+                    if self.is_running(ovpn):
                         # delay initialization of iptables until resource files are
-                        # created
+                        # created. If none are created the delay still applies as normal
+                        # timeout
+                        time.sleep(0.2)
                         for script in config_dict["scripts"]:
                             stage = script["stage"]
                             if stage in ("up", "always"):
@@ -311,17 +344,28 @@ class OpenvpnCommand:
                                     stats_name=script["creates"], create=False
                                 )
 
-                    # safety gap
-                    time.sleep(0.5)
-                    iptables.apply_config_dir(self.server, self.protocol)
+                    else:
+                        self.panic(ovpn, "Openvpn process stopped unexpected.")
+
+                    if iptables.apply_config_dir(self.server, self.protocol):
+                        resources.write_stats(self.server, stats_name="server")
+
+                        stats_dict = resources.get_stats()
+                        stats_dict["last_server"] = {}
+                        stats_dict["last_server"]["domain"] = self.domain
+                        stats_dict["last_server"]["protocol"] = self.protocol
+                        resources.write_stats(stats_dict)
+                    else:
+                        self.panic(ovpn, "Applying iptables failed.")
+
                     break
                 except resources.ResourceNotFoundError:
-                    time.sleep(0.2)
+                    pass
+            ### for
             else:
-                ovpn.kill()
-                return False
+                self.panic(ovpn, "Timeout reached.")
 
-            if not ovpn.poll():
+            if self.is_running(ovpn):
                 ovpn.wait()
 
         return True
@@ -336,10 +380,11 @@ def run_openvpn(server, openvpn, daemon, protocol):
     try:
         retval = openvpn_cmd.run()
     except KeyboardInterrupt:
+        retval = True
         time.sleep(1)
 
-    if not openvpn_cmd.has_flag("--daemon"):
-        iptables.reset(fallback=True)
+    if not openvpn_cmd.is_daemon():
+        openvpn_cmd.cleanup()
 
     return retval
 

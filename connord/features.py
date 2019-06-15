@@ -117,7 +117,6 @@ def to_string():
     return result.rstrip()
 
 
-# TODO: delete
 def print_features():
     """Prints all possible features"""
     print(to_string())

@@ -340,9 +340,11 @@ def process_iptables_cmd(args):
         if args.no_fallback:
             iptables.reset(fallback=False)
         else:
-            iptables.reset()
+            iptables.reset(fallback=True)
+
+    # TODO: rearrange apply to apply a specific set of rules like filter.rules
     elif args.iptables_sub == "apply":
-        iptables.reset()
+        iptables.reset(fallback=True)
         if args.tcp:
             protocol = "tcp"
         else:
@@ -350,12 +352,8 @@ def process_iptables_cmd(args):
 
         domain = args.domain[0]
         server = servers.get_server_by_domain(domain)
-        if iptables.apply_config_dir(server, protocol):
-            stats_dict = resources.get_stats()
-            stats_dict["last_server"] = {}
-            stats_dict["last_server"]["domain"] = domain
-            stats_dict["last_server"]["protocol"] = protocol
-            resources.write_stats(stats_dict)
+        # TODO: which action to take when applying rules fails?
+        iptables.apply_config_dir(server, protocol)
     elif args.iptables_sub == "reload":
         stats_dict = resources.get_stats()
         domain = str()
@@ -364,12 +362,12 @@ def process_iptables_cmd(args):
             domain = stats_dict["last_server"]["domain"]
             protocol = stats_dict["last_server"]["protocol"]
         except KeyError:
-            print("Could not reload iptables. Apply iptables first.")
+            print("Could not reload iptables. Run 'connect' or apply iptables first.")
             return False
 
-        server = servers.get_server_by_domain(domain)
+        server = resources.get_stats(stats_name="server")
 
-        iptables.reset()
+        iptables.reset(fallback=True)
         iptables.apply_config_dir(server, protocol)
     else:
         raise NotImplementedError("Not implemented")
@@ -377,8 +375,9 @@ def process_iptables_cmd(args):
     return True
 
 
+# This function has a high complexity score but it's kept simple though
 # pylint: disable=too-many-branches
-def main():
+def main():  # noqa: C901
     """Entry Point for the program.
     """
 

@@ -18,6 +18,7 @@
 
 import os
 import getpass
+from shutil import rmtree
 import yaml
 from pkg_resources import resource_filename
 from connord import ConnordError
@@ -324,6 +325,17 @@ def get_stats_dir(create=True):
     return stats_dir
 
 
+@user.needs_root
+def remove_stats_dir():
+    try:
+        stats_dir = get_stats_dir(create=False)
+        rmtree(stats_dir)
+    except ResourceNotFoundError:
+        pass
+
+    return True
+
+
 def list_stats_dir(filetype=None):
     stats_dir = get_stats_dir()
     return list_dir(stats_dir, filetype)
@@ -348,8 +360,8 @@ def get_stats_file(stats_name=None, create=True):
 
 
 @user.needs_root
-def get_stats():
-    stats_file = get_stats_file()
+def get_stats(stats_name="stats"):
+    stats_file = get_stats_file(stats_name=stats_name)
     try:
         with open(stats_file, "r") as stats_fd:
             stats_dict = yaml.safe_load(stats_fd)
@@ -362,8 +374,8 @@ def get_stats():
 
 
 @user.needs_root
-def write_stats(stats_dict):
-    stats_file = get_stats_file()
+def write_stats(stats_dict, stats_name="stats"):
+    stats_file = get_stats_file(stats_name=stats_name)
     if not isinstance(stats_dict, dict):
         raise TypeError(
             # pylint: disable=line-too-long

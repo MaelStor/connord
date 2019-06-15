@@ -177,7 +177,6 @@ def to_string():
     return result.rstrip()
 
 
-# TODO: delete
 def print_countries():
     """Prints all possible countries"""
     print(to_string())
