@@ -22,7 +22,8 @@
 import argparse
 import sys
 
-# from .connord import update
+from requests.exceptions import RequestException
+
 from connord import update
 from connord import version
 from connord import listings
@@ -32,9 +33,11 @@ from connord import user
 from connord import servers
 from connord import resources
 from connord import areas
+from connord import countries
+from .features import FeatureError
 
 
-# pylint: disable=too-many-statements
+# pylint: disable=too-many-statements,too-many-locals
 def parse_args(argv):
     """Parse arguments
     :returns: list of args
@@ -202,8 +205,11 @@ your connection safe.
         action="store_true",
         help="Use TCP protocol. Only one of --udp or --tcp may be present.",
     )
-    command.add_parser(
-        "kill", help="Kill all processes of openvpn. Useful in daemon mode."
+    kill_cmd = command.add_parser(
+        "kill", help="Kill openvpn processes. Useful in daemon mode."
+    )
+    kill_cmd.add_argument(
+        "-a", "--all", action="store_true", help="Kill all openvpn processes."
     )
     iptables_cmd = command.add_parser("iptables", help="Wrapper around iptables.")
     iptables_cmd_subparsers = iptables_cmd.add_subparsers(dest="iptables_sub")
@@ -246,28 +252,28 @@ def process_list_cmd(args):
     if args.iptables:
         return listings.list_iptables(["filter"], "4")
 
-    _countries = args.country
-    _area = args.area
-    _types = args.type
-    _features = args.feature
-    _netflix = args.netflix
-    _top = args.top
+    countries_ = args.country
+    area_ = args.area
+    types_ = args.type
+    features_ = args.feature
+    netflix = args.netflix
+    top = args.top
 
     if args.max_load:
-        _load = args.max_load
-        _match = "max"
+        load_ = args.max_load
+        match = "max"
     elif args.min_load:
-        _load = args.min_load
-        _match = "min"
+        load_ = args.min_load
+        match = "min"
     elif args.load:
-        _load = args.load
-        _match = "exact"
+        load_ = args.load
+        match = "exact"
     else:  # apply defaults
-        _load = 100
-        _match = "max"
+        load_ = 100
+        match = "max"
 
     return listings.main(
-        _countries, _area, _types, _features, _netflix, _load, _match, _top
+        countries_, area_, types_, features_, netflix, load_, match, top
     )
 
 
@@ -279,55 +285,55 @@ def process_connect_cmd(args):
     """
 
     if args.server:
-        _server = args.server
+        server = args.server
     elif args.best:
-        _server = "best"
+        server = "best"
     else:  # apply default
-        _server = "best"
+        server = "best"
 
-    _countries = args.country
-    _areas = args.area
-    _features = args.feature
-    _types = args.type
-    _netflix = args.netflix
+    countries_ = args.country
+    areas_ = args.area
+    features_ = args.feature
+    types_ = args.type
+    netflix = args.netflix
 
     if args.max_load:
-        _load = args.max_load
-        _match = "max"
+        load_ = args.max_load
+        match = "max"
     elif args.min_load:
-        _load = args.min_load
-        _match = "min"
+        load_ = args.min_load
+        match = "min"
     elif args.load:
-        _load = args.load
-        _match = "exact"
+        load_ = args.load
+        match = "exact"
     else:  # apply defaults
-        _load = 10
-        _match = "max"
+        load_ = 10
+        match = "max"
 
-    _daemon = args.daemon
-    _config = args.config
-    _openvpn = args.openvpn_options
+    daemon = args.daemon
+    config_ = args.config
+    openvpn = args.openvpn_options
 
     if args.udp:
-        _protocol = "udp"
+        protocol = "udp"
     elif args.tcp:
-        _protocol = "tcp"
+        protocol = "tcp"
     else:  # apply default
-        _protocol = "udp"
+        protocol = "udp"
 
     return connect.connect(
-        _server,
-        _countries,
-        _areas,
-        _features,
-        _types,
-        _netflix,
-        _load,
-        _match,
-        _daemon,
-        _config,
-        _openvpn,
-        _protocol,
+        server,
+        countries_,
+        areas_,
+        features_,
+        types_,
+        netflix,
+        load_,
+        match,
+        daemon,
+        config_,
+        openvpn,
+        protocol,
     )
 
 
@@ -337,44 +343,53 @@ def process_iptables_cmd(args):
         if args.no_fallback:
             iptables.reset(fallback=False)
         else:
-            iptables.reset()
+            iptables.reset(fallback=True)
+
+    # TODO: rearrange apply to apply a specific set of rules like filter.rules
     elif args.iptables_sub == "apply":
-        iptables.reset()
+        iptables.reset(fallback=True)
         if args.tcp:
-            _protocol = "tcp"
+            protocol = "tcp"
         else:
-            _protocol = "udp"
+            protocol = "udp"
 
         domain = args.domain[0]
-        _server = servers.get_server_by_domain(domain)
-        if iptables.apply_config_dir(_server, _protocol):
-            stats_dict = resources.get_stats()
-            stats_dict["last_server"] = {}
-            stats_dict["last_server"]["domain"] = domain
-            stats_dict["last_server"]["protocol"] = _protocol
-            resources.write_stats(stats_dict)
+        server = servers.get_server_by_domain(domain)
+        # TODO: which action to take when applying rules fails?
+        iptables.apply_config_dir(server, protocol)
     elif args.iptables_sub == "reload":
         stats_dict = resources.get_stats()
         domain = str()
-        _protocol = str()
+        protocol = str()
         try:
             domain = stats_dict["last_server"]["domain"]
-            _protocol = stats_dict["last_server"]["protocol"]
+            protocol = stats_dict["last_server"]["protocol"]
         except KeyError:
-            print("Could not reload iptables. Apply iptables first.")
+            print("Could not reload iptables. Run 'connect' or apply iptables first.")
             return False
 
-        _server = servers.get_server_by_domain(domain)
+        server = resources.get_stats(stats_name="server")
 
-        iptables.reset()
-        iptables.apply_config_dir(_server, _protocol)
+        iptables.reset(fallback=True)
+        iptables.apply_config_dir(server, protocol)
     else:
         raise NotImplementedError("Not implemented")
 
     return True
 
 
-def main():
+@user.needs_root
+def process_kill_cmd(args):
+    if args.all:
+        connect.kill_openvpn()
+    else:
+        ovpn_pid = resources.read_pid()
+        connect.kill_openvpn(ovpn_pid)
+
+
+# This function has a high complexity score but it's kept simple though
+# pylint: disable=too-many-branches
+def main():  # noqa: C901
     """Entry Point for the program.
     """
 
@@ -392,11 +407,12 @@ def main():
         elif args.command == "connect":
             process_connect_cmd(args)
         elif args.command == "kill":
-            connect.kill_openvpn()
+            process_kill_cmd(args)
         elif args.command == "iptables":
             process_iptables_cmd(args)
         else:
             raise NotImplementedError("Could not process commandline arguments.")
+        sys.exit(0)
     except PermissionError:
         print(
             'Permission Denied: You need to run "connord {}" as root'.format(
@@ -404,16 +420,25 @@ def main():
             ),
             file=sys.stderr,
         )
-        sys.exit(1)
     except resources.ResourceNotFoundError as error:
         print(error)
-        sys.exit(1)
     except resources.MalformedResourceError as error:
         print(error)
-        sys.exit(1)
     except areas.AreaError as error:
         print(error)
-        sys.exit(1)
     except iptables.IptablesError as error:
         print(error)
-        sys.exit(1)
+    except countries.CountryError as error:
+        print(error)
+    except FeatureError as error:
+        print(error)
+    except servers.DomainNotFoundError as error:
+        print(error)
+    except servers.MalformedDomainError as error:
+        print(error)
+    except connect.ConnectError as error:
+        print(error)
+    except RequestException as error:
+        print(error)
+
+    sys.exit(1)

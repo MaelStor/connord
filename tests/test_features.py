@@ -2,61 +2,61 @@
 
 from connord import features
 from main_test_module import (
-    _get_servers_stub,
-    _get_expected_servers_by_domain,
-    _get_stub,
+    get_servers_stub,
+    get_expected_servers_by_domain,
+    get_stub,
 )
 
 
 def test_verify_features_bad():
     # test features is not a list with string
-    _features = "some string"
+    features_ = "some string"
     try:
-        features.verify_features(_features)
+        features.verify_features(features_)
         assert False
     except features.FeatureError as error:
         assert str(error) == "Wrong server features: some string"
 
     # test features is not a list with integer
-    _features = 123
+    features_ = 123
     try:
-        features.verify_features(_features)
+        features.verify_features(features_)
         assert False
     except features.FeatureError as error:
         assert str(error) == "Wrong server features: 123"
 
     # test mix of correct and wrong features
-    _features = ["openvpn_udp", "wrong"]
+    features_ = ["openvpn_udp", "wrong"]
     try:
-        features.verify_features(_features)
+        features.verify_features(features_)
         assert False
     except features.FeatureError as error:
         assert str(error) == "Wrong server features: ['wrong']"
 
     # test mix of multiple correct and wrong features
-    _features = ["openvpn_udp", "socks", "wrong", "even_worse"]
+    features_ = ["openvpn_udp", "socks", "wrong", "even_worse"]
     try:
-        features.verify_features(_features)
+        features.verify_features(features_)
         assert False
     except features.FeatureError as error:
         assert str(error) == "Wrong server features: ['wrong', 'even_worse']"
 
     # test multiple features are all wrong
-    _features = ["wrong", "also_wrong", 123]
+    features_ = ["wrong", "also_wrong", 123]
     try:
-        features.verify_features(_features)
+        features.verify_features(features_)
         assert False
     except features.FeatureError as error:
         assert str(error) == "Wrong server features: ['wrong', 'also_wrong', 123]"
 
 
 def test_filter_servers_good():
-    servers_stub = _get_servers_stub()
+    servers_stub = get_servers_stub()
 
     # test default features argument is None
     try:
         actual_servers = features.filter_servers(servers_stub)
-        expected_servers = _get_expected_servers_by_domain(
+        expected_servers = get_expected_servers_by_domain(
             ["de111", "de112", "de113", "us2853"]
         )
         assert actual_servers == expected_servers
@@ -66,7 +66,7 @@ def test_filter_servers_good():
     # test default features argument is empyt list
     try:
         actual_servers = features.filter_servers(servers_stub)
-        expected_servers = _get_expected_servers_by_domain(
+        expected_servers = get_expected_servers_by_domain(
             ["de111", "de112", "de113", "us2853"]
         )
         assert actual_servers == expected_servers
@@ -78,7 +78,7 @@ def test_filter_servers_good():
         actual_servers = features.filter_servers(
             servers_stub, ["openvpn_udp", "openvpn_tcp"]
         )
-        expected_servers = _get_expected_servers_by_domain(
+        expected_servers = get_expected_servers_by_domain(
             ["de111", "de112", "de113", "us2853"]
         )
         assert actual_servers == expected_servers
@@ -87,12 +87,12 @@ def test_filter_servers_good():
 
 
 def test_filter_servers_with_every_feature():
-    servers_stub = _get_servers_stub()
+    servers_stub = get_servers_stub()
 
     # test with ikev2
     try:
         actual_servers = features.filter_servers(servers_stub, ["ikev2"])
-        expected_servers = _get_expected_servers_by_domain(["de111", "de112", "de113"])
+        expected_servers = get_expected_servers_by_domain(["de111", "de112", "de113"])
         assert actual_servers == expected_servers
     except features.FeatureError:
         assert False
@@ -100,7 +100,7 @@ def test_filter_servers_with_every_feature():
     # test with openvpn_udp
     try:
         actual_servers = features.filter_servers(servers_stub, ["openvpn_udp"])
-        expected_servers = _get_expected_servers_by_domain(
+        expected_servers = get_expected_servers_by_domain(
             ["de111", "de112", "de113", "us2853"]
         )
         assert actual_servers == expected_servers
@@ -110,7 +110,7 @@ def test_filter_servers_with_every_feature():
     # test with openvpn_tcp
     try:
         actual_servers = features.filter_servers(servers_stub, ["openvpn_tcp"])
-        expected_servers = _get_expected_servers_by_domain(
+        expected_servers = get_expected_servers_by_domain(
             ["de111", "de112", "de113", "us-ca5", "us2853"]
         )
         assert actual_servers == expected_servers
@@ -120,7 +120,7 @@ def test_filter_servers_with_every_feature():
     # test with socks
     try:
         actual_servers = features.filter_servers(servers_stub, ["socks"])
-        expected_servers = _get_expected_servers_by_domain(["de111", "de112", "de113"])
+        expected_servers = get_expected_servers_by_domain(["de111", "de112", "de113"])
         assert actual_servers == expected_servers
     except features.FeatureError:
         assert False
@@ -128,7 +128,7 @@ def test_filter_servers_with_every_feature():
     # test with proxy
     try:
         actual_servers = features.filter_servers(servers_stub, ["proxy"])
-        expected_servers = _get_expected_servers_by_domain(["de111", "de112", "de113"])
+        expected_servers = get_expected_servers_by_domain(["de111", "de112", "de113"])
         assert actual_servers == expected_servers
     except features.FeatureError:
         assert False
@@ -150,7 +150,7 @@ def test_filter_servers_with_every_feature():
     # test with openvpn_xor_udp
     try:
         actual_servers = features.filter_servers(servers_stub, ["openvpn_xor_udp"])
-        expected_servers = _get_expected_servers_by_domain(["nl80", "nl81", "nl82"])
+        expected_servers = get_expected_servers_by_domain(["nl80", "nl81", "nl82"])
         assert actual_servers == expected_servers
     except features.FeatureError:
         assert False
@@ -158,7 +158,7 @@ def test_filter_servers_with_every_feature():
     # test with openvpn_xor_tcp
     try:
         actual_servers = features.filter_servers(servers_stub, ["openvpn_xor_tcp"])
-        expected_servers = _get_expected_servers_by_domain(["nl80", "nl81", "nl82"])
+        expected_servers = get_expected_servers_by_domain(["nl80", "nl81", "nl82"])
         assert actual_servers == expected_servers
     except features.FeatureError:
         assert False
@@ -166,7 +166,7 @@ def test_filter_servers_with_every_feature():
     # test with proxy_cybersec
     try:
         actual_servers = features.filter_servers(servers_stub, ["proxy_cybersec"])
-        expected_servers = _get_expected_servers_by_domain(["de111", "de112", "de113"])
+        expected_servers = get_expected_servers_by_domain(["de111", "de112", "de113"])
         assert actual_servers == expected_servers
     except features.FeatureError:
         assert False
@@ -174,7 +174,7 @@ def test_filter_servers_with_every_feature():
     # test with proxy_ssl
     try:
         actual_servers = features.filter_servers(servers_stub, ["proxy_ssl"])
-        expected_servers = _get_expected_servers_by_domain(["de112", "de113"])
+        expected_servers = get_expected_servers_by_domain(["de112", "de113"])
         assert actual_servers == expected_servers
     except features.FeatureError:
         assert False
@@ -182,7 +182,7 @@ def test_filter_servers_with_every_feature():
     # test with proxy_ssl_cybersec
     try:
         actual_servers = features.filter_servers(servers_stub, ["proxy_ssl_cybersec"])
-        expected_servers = _get_expected_servers_by_domain(["de111", "de112"])
+        expected_servers = get_expected_servers_by_domain(["de111", "de112"])
         assert actual_servers == expected_servers
     except features.FeatureError:
         assert False
@@ -190,7 +190,7 @@ def test_filter_servers_with_every_feature():
     # test with ikev2_v6
     try:
         actual_servers = features.filter_servers(servers_stub, ["ikev2_v6"])
-        expected_servers = _get_expected_servers_by_domain(["nl82"])
+        expected_servers = get_expected_servers_by_domain(["nl82"])
         assert actual_servers == expected_servers
     except features.FeatureError:
         assert False
@@ -198,7 +198,7 @@ def test_filter_servers_with_every_feature():
     # test with openvpn_udp_v6
     try:
         actual_servers = features.filter_servers(servers_stub, ["openvpn_udp_v6"])
-        expected_servers = _get_expected_servers_by_domain(["nl82"])
+        expected_servers = get_expected_servers_by_domain(["nl82"])
         assert actual_servers == expected_servers
     except features.FeatureError:
         assert False
@@ -206,7 +206,7 @@ def test_filter_servers_with_every_feature():
     # test with openvpn_tcp_v6
     try:
         actual_servers = features.filter_servers(servers_stub, ["openvpn_tcp_v6"])
-        expected_servers = _get_expected_servers_by_domain(["nl82"])
+        expected_servers = get_expected_servers_by_domain(["nl82"])
         assert actual_servers == expected_servers
     except features.FeatureError:
         assert False
@@ -214,7 +214,7 @@ def test_filter_servers_with_every_feature():
     # test with wireguard_udp
     try:
         actual_servers = features.filter_servers(servers_stub, ["wireguard_udp"])
-        expected_servers = _get_expected_servers_by_domain(["nl82"])
+        expected_servers = get_expected_servers_by_domain(["nl82"])
         assert actual_servers == expected_servers
     except features.FeatureError:
         assert False
@@ -224,7 +224,7 @@ def test_filter_servers_with_every_feature():
         actual_servers = features.filter_servers(
             servers_stub, ["openvpn_udp_tls_crypt"]
         )
-        expected_servers = _get_expected_servers_by_domain(["nl82"])
+        expected_servers = get_expected_servers_by_domain(["nl82"])
         assert actual_servers == expected_servers
     except features.FeatureError:
         assert False
@@ -234,14 +234,14 @@ def test_filter_servers_with_every_feature():
         actual_servers = features.filter_servers(
             servers_stub, ["openvpn_tcp_tls_crypt"]
         )
-        expected_servers = _get_expected_servers_by_domain(["nl82"])
+        expected_servers = get_expected_servers_by_domain(["nl82"])
         assert actual_servers == expected_servers
     except features.FeatureError:
         assert False
 
 
 def test_to_string():
-    expected_result = _get_stub("features_to_string_stub.txt").rstrip()
+    expected_result = get_stub("features_to_string_stub.txt").rstrip()
     actual_result = features.to_string()
 
     assert actual_result == expected_result

@@ -2,7 +2,7 @@
 
 import time
 from connord import connect
-from main_test_module import _get_servers_stub, measure_time
+from main_test_module import get_servers_stub, measure_time
 
 ping_output_fixture_good = b"""PING archlinux.org (192.168.8.1) 56(84) bytes of data.
 
@@ -47,7 +47,9 @@ def test_ping_bad(mocker):
     server = connect.ping(test_server)
 
     mocked_popen.assert_called()
-    assert server["ping"] is None
+    import math
+
+    assert server["ping"] == math.inf
 
 
 def test_ping_servers_parallelness(mocker):
@@ -59,10 +61,10 @@ def test_ping_servers_parallelness(mocker):
         return test_server
 
     mocker.patch("connord.connect.ping", ping_fix)
-    _servers = _get_servers_stub()
-    actual_servers = connect.ping_servers_parallel(_servers)
+    servers_ = get_servers_stub()
+    actual_servers = connect.ping_servers_parallel(servers_)
     expected_servers = []
-    for i in range(len(_servers)):
+    for i in range(len(servers_)):
         expected_servers.append(test_server)
 
     assert actual_servers == expected_servers

@@ -103,14 +103,27 @@ def verify_countries(countries):
     """
 
     if not isinstance(countries, list):
-        raise CountryError("Wrong countries: {!s}".format(countries))
+        raise TypeError(
+            "Invalid format for countries: {!s} must be {!s}".format(
+                type(countries), list
+            )
+        )
 
     wrong_countries = [
         country for country in countries if country.lower() not in COUNTRIES.keys()
     ]
 
     if wrong_countries:
-        raise CountryError("Wrong countries: {!s}".format(wrong_countries))
+        if len(wrong_countries) == 1:
+            error_message = "Invalid country: {!r}".format(wrong_countries[0])
+        else:
+            countries_s = ""
+            for country in wrong_countries:
+                countries_s += "{!r},".format(country)
+
+            error_message = "Invalid countries: {}.".format(countries_s.rstrip(","))
+
+        raise CountryError(error_message)
 
     return True
 
@@ -164,7 +177,6 @@ def to_string():
     return result.rstrip()
 
 
-# TODO: delete
 def print_countries():
     """Prints all possible countries"""
     print(to_string())

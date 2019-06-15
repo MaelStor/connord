@@ -20,6 +20,7 @@
 import subprocess
 from multiprocessing.pool import ThreadPool
 from multiprocessing import cpu_count
+from math import inf
 import time
 import os
 import re
@@ -55,28 +56,28 @@ def ping(server):
         ["ping", "-q", "-n", "-c", "1", "-l", "1", "-W", "1", ip_address],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-    ) as _ping:
+    ) as ping_:
 
-        out, _ = _ping.communicate()
+        out, _ = ping_.communicate()
         mat = pattern.search(out.decode())
         if mat:
             server_copy["ping"] = float(mat.group(2))
         else:
-            server_copy["ping"] = None
+            server_copy["ping"] = float("inf")
 
         return server_copy
 
 
-def ping_servers_parallel(_servers):
+def ping_servers_parallel(servers_):
     """
     Ping a list of servers
-    :param list _servers: List of servers
+    :param list servers_: List of servers
     :returns: List of servers with ping time
     """
     worker_count = cpu_count() + 1
     with ThreadPool(processes=worker_count) as pool:
         results = []
-        for server in _servers:
+        for server in servers_:
             results.append(pool.apply_async(ping, (server,)))
 
         pinged_servers = []
@@ -86,160 +87,323 @@ def ping_servers_parallel(_servers):
         return pinged_servers
 
 
+# pylint: disable=too-many-arguments
 def filter_servers(
-    _servers, _netflix, _countries, _areas, _features, _types, _load, _match
+    servers_, netflix, countries_, areas_, features_, types_, load_, match
 ):
-    _servers = _servers.copy()
-    if _load:
-        _servers = load.filter_servers(_servers, _load, _match)
-    if _netflix:
-        _servers = servers.filter_netflix_servers(_servers, _countries)
-    if _countries:
-        _servers = countries.filter_servers(_servers, _countries)
-    if _areas:
-        _servers = areas.filter_servers(_servers, _areas)
-    if _types:
-        _servers = types.filter_servers(_servers, _types)
-    if _features:
-        _servers = features.filter_servers(_servers, _features)
+    servers_ = servers_.copy()
+    if load_:
+        servers_ = load.filter_servers(servers_, load_, match)
+    if netflix:
+        servers_ = servers.filter_netflix_servers(servers_, countries_)
+    if countries_:
+        servers_ = countries.filter_servers(servers_, countries_)
+    if areas_:
+        servers_ = areas.filter_servers(servers_, areas_)
+    if types_:
+        servers_ = types.filter_servers(servers_, types_)
+    if features_:
+        servers_ = features.filter_servers(servers_, features_)
 
-    return _servers
+    return servers_
 
 
-def filter_best_servers(_servers):
-    _servers = _servers.copy()
-    _servers = sorted(_servers, key=lambda k: k["load"])
-    if len(_servers) > 10:
-        _servers = _servers[:10]
-    _servers = ping_servers_parallel(_servers)
-    _servers = sorted(_servers, key=lambda k: k["ping"])
-    return _servers
+def filter_best_servers(servers_):
+    servers_ = servers_.copy()
+    servers_ = sorted(servers_, key=lambda k: k["load"])
+    if len(servers_) > 10:
+        servers_ = servers_[:10]
+    servers_ = ping_servers_parallel(servers_)
+    servers_ = sorted(servers_, key=lambda k: k["ping"])
+    return servers_
 
 
 @user.needs_root
-def connect_to_specific_server(_domain, _openvpn, _daemon, _protocol):
-    _server = servers.get_server_by_domain(_domain)
-    if _server:
-        return run(_server, _openvpn, _daemon, _protocol)
-
-    raise ConnectError("Could not find server with domain {}.".format(_domain))
+def connect_to_specific_server(domain, openvpn, daemon, protocol):
+    server = servers.get_server_by_domain(domain[0])
+    return run_openvpn(server, openvpn, daemon, protocol)
 
 
+# pylint: disable=too-many-locals
 @user.needs_root
 def connect(
-    _domain,
-    _countries,
-    _areas,
-    _features,
-    _types,
-    _netflix,
-    _load,
-    _match,
-    _daemon,
-    _config,
-    _openvpn,
-    _protocol,
+    domain,
+    countries_,
+    areas_,
+    features_,
+    types_,
+    netflix,
+    load_,
+    match,
+    daemon,
+    config_,
+    openvpn,
+    protocol,
 ):
 
-    iptables.reset()
+    iptables.reset(fallback=True)
 
-    if _domain != "best":
-        return connect_to_specific_server(_domain, _openvpn, _daemon, _protocol)
+    if domain != "best":
+        return connect_to_specific_server(domain, openvpn, daemon, protocol)
 
-    if _protocol:
-        feature = "openvpn_" + _protocol
-        if _features is None:
-            _features = [feature]
-        elif feature in _features:
+    if protocol:
+        feature = "openvpn_" + protocol
+        if features_ is None:
+            features_ = [feature]
+        elif feature in features_:
             pass
         else:
-            _features.append("openvpn_" + _protocol)
+            features_.append("openvpn" + protocol)
 
-    _servers = servers.get_servers()
-    _servers = filter_servers(
-        _servers, _netflix, _countries, _areas, _features, _types, _load, _match
+    servers_ = servers.get_servers()
+    servers_ = filter_servers(
+        servers_, netflix, countries_, areas_, features_, types_, load_, match
     )
 
-    best_servers = filter_best_servers(_servers)
-    for _server in best_servers:
-        if _server["ping"] is not None:
-            return run(_server, _openvpn, _daemon, _protocol)
+    best_servers = filter_best_servers(servers_)
+    max_retries = 3
+    for i, server in enumerate(best_servers):
+        if i == max_retries:
+            raise ConnectError("Maximum retries reached.")
+
+        if server["ping"] != inf:
+            if run_openvpn(server, openvpn, daemon, protocol):
+                return True
+            # else give the next server a try
+        else:
+            raise ConnectError("No server left with a valid ping.")
 
     raise ConnectError("No server found to establish a connection.")
 
 
-def add_openvpn_cmd_option(openvpn_cmd, flag, option=None):
-    if flag not in openvpn_cmd:
-        openvpn_cmd.append(flag)
-        if option:
-            openvpn_cmd.append(option)
-    return openvpn_cmd
+class OpenvpnCommandPanic(ConnectError):
+    def __init__(self, problem, message=None):
+        if not message:
+            message = "Running openvpn failed: {}".format(problem)
+
+        super().__init__(message)
+        self.problem = problem
 
 
-@user.needs_root
-def run_openvpn(_domain, _openvpn, _daemon, _protocol):
-    # TODO: Validate domain when it is an user input
-    openvpn_options = []
-    if _openvpn:
-        openvpn_options = _openvpn.split()
+class OpenvpnCommand:
+    def __init__(self, server, openvpn, daemon, protocol):
+        self.server = server
+        self.domain = server["domain"]
+        self.openvpn_options = openvpn
+        self.daemon = daemon
+        self.protocol = protocol
+        self.cmd = ["openvpn"]
 
-    cmd = ["openvpn"]
-    for option in openvpn_options:
-        cmd.append(option)
+    def _add_openvpn_cmd_option(self, flag, *args):
+        if flag.startswith("-"):
+            if flag not in self.cmd:
+                self.cmd.append(flag)
+                for arg in args:
+                    self.cmd.append(arg)
+        else:  # flag seems to be an argument and can be added without checks
+            self.cmd.append(flag)
 
-    if _daemon:
-        cmd = add_openvpn_cmd_option(cmd, "--daemon")
+    @staticmethod
+    def _format_flag(flag):
+        return "--{}".format(flag)
 
-    try:
-        config_file = resources.get_ovpn_config(_domain, _protocol)
-    except resources.ResourceNotFoundError:
-        update.update(force=True)  # give updating a try else let the error pass through
-        config_file = resources.get_ovpn_config(_domain, _protocol)
+    def _forge_number(self, key, value):
+        flag = self._format_flag(key)
+        self._add_openvpn_cmd_option(flag, str(value))
 
-    cmd = add_openvpn_cmd_option(cmd, "--config", option=config_file)
+    def _forge_string(self, key, value):
+        flag = self._format_flag(key)
+        if key == "auth-user-pass":
+            if value == "built-in":
+                creds_file = resources.get_credentials_file()
+            else:
+                creds_file = value
 
-    credentials_file = resources.get_credentials_file(create=True)
-    cmd = add_openvpn_cmd_option(cmd, "--auth-user-pass", option=credentials_file)
-    cmd = add_openvpn_cmd_option(cmd, "--auth-nocache")
-    cmd = add_openvpn_cmd_option(cmd, "--auth-retry", option="nointeract")
+            self._add_openvpn_cmd_option(flag, creds_file)
+        else:
+            self._add_openvpn_cmd_option(flag, value)
 
-    cmd = add_openvpn_cmd_option(cmd, "--script-security", option="2")
-    cmd = add_openvpn_cmd_option(
-        cmd, "--up", option="/etc/openvpn/client/openvpn_up_down.bash"
-    )
+    def _forge_bool(self, key, value):
+        if value and value not in ("False", "false"):
+            flag = self._format_flag(key)
+            self._add_openvpn_cmd_option(flag)
 
-    cmd = add_openvpn_cmd_option(
-        cmd, "--down", option="/etc/openvpn/client/openvpn_up_down.bash"
-    )
-    cmd = add_openvpn_cmd_option(cmd, "--down-pre")
-    cmd = add_openvpn_cmd_option(cmd, "--redirect-gateway")
+    def _forge_list(self, key, list_):
+        if key == "scripts":
+            self._forge_scripts(list_)
+        else:
+            flag = self._format_flag(key)
+            self._add_openvpn_cmd_option(flag, list_)
 
-    try:
-        with subprocess.Popen(cmd) as ovpn:
-            _, _ = ovpn.communicate()
-    except KeyboardInterrupt:
-        # TODO: value is too high
-        time.sleep(3)
+    @staticmethod
+    def _format_script_arg(script_name, path, file_):
+        if path == "built-in":
+            script_path = resources.get_scripts_file(script_name=script_name)
+            env_dir = resources.get_stats_dir()
+            env_file = "{}/{}".format(env_dir, file_)
+        else:
+            script_path = path
+            env_file = file_
+
+        return "{} {}".format(script_path, env_file)
+
+    def _forge_scripts(self, scripts):
+        for script in scripts:
+            name = script["name"]
+            flag = self._format_flag(name)
+            path = script["path"]
+            file_ = script["creates"]
+            if name in ("up", "down"):
+                arg = self._format_script_arg("openvpn_up_down.bash", path, file_)
+            elif name == "ipchange":
+                arg = self._format_script_arg("openvpn_ipchange.bash", path, file_)
+            else:
+                if path == "built-in":
+                    raise resources.ResourceNotFoundError(
+                        "No built-in found for {!r}.".format(name)
+                    )
+
+                arg = self._format_script_arg(name, path, file_)
+
+            self._add_openvpn_cmd_option(flag, arg)
+
+    def _forge_command_line(self):
+        if self.openvpn_options:
+            for option in self.openvpn_options.split():
+                self._add_openvpn_cmd_option(option)
+
+        if self.daemon:
+            self._add_openvpn_cmd_option("--daemon")
+
+    def _forge_config(self):
+        openvpn_config = resources.get_config()["openvpn"]
+        for k, v in openvpn_config.items():
+            if isinstance(v, bool) or v in ("true", "True", "false", "False"):
+                self._forge_bool(k, v)
+            elif isinstance(v, list):
+                self._forge_list(k, v)
+            elif isinstance(v, (int, float)):
+                self._forge_number(k, v)
+            else:
+                self._forge_string(k, v)
+
+    def has_flag(self, flag):
+        return flag in self.cmd
+
+    def forge(self):
+        self._forge_command_line()
+        self._forge_config()
+        if "--config" not in self.cmd:
+            try:
+                config_file = resources.get_ovpn_config(self.domain, self.protocol)
+                self._add_openvpn_cmd_option("--config", config_file)
+            except resources.ResourceNotFoundError:
+                update.update(
+                    force=True
+                )  # give updating a try else let the error happen
+                config_file = resources.get_ovpn_config(self.domain, self.protocol)
+                self._add_openvpn_cmd_option("--config", config_file)
+
+        if not self.has_flag("--writepid"):
+            pid_dir = resources.get_stats_dir(create=True)
+            pid_file = pid_dir + "/openvpn.pid"
+            self._add_openvpn_cmd_option("--writepid", pid_file)
+
+    def is_daemon(self):
+        return "--daemon" in self.cmd
+
+    @staticmethod
+    def cleanup():
+        resources.remove_stats_dir()
+        iptables.reset(fallback=True)
+
+    @staticmethod
+    def is_running(process):
+        return not bool(process.poll())
+
+    def panic(self, process, problem):
+        if self.is_running(process):
+            process.kill()
+
+        self.cleanup()
+        raise OpenvpnCommandPanic(problem)
+
+    def run(self):
+        config_dict = resources.get_config()["openvpn"]
+        self.cleanup()
+        with subprocess.Popen(self.cmd) as ovpn:
+            # give openvpn a maximum of 60 seconds to startup. A lower value is bad if
+            # asked for username/password.
+            # pylint: disable=unused-variable
+            for i in range(300):
+                try:
+                    if self.is_running(ovpn):
+                        # delay initialization of iptables until resource files are
+                        # created. If none are created the delay still applies as normal
+                        # timeout
+                        time.sleep(0.2)
+                        for script in config_dict["scripts"]:
+                            stage = script["stage"]
+                            if stage in ("up", "always"):
+                                resources.get_stats_file(
+                                    stats_name=script["creates"], create=False
+                                )
+
+                    else:
+                        self.panic(ovpn, "Openvpn process stopped unexpected.")
+
+                    if iptables.apply_config_dir(self.server, self.protocol):
+                        resources.write_stats(self.server, stats_name="server")
+
+                        stats_dict = resources.get_stats()
+                        stats_dict["last_server"] = {}
+                        stats_dict["last_server"]["domain"] = self.domain
+                        stats_dict["last_server"]["protocol"] = self.protocol
+                        resources.write_stats(stats_dict)
+                    else:
+                        self.panic(ovpn, "Applying iptables failed.")
+
+                    break
+                except resources.ResourceNotFoundError:
+                    pass
+            ### for
+            else:
+                self.panic(ovpn, "Timeout reached.")
+
+            if self.is_running(ovpn):
+                ovpn.wait()
+
         return True
 
-    return True
+
+@user.needs_root
+def run_openvpn(server, openvpn, daemon, protocol):
+    openvpn_cmd = OpenvpnCommand(server, openvpn, daemon, protocol)
+    openvpn_cmd.forge()
+
+    retval = False
+    try:
+        retval = openvpn_cmd.run()
+    except KeyboardInterrupt:
+        retval = True
+        time.sleep(1)
+
+    if not openvpn_cmd.is_daemon():
+        openvpn_cmd.cleanup()
+
+    return retval
 
 
 @user.needs_root
-def run(_server, _openvpn, _daemon, _protocol):
-    iptables.apply_config_dir(_server, _protocol)
-
-    domain = _server["domain"]
-    return run_openvpn(domain, _openvpn, _daemon, _protocol)
-
-
-@user.needs_root
-def kill_openvpn():
-    cmd = ["ps"]
-    cmd.append("-A")
-    with subprocess.Popen(cmd, stdout=subprocess.PIPE) as proc:
-        out, _ = proc.communicate()
-        for line in out.decode().splitlines():
-            if "openvpn" in line:
-                pid = int(line.split(None, 1)[0])
-                os.kill(pid, signal.SIGTERM)
+def kill_openvpn(pid=None):
+    if pid:
+        os.kill(pid, signal.SIGTERM)
+    else:
+        cmd = ["ps"]
+        cmd.append("-A")
+        with subprocess.Popen(cmd, stdout=subprocess.PIPE) as proc:
+            out, _ = proc.communicate()
+            for line in out.decode().splitlines():
+                if "openvpn" in line:
+                    pid = int(line.split(None, 1)[0])
+                    os.kill(pid, signal.SIGTERM)

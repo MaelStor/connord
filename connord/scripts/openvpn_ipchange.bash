@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # vim: set fileencoding=utf-8 :
 
 # connord - connect to nordvpn servers
@@ -16,18 +17,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-"""
-Init file
-"""
+# shellcheck disable=SC2154
+[[ "$script_type" ]] || exit 2
 
+# shellcheck disable=2034,2021
+[[ "$2" ]] && ip_address="$(echo "$2" | tr -d '[AF_INET]' | cut -d' ' -f1)"
+# shellcheck disable=2034
+[[ "$2" ]] && port_number="$(echo "$2" | cut -d' ' -f2)"
 
-class ConnordError(Exception):
-    """Main Exception class for connord module"""
-
-
-# TODO: Introduce ValidationError to be used verifying command-line arguments
-# in filters
-
-
-__version__ = "0.1.0-beta.2"
-__license__ = "GNU General Public License v3 or later (GPLv3+)"
+this_dir="$(dirname "${BASH_SOURCE[0]}")"
+source "${this_dir}/dump_openvpn_env.bash"

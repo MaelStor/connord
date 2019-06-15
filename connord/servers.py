@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import re
 import requests
 from cachetools import cached, TTLCache
 from connord import ConnordError
@@ -27,37 +28,103 @@ __API_URL = "https://api.nordvpn.com/server"
 NETFLIX = ["us", "ca", "jp", "gb", "fr", "it"]
 
 
-class ServerError(ConnordError):
-    """Thrown within this module"""
+class DomainNotFoundError(ConnordError):
+    """Raised when a domain is requested but doesn't exist."""
+
+    def __init__(self, domain, message=None):
+        if not message:
+            message = "Domain not found: {!r}".format(domain)
+
+        super().__init__(message)
+        self.domain = domain
+
+
+class MalformedDomainError(ConnordError):
+    """Raised when domain is not in the expected format."""
+
+    def __init__(self, domain, problem, message=None):
+        if not message:
+            message = "Invalid domain: {!r}: {}".format(domain, problem)
+
+        super().__init__(message)
+        self.problem = problem
+
+
+def get_domain_format():
+    return re.compile(r"(?P<country_code>[a-z]{2})(?P<number>[0-9]+)(.netflix.com)?")
 
 
 def get_server_by_domain(domain):
     servers = get_servers()
+    if ".nordvpn.com" in domain:
+        fqdn = domain
+    else:
+        fqdn = domain + ".nordvpn.com"
+
     for server in servers:
-        if server["domain"] == domain + ".nordvpn.com":
+        if server["domain"] == fqdn:
             return server
 
-    return None
+    raise ValueError("Domain not found: {!r}.".format(domain))
 
 
 def get_servers_by_domains(domains):
-    filtered_servers = [get_server_by_domain(domain) for domain in domains]
+    fqdns = []
+    for domain in domains:
+        if ".nordvpn.com" in domain:
+            fqdn = domain
+        else:
+            fqdn = domain + ".nordvpn.com"
+
+        fqdns.append(fqdn)
+
+    servers = get_servers()
+    filtered_servers = []
+    for server in servers:
+        for fqdn in fqdns:
+            if server["domain"] == fqdn:
+                filtered_servers.append(server)
+                fqdns.remove(fqdn)
+                break
+
+    if not fqdns:
+        raise DomainNotFoundError(fqdns[0])
 
     return filtered_servers
+
+
+def validate_domain(domain):
+    pattern = get_domain_format()
+    match = pattern.match(domain)
+    if match:
+        domain_d = match.groupdict()
+        countries.verify_countries([domain_d["country_code"]])
+        if get_server_by_domain(domain):
+            return True
+
+        raise DomainNotFoundError(domain)
+
+    raise MalformedDomainError(
+        domain, "Expected format is {{country_code}}{{number}}[.netflix.com]"
+    )
 
 
 @cached(cache=TTLCache(maxsize=1, ttl=60))
 def get_servers():
     header = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:60.0) \
-Gecko/20100101 Firefox/60.0"
+        "User-Agent": " ".join(
+            (
+                "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:60.0)",
+                "Gecko/20100101 Firefox/60.0",
+            )
+        )
     }
 
     with requests.get(__API_URL, headers=header, timeout=1) as response:
         return response.json()
 
 
-def filter_netflix_servers(servers, _countries):
+def filter_netflix_servers(servers, countries_):
     servers = servers.copy()
     servers = countries.filter_servers(servers, NETFLIX)
     return servers
@@ -101,14 +168,14 @@ def to_string(servers, stream=False):
         return str()
 
     formatter = ServersPrettyFormatter()
-    _file = formatter.get_stream_file(stream)
+    file_ = formatter.get_stream_file(stream)
 
     headline = formatter.format_headline()
-    print(headline, file=_file)
+    print(headline, file=file_)
     count = 1
     for server in servers:
-        _server_s = formatter.format_server(server, count)
-        print(_server_s, file=_file)
+        server_s = formatter.format_server(server, count)
+        print(server_s, file=file_)
         count += 1
 
     return formatter.get_output()

@@ -17,7 +17,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ################################################################################
-# 01-filter.fallback
+# 01-filter6.rules
 #
 # Jinja2 template for iptables
 # The naming scheme is important. You can prefix the table name with a number
@@ -28,7 +28,7 @@
 # and after disconnecting. Rules files are applied after connecting to a nordvpn 
 # server.
 #
-# Recognized variables which are not present in the config file:
+# Recognized variables which must not be present in the config file:
 # vpn_remote:   the remote ip address of the vpn server
 # vpn_protocol: the protocol in use: udp or tcp
 # vpn_port:     the port to communicate with the vpn server
@@ -48,59 +48,14 @@
 #         documentation there.
 ################################################################################
 
-connord-lo-input:
-  policy: None
-  action: create
-  rules:
-  - conntrack:
-      ctstate: RELATED,ESTABLISHED
-    target: ACCEPT
-  - src: 127.0.0.0/8
-    target: ACCEPT
-connord-lan-input:
-  policy: None
-  action: create
-  rules:
-  - conntrack:
-      ctstate: RELATED,ESTABLISHED
-    target: ACCEPT
-  - target:
-      LOG:
-        log-prefix: '[LAN_I_D]: '
-  - target: DROP
 INPUT:
   policy: DROP
   action: None
-  rules:
-  - in-interface: lo
-    target: connord-lo-input
-  - in-interface: "{{ iptables.lan_interface }}"
-    target: connord-lan-input
-  - target:
-      LOG:
-        log-prefix: '[IN_D]: '
-connord-lo-output:
-  policy: None
-  action: create
-  rules:
-  - conntrack:
-      ctstate: RELATED,ESTABLISHED
-    target: ACCEPT
-  - dst: 127.0.0.0/8
-    target: ACCEPT
-connord-lan-output:
-  policy: None
-  action: create
-  rules:
-  - target: ACCEPT
+  rules: []
 OUTPUT:
-  policy: ACCEPT
+  policy: ACCEPT 
   action: None
   rules:
-  - out-interface: lo
-    target: connord-lo-output
-  - out-interface: "{{ iptables.lan_interface }}"
-    target: connord-lan-output
   - target:
       LOG:
         log-prefix: '[OUT_D]: '
@@ -110,7 +65,4 @@ OUTPUT:
 FORWARD:
   policy: DROP
   action: None
-  rules:
-  - target:
-      LOG:
-        log-prefix: '[FORW_D]: '
+  rules: []

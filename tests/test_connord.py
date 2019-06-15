@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
 from connord import connord
-from main_test_module import _get_stub
+from main_test_module import get_stub
 
 
 def test_main_when_sys_argv_has_no_arguments(capsys, mocker):
     argv = ["connord"]
-    help_stub = _get_stub("help_message_stub.txt")
+    help_stub = get_stub("help_message_stub.txt")
 
     mocker.patch.object(connord.sys, "argv", argv)
 
@@ -43,7 +43,11 @@ def test_main_when_command_is_version(mocker):
     mocked_version = mocker.patch("connord.connord.version")
     mocked_version.print_version.return_value = True
 
-    connord.main()
+    try:
+        connord.main()
+        assert False
+    except SystemExit as error:
+        assert error.code == 0
 
 
 def test_main_when_command_is_list(mocker):
@@ -53,28 +57,24 @@ def test_main_when_command_is_list(mocker):
     mocked_list = mocker.patch("connord.connord.listings")
     mocked_list.main.return_value = True
 
-    connord.main()
+    try:
+        connord.main()
+        assert False
+    except SystemExit as error:
+        assert error.code == 0
+
     mocked_list.main.assert_called_once()
 
 
-# def test_main_when_command_is_connect(mocker):
-#     argv = ['connord', 'connect']
-#     mocker.patch.object(connord.sys, 'argv', argv)
-#
-#     try:
-#         connord.main()
-#         assert False
-#     except NotImplementedError:
-#         assert True
-
-
-def test_main_when_command_is_kill(mocker):
+def test_main_when_command_is_kill_user_is_not_root(mocker):
     argv = ["connord", "kill"]
     mocker.patch.object(connord.sys, "argv", argv)
-    mocked_connect = mocker.patch("connord.connect.kill_openvpn")
 
-    connord.main()
-    mocked_connect.assert_called_once()
+    try:
+        connord.main()
+        assert False
+    except SystemExit as error:
+        assert error.code == 1
 
 
 class ArgumentFixture:
@@ -82,7 +82,7 @@ class ArgumentFixture:
         self,
         country=None,
         area=None,
-        _type=None,
+        type_=None,
         feature=None,
         netflix=None,
         iptables=None,
@@ -90,7 +90,7 @@ class ArgumentFixture:
     ):
         self.country = country
         self.area = area
-        self.type = _type
+        self.type = type_
         self.feature = feature
         self.netflix = netflix
         self.top = top

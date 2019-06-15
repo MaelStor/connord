@@ -85,7 +85,7 @@ def map_types(types):
 
     verify_types(types)
 
-    mapped_types = [TYPES[_type] for _type in types]
+    mapped_types = [TYPES[type_] for type_ in types]
     return mapped_types
 
 
@@ -93,13 +93,13 @@ def map_types_reverse(types):
 
     verify_types_description(types)
     mapped_types = [
-        key for _type in types for key, value in TYPES.items() if _type == value
+        key for type_ in types for key, value in TYPES.items() if type_ == value
     ]
 
     return mapped_types
 
 
-def _has_type(server, server_type):
+def has_type(server, server_type):
     for category in server["categories"]:
         if category["name"] == server_type:
             return True
@@ -126,7 +126,7 @@ def filter_servers(servers, types=None):
     for server in servers:
         append = True
         for mapped_type in mapped_types:
-            if not _has_type(server, mapped_type):
+            if not has_type(server, mapped_type):
                 append = False
                 break
 
@@ -145,9 +145,6 @@ def to_string():
         result += "{:26}{}\n".format(server_type, description)
 
     return result.rstrip()
-
-
-# TODO: delete
 
 
 def print_types():

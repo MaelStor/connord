@@ -18,6 +18,7 @@
 
 import os
 import getpass
+from shutil import rmtree
 import yaml
 from pkg_resources import resource_filename
 from connord import ConnordError
@@ -58,6 +59,17 @@ class MalformedResourceError(ConnordError):
         self.resource_file = resource_file
         self.problem = problem
         self.problem_mark = problem_mark
+
+
+def list_dir(directory, filetype=None):
+    files = os.listdir(directory)
+
+    if filetype:
+        files = [_file for _file in files if _file.endswith("." + filetype)]
+
+    full_path_files = [directory + "/" + _file for _file in files]
+
+    return full_path_files
 
 
 def get_zip_dir(create=True):
@@ -143,7 +155,6 @@ def file_has_permissions(path, permissions=0o600):
     """Check file permissions"""
 
     stats = os.stat(path)
-    print(stats)
     return stats.st_mode & 0o777 == permissions
 
 
@@ -265,14 +276,7 @@ def get_config_dir():
 
 def list_config_dir(filetype=None):
     config_dir = get_config_dir()
-    files = os.listdir(config_dir)
-
-    if filetype:
-        files = [_file for _file in files if _file.endswith("." + filetype)]
-
-    full_path_files = [config_dir + "/" + _file for _file in files]
-
-    return full_path_files
+    return list_dir(config_dir, filetype)
 
 
 def get_config_file(config_name="config.yml"):
@@ -322,7 +326,24 @@ def get_stats_dir(create=True):
 
 
 @user.needs_root
+def remove_stats_dir():
+    try:
+        stats_dir = get_stats_dir(create=False)
+        rmtree(stats_dir)
+    except ResourceNotFoundError:
+        pass
+
+    return True
+
+
+def list_stats_dir(filetype=None):
+    stats_dir = get_stats_dir()
+    return list_dir(stats_dir, filetype)
+
+
+@user.needs_root
 def get_stats_file(stats_name=None, create=True):
+    """Get stats file"""
     if not stats_name:
         stats_name = "stats"
 
@@ -339,8 +360,8 @@ def get_stats_file(stats_name=None, create=True):
 
 
 @user.needs_root
-def get_stats():
-    stats_file = get_stats_file()
+def get_stats(stats_name="stats"):
+    stats_file = get_stats_file(stats_name=stats_name)
     try:
         with open(stats_file, "r") as stats_fd:
             stats_dict = yaml.safe_load(stats_fd)
@@ -353,8 +374,8 @@ def get_stats():
 
 
 @user.needs_root
-def write_stats(stats_dict):
-    stats_file = get_stats_file()
+def write_stats(stats_dict, stats_name="stats"):
+    stats_file = get_stats_file(stats_name=stats_name)
     if not isinstance(stats_dict, dict):
         raise TypeError(
             # pylint: disable=line-too-long
@@ -365,3 +386,9 @@ def write_stats(stats_dict):
 
     with open(stats_file, "w") as stats_fd:
         yaml.dump(stats_dict, stats_fd, default_flow_style=False)
+
+
+def read_pid(pid_name="openvpn.pid"):
+    pid_file = get_stats_file(stats_name=pid_name)
+    with open(pid_file, "r") as pid_fd:
+        return int(pid_fd.readline())

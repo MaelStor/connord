@@ -72,12 +72,12 @@ class Filter(metaclass=abc.ABCMeta):
         else:
             self.__verify_load(load)
 
-        filtered_servers = self._filter(load)
+        filtered_servers = self.filter_(load)
 
         return filtered_servers
 
     @abc.abstractmethod
-    def _filter(self, load):
+    def filter_(self, load):
         """
         To be implemented by subclasses
         :param load: Expects an integer between 0 and 100 inclusive
@@ -90,7 +90,7 @@ class LoadFilter(Filter):
     Filter to match load exactly
     """
 
-    def _filter(self, load):
+    def filter_(self, load):
         filtered_servers = [server for server in self.servers if server["load"] == load]
         return filtered_servers
 
@@ -100,7 +100,7 @@ class MaxLoadFilter(Filter):
     Filter to match maximum load
     """
 
-    def _filter(self, load):
+    def filter_(self, load):
         filtered_servers = [server for server in self.servers if server["load"] <= load]
         return filtered_servers
 
@@ -110,7 +110,7 @@ class MinLoadFilter(Filter):
     Filter to match minimum load
     """
 
-    def _filter(self, load):
+    def filter_(self, load):
         filtered_servers = [server for server in self.servers if server["load"] >= load]
         return filtered_servers
 

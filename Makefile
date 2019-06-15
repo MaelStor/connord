@@ -8,7 +8,7 @@ install: connord/scripts/openvpn_up_down.bash
 	pip install .
 
 clean:
-	rm -rf dist pip-wheel-metadata
+	rm -rf dist pip-wheel-metadata build
 	find . -regex ".*/__pycache__" -exec rm -rf {} +
 	find . -regex ".*\.egg-info" -exec rm -rf {} +
 
@@ -25,8 +25,23 @@ venv:
 	python -m pip install -r requirements-devel.txt
 	python -m pip install -e .
 
+.ONESHELL:
 test:
+	@retval=0;
 	pytest --cov=connord --cov-report term-missing:skip-covered tests/
+	@if [ $$? -ne 0 ]; then retval=1; fi
+	@echo '============================== Test Scipts ============================='
+	@for f in tests/scripts/*; do
+		@echo -n "Running $$f: "
+		@if ./$$f >/dev/null; then 
+			@echo 'OK'
+		@else
+			@echo 'FAILED'
+			@retval=1;
+		@fi
+	@done
+	@echo '========================================================================'
+	@exit $$retval
 
 .ONESHELL:
 tox: clean

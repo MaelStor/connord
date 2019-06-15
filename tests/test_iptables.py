@@ -6,7 +6,7 @@
 # 'connord.iptables.user.needs_root', lambda *x, **y: lambda f: f)
 
 # from connord import user
-from main_test_module import _get_expected_servers_by_domain
+from main_test_module import get_expected_servers_by_domain
 
 
 def test_get_table_name_when_config_is_valid():
@@ -387,11 +387,11 @@ def test_is_table_v6(mocker):
 
 
 def test_apply_config_dir_when_apply_config_bad(mocker):
-    _config_files = ["testing", "config"]
-    _config_dir = "testdir"
+    config_files = ["testing", "config"]
+    config_dir = "testdir"
 
     mocked_find = mocker.patch("connord.iptables.resources.list_config_dir")
-    mocked_find.return_value = _config_files
+    mocked_find.return_value = config_files
     mocked_apply = mocker.patch("connord.iptables.apply_config")
     mocked_apply.return_value = False
 
