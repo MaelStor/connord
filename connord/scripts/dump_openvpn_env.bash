@@ -68,7 +68,7 @@ list_insert() {
 }
 
 to_lower() {
-  echo "$1" | tr '[:upper:]' '[:lower:]'
+  echo "$1" | tr '[:upper:]-' '[:lower:]_'
 }
 
 add_list_key "${script_type}_args"
