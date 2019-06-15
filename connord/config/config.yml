@@ -29,8 +29,8 @@
 iptables:
   dns:
     # NordVPN
-    - '103.86.99.100/32'
-    - '103.86.96.100/32'
+    - "103.86.99.100/32"
+    - "103.86.96.100/32"
   # These variables must be set if you want to use the iptables rules defined in
   # the config directory
   #
@@ -41,7 +41,68 @@ iptables:
 connord:
   # A default when this option is not given on the commandline.
   # possible values: max, min, exact
-  load_match: 'max'
+  load_match: "max"
   # possible values: 0 <= x <= 100
   load: 10
 
+openvpn:
+  # For an overview of all possible flags see also: `$ man 8 openvpn`. If you
+  # want to use --up, --down or any other command that takes scripts see
+  # 'scripts' section below. Flags that don't take an argument must be either
+  # set to True or False.
+
+  ##### Daemon
+  # To see whats going on 'daemon' defaults to False.
+  daemon: False
+
+  ##### OpenVPN configuration files
+  # If you don't want to use NordVPN or want to stick to a specific
+  # configuration you may specify config here
+  # config: /path/to/config.{conf,ovpn}
+
+  ##### Authentication
+  # May be 'built-in' to use connord's credentials file or specify one of your
+  # own with an absolute path. If switched off it may be useful to set
+  # auth-nocache to False or else openvpn may ask you multiple times for your
+  # credentials.
+  auth-user-pass: "built-in"
+  # Don't cache --askpass or --auth-user-pass username/passwords in virtual
+  # memory.
+  auth-nocache: False
+  # type may be one of 'none', 'nointeract', 'interact'
+  auth-retry: "nointeract"
+
+  ##### Miscelleanous
+  down-pre: True
+  redirect-gateway: True
+
+  ##### Scripts
+  # This allows scripts to be used during initialization of openvpn
+  script-security: 2
+
+  # 'scripts' is special to connord and not found within openvpn documentation.
+  # Pass the path to your script or use 'built-in' to use the one from connord.
+  # You may comment out a script if you don't want to use a
+  # script. If you switch them off take caution not to use variables
+  # from these scripts in your rules files. 'stage' may be 'up', 'down',
+  # 'always' or 'never' and gives a hint when to check for existence of the file
+  # specified with 'creates'. If a script doesn't create anything add an empty
+  # string to 'creates'.
+  scripts:
+    # An example for an own up script
+    # - name: 'myup'
+    #   path: '/path/to/myupscript'
+    #   stage: 'up'
+    #   creates: ''
+    - name: "up"
+      path: "built-in"
+      stage: "up"
+      creates: "up.env"
+    - name: "down"
+      path: "built-in"
+      stage: "down"
+      creates: "down.env"
+    - name: "ipchange"
+      path: "built-in"
+      stage: "always"
+      creates: "ipchange.env"

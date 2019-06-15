@@ -87,6 +87,7 @@ def ping_servers_parallel(servers_):
         return pinged_servers
 
 
+# pylint: disable=too-many-arguments
 def filter_servers(
     servers_, netflix, countries_, areas_, features_, types_, load_, match
 ):
@@ -123,6 +124,7 @@ def connect_to_specific_server(domain, openvpn, daemon, protocol):
     return run_openvpn(server, openvpn, daemon, protocol)
 
 
+# pylint: disable=too-many-locals
 @user.needs_root
 def connect(
     domain,
@@ -174,78 +176,144 @@ def connect(
     raise ConnectError("No server found to establish a connection.")
 
 
-def add_openvpn_cmd_option(openvpn_cmd, flag, *args):
-    if flag not in openvpn_cmd:
-        openvpn_cmd.append(flag)
-        for arg in args:
-            openvpn_cmd.append(arg)
-    return openvpn_cmd
+class OpenvpnCommand:
+    def __init__(self, server, openvpn, daemon, protocol):
+        self.server = server
+        self.domain = server["domain"]
+        self.openvpn_options = openvpn
+        self.daemon = daemon
+        self.protocol = protocol
+        self.cmd = ["openvpn"]
 
+    def _add_openvpn_cmd_option(self, flag, *args):
+        if flag.startswith("-"):
+            if flag not in self.cmd:
+                self.cmd.append(flag)
+                for arg in args:
+                    self.cmd.append(arg)
+        else:  # flag seems to be an argument and can be added without checks
+            self.cmd.append(flag)
 
-@user.needs_root
-def run_openvpn(server, openvpn, daemon, protocol):
-    chroot_dir = "/var/openvpn"
-    os.makedirs(chroot_dir, mode=0o700, exist_ok=True)
-    domain = server["domain"]
+    @staticmethod
+    def _format_flag(flag):
+        return "--{}".format(flag)
 
-    openvpn_options = []
-    if openvpn:
-        openvpn_options = openvpn.split()
+    def _forge_number(self, key, value):
+        flag = self._format_flag(key)
+        self._add_openvpn_cmd_option(flag, str(value))
 
-    cmd = ["openvpn"]
-    for option in openvpn_options:
-        cmd.append(option)
+    def _forge_string(self, key, value):
+        flag = self._format_flag(key)
+        if key == "auth-user-pass":
+            if value == "built-in":
+                creds_file = resources.get_credentials_file()
+            else:
+                creds_file = value
 
-    if daemon:
-        cmd = add_openvpn_cmd_option(cmd, "--daemon")
+            self._add_openvpn_cmd_option(flag, creds_file)
+        else:
+            self._add_openvpn_cmd_option(flag, value)
 
-    try:
-        config_file = resources.get_ovpn_config(domain, protocol)
-    except resources.ResourceNotFoundError:
-        update.update(force=True)  # give updating a try else let the error pass through
-        config_file = resources.get_ovpn_config(domain, protocol)
+    def _forge_bool(self, key, value):
+        if value and value not in ("False", "false"):
+            flag = self._format_flag(key)
+            self._add_openvpn_cmd_option(flag)
 
-    cmd = add_openvpn_cmd_option(cmd, "--config", config_file)
+    def _forge_list(self, key, list_):
+        if key == "scripts":
+            self._forge_scripts(list_)
+        else:
+            flag = self._format_flag(key)
+            self._add_openvpn_cmd_option(flag, list_)
 
-    credentials_file = resources.get_credentials_file(create=True)
-    cmd = add_openvpn_cmd_option(cmd, "--auth-user-pass", credentials_file)
-    cmd = add_openvpn_cmd_option(cmd, "--auth-nocache")
-    cmd = add_openvpn_cmd_option(cmd, "--auth-retry", "nointeract")
+    @staticmethod
+    def _format_script_arg(script_name, path, file_):
+        if path == "built-in":
+            script_path = resources.get_scripts_file(script_name=script_name)
+            env_dir = resources.get_stats_dir()
+            env_file = "{}/{}".format(env_dir, file_)
+        else:
+            script_path = path
+            env_file = file_
 
-    cmd = add_openvpn_cmd_option(cmd, "--script-security", "2")
+        return "{} {}".format(script_path, env_file)
 
-    up_down_script = resources.get_scripts_file(script_name="openvpn_up_down.bash")
-    up_output_path = resources.get_stats_file(stats_name="up.env", create=True)
-    up_arg = "{} {}".format(up_down_script, up_output_path)
-    cmd = add_openvpn_cmd_option(cmd, "--up", up_arg)
-    down_output_path = resources.get_stats_file(stats_name="down.env", create=True)
-    down_arg = "{} {}".format(up_down_script, down_output_path)
-    cmd = add_openvpn_cmd_option(cmd, "--down", down_arg)
+    def _forge_scripts(self, scripts):
+        for script in scripts:
+            name = script["name"]
+            flag = self._format_flag(name)
+            path = script["path"]
+            file_ = script["creates"]
+            if name in ("up", "down"):
+                arg = self._format_script_arg("openvpn_up_down.bash", path, file_)
+            elif name == "ipchange":
+                arg = self._format_script_arg("openvpn_ipchange.bash", path, file_)
+            else:
+                if path == "built-in":
+                    raise resources.ResourceNotFoundError(
+                        "No built-in found for {!r}.".format(name)
+                    )
 
-    cmd = add_openvpn_cmd_option(cmd, "--down-pre")
-    cmd = add_openvpn_cmd_option(cmd, "--redirect-gateway")
-    ipchange_script = resources.get_scripts_file(script_name="openvpn_ipchange.bash")
-    ipchange_output_path = resources.get_stats_file(
-        stats_name="ipchange.env", create=True
-    )
-    flag = "{} {}".format(ipchange_script, ipchange_output_path)
-    cmd = add_openvpn_cmd_option(cmd, "--ipchange", flag)
+                arg = self._format_script_arg(name, path, file_)
 
-    try:
-        with subprocess.Popen(cmd) as ovpn:
+            self._add_openvpn_cmd_option(flag, arg)
+
+    def _forge_command_line(self):
+        if self.openvpn_options:
+            for option in self.openvpn_options.split():
+                self._add_openvpn_cmd_option(option)
+
+        if self.daemon:
+            self._add_openvpn_cmd_option("--daemon")
+
+    def _forge_config(self):
+        openvpn_config = resources.get_config()["openvpn"]
+        for k, v in openvpn_config.items():
+            if isinstance(v, bool) or v in ("true", "True", "false", "False"):
+                self._forge_bool(k, v)
+            elif isinstance(v, list):
+                self._forge_list(k, v)
+            elif isinstance(v, (int, float)):
+                self._forge_number(k, v)
+            else:
+                self._forge_string(k, v)
+
+    def has_flag(self, flag):
+        return flag in self.cmd
+
+    def forge(self):
+        self._forge_command_line()
+        self._forge_config()
+        if "--config" not in self.cmd:
+            try:
+                config_file = resources.get_ovpn_config(self.domain, self.protocol)
+                self._add_openvpn_cmd_option("--config", config_file)
+            except resources.ResourceNotFoundError:
+                update.update(
+                    force=True
+                )  # give updating a try else let the error happen
+                config_file = resources.get_ovpn_config(self.domain, self.protocol)
+                self._add_openvpn_cmd_option("--config", config_file)
+
+    def run(self):
+        config_dict = resources.get_config()["openvpn"]
+        with subprocess.Popen(self.cmd) as ovpn:
             # pylint: disable=unused-variable
             for i in range(50):  # give openvpn a maximum of 10 seconds to startup
                 try:
                     if not ovpn.poll():
                         # delay initialization of iptables until resource files are
                         # created
-                        resources.get_stats_file(
-                            stats_name="ipchange.env", create=False
-                        )
-                        resources.get_stats_file(stats_name="up.env", create=False)
+                        for script in config_dict["scripts"]:
+                            stage = script["stage"]
+                            if stage in ("up", "always"):
+                                resources.get_stats_file(
+                                    stats_name=script["creates"], create=False
+                                )
+
                     # safety gap
                     time.sleep(0.5)
-                    iptables.apply_config_dir(server, protocol)
+                    iptables.apply_config_dir(self.server, self.protocol)
                     break
                 except resources.ResourceNotFoundError:
                     time.sleep(0.2)
@@ -255,13 +323,25 @@ def run_openvpn(server, openvpn, daemon, protocol):
 
             if not ovpn.poll():
                 ovpn.wait()
+
+        return True
+
+
+@user.needs_root
+def run_openvpn(server, openvpn, daemon, protocol):
+    openvpn_cmd = OpenvpnCommand(server, openvpn, daemon, protocol)
+    openvpn_cmd.forge()
+
+    retval = False
+    try:
+        retval = openvpn_cmd.run()
     except KeyboardInterrupt:
         time.sleep(1)
 
-    if not daemon:
+    if not openvpn_cmd.has_flag("--daemon"):
         iptables.reset(fallback=True)
 
-    return True
+    return retval
 
 
 @user.needs_root
