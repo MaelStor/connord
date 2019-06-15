@@ -20,10 +20,10 @@
 ################################################################################
 # config.yml
 #
-# Configuration for iptables and connord. Any variable/dictionary etc. defined
-# here can be used in fallback and rules files. Current variables in the
-# iptables dictionary are just a reasonable default and can be deleted if not in
-# use.
+# Configuration for iptables, openvpn and connord. Any variable/dictionary etc.
+# defined here can be used in fallback and rules files. Current variables in the
+# iptables and openvpn dictionary are just a reasonable default and can be
+# adjusted or deleted if not in use.
 # ##############################################################################
 
 iptables:
@@ -34,16 +34,9 @@ iptables:
   # These variables must be set if you want to use the iptables rules defined in
   # the config directory
   #
-  # lan_interface: your_interface here
-  # lan_address: ip address with or without cidr of your lan
-  # vpn_interface: tun+
-
-connord:
-  # A default when this option is not given on the commandline.
-  # possible values: max, min, exact
-  load_match: "max"
-  # possible values: 0 <= x <= 100
-  load: 10
+  # lan_interface: your_interface_here
+  # lan_address: lan_address # with or without cidr of your lan
+  # vpn_interface: tun+ # Also available as 'dev' from openvpn environment
 
 openvpn:
   # For an overview of all possible flags see also: `$ man 8 openvpn`. If you
@@ -57,7 +50,7 @@ openvpn:
 
   ##### OpenVPN configuration files
   # If you don't want to use NordVPN or want to stick to a specific
-  # configuration you may specify config here
+  # configuration you may specify a config here
   # config: /path/to/config.{conf,ovpn}
 
   ##### Authentication
@@ -87,10 +80,11 @@ openvpn:
   # from these scripts in your rules files. 'stage' may be 'up', 'down',
   # 'always' or 'never' and gives a hint when to check for existence of the file
   # specified with 'creates'. If a script doesn't create anything add an empty
-  # string to 'creates'.
+  # string to 'creates'. Created files of built-in scripts can be found in
+  # /var/run/connord
   scripts:
     # An example for an own up script
-    # - name: 'myup'
+    # - name: 'up'
     #   path: '/path/to/myupscript'
     #   stage: 'up'
     #   creates: ''
