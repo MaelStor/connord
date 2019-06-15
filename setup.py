@@ -48,7 +48,7 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     entry_points={"console_scripts": ["connord = connord.__main__:main"]},
-    url="http://gitlab.noiams.space/maelstor/connord",
+    url="https://github.com/MaelStor/connord",
     author="Mael Stor",
     author_email="maelstor@posteo.de",
     license="GPL-3.0-or-later",
