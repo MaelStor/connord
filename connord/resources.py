@@ -386,3 +386,9 @@ def write_stats(stats_dict, stats_name="stats"):
 
     with open(stats_file, "w") as stats_fd:
         yaml.dump(stats_dict, stats_fd, default_flow_style=False)
+
+
+def read_pid(pid_name="openvpn.pid"):
+    pid_file = get_stats_file(stats_name=pid_name)
+    with open(pid_file, "r") as pid_fd:
+        return int(pid_fd.readline())

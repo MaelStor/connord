@@ -66,18 +66,15 @@ def test_main_when_command_is_list(mocker):
     mocked_list.main.assert_called_once()
 
 
-def test_main_when_command_is_kill(mocker):
+def test_main_when_command_is_kill_user_is_not_root(mocker):
     argv = ["connord", "kill"]
     mocker.patch.object(connord.sys, "argv", argv)
-    mocked_connect = mocker.patch("connord.connect.kill_openvpn")
 
     try:
         connord.main()
         assert False
     except SystemExit as error:
-        assert error.code == 0
-
-    mocked_connect.assert_called_once()
+        assert error.code == 1
 
 
 class ArgumentFixture:

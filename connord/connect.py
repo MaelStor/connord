@@ -304,6 +304,11 @@ class OpenvpnCommand:
                 config_file = resources.get_ovpn_config(self.domain, self.protocol)
                 self._add_openvpn_cmd_option("--config", config_file)
 
+        if not self.has_flag("--writepid"):
+            pid_dir = resources.get_stats_dir(create=True)
+            pid_file = pid_dir + "/openvpn.pid"
+            self._add_openvpn_cmd_option("--writepid", pid_file)
+
     def is_daemon(self):
         return "--daemon" in self.cmd
 
@@ -390,12 +395,15 @@ def run_openvpn(server, openvpn, daemon, protocol):
 
 
 @user.needs_root
-def kill_openvpn():
-    cmd = ["ps"]
-    cmd.append("-A")
-    with subprocess.Popen(cmd, stdout=subprocess.PIPE) as proc:
-        out, _ = proc.communicate()
-        for line in out.decode().splitlines():
-            if "openvpn" in line:
-                pid = int(line.split(None, 1)[0])
-                os.kill(pid, signal.SIGTERM)
+def kill_openvpn(pid=None):
+    if pid:
+        os.kill(pid, signal.SIGTERM)
+    else:
+        cmd = ["ps"]
+        cmd.append("-A")
+        with subprocess.Popen(cmd, stdout=subprocess.PIPE) as proc:
+            out, _ = proc.communicate()
+            for line in out.decode().splitlines():
+                if "openvpn" in line:
+                    pid = int(line.split(None, 1)[0])
+                    os.kill(pid, signal.SIGTERM)

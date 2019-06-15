@@ -8,7 +8,7 @@ positional arguments:
     update              Update nordvpn configuration files.
     list                Prints all servers if no argument is given.
     connect             Connect to a server.
-    kill                Kill all processes of openvpn. Useful in daemon mode.
+    kill                Kill openvpn processes. Useful in daemon mode.
     iptables            Wrapper around iptables.
     version             Show version
 

@@ -205,8 +205,11 @@ your connection safe.
         action="store_true",
         help="Use TCP protocol. Only one of --udp or --tcp may be present.",
     )
-    command.add_parser(
-        "kill", help="Kill all processes of openvpn. Useful in daemon mode."
+    kill_cmd = command.add_parser(
+        "kill", help="Kill openvpn processes. Useful in daemon mode."
+    )
+    kill_cmd.add_argument(
+        "-a", "--all", action="store_true", help="Kill all openvpn processes."
     )
     iptables_cmd = command.add_parser("iptables", help="Wrapper around iptables.")
     iptables_cmd_subparsers = iptables_cmd.add_subparsers(dest="iptables_sub")
@@ -375,6 +378,15 @@ def process_iptables_cmd(args):
     return True
 
 
+@user.needs_root
+def process_kill_cmd(args):
+    if args.all:
+        connect.kill_openvpn()
+    else:
+        ovpn_pid = resources.read_pid()
+        connect.kill_openvpn(ovpn_pid)
+
+
 # This function has a high complexity score but it's kept simple though
 # pylint: disable=too-many-branches
 def main():  # noqa: C901
@@ -395,7 +407,7 @@ def main():  # noqa: C901
         elif args.command == "connect":
             process_connect_cmd(args)
         elif args.command == "kill":
-            connect.kill_openvpn()
+            process_kill_cmd(args)
         elif args.command == "iptables":
             process_iptables_cmd(args)
         else:
