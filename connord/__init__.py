@@ -29,5 +29,5 @@ class ConnordError(Exception):
 # in filters
 
 
-__version__ = "0.1.0-beta.4"
+__version__ = "0.1.0-beta.5"
 __license__ = "GNU General Public License v3 or later (GPLv3+)"
