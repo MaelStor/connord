@@ -232,7 +232,7 @@ def test_get_zip_file_when_default_parameters_path_exists(mocker):
     actual_result = resources.get_zip_file()
 
     # assert
-    mocked_get_zip_dir.assert_called_once_with(True)
+    mocked_get_zip_dir.assert_called_once_with(create=True)
     mocked_os.path.exists.assert_called_once_with(expected_result)
     assert actual_result == expected_result
 
@@ -254,7 +254,7 @@ def test_get_zip_file_when_default_parameters_path_not_exists(mocker):
         assert error.resource_file == expected_result
 
     # assert
-    mocked_get_zip_dir.assert_called_once_with(True)
+    mocked_get_zip_dir.assert_called_once_with(create=True)
     mocked_os.path.exists.assert_called_once_with(expected_result)
 
 
