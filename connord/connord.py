@@ -40,8 +40,8 @@ from .features import FeatureError
 # pylint: disable=too-many-statements,too-many-locals
 def parse_args(argv):
     """Parse arguments
-    :returns: list of args
 
+    :returns: list of args
     """
     description = """
 Connect to NordVPN servers secure and fast.
@@ -182,13 +182,6 @@ your connection safe.
         "-d", "--daemon", action="store_true", help="Start in daemon mode."
     )
     connect_cmd.add_argument(
-        "-i",
-        "--config",
-        type=str,
-        nargs="?",
-        help="Take config from /path/to/config.{yml|ini}.",
-    )
-    connect_cmd.add_argument(
         "-o",
         "--openvpn",
         dest="openvpn_options",
@@ -280,6 +273,7 @@ def process_list_cmd(args):
 def process_connect_cmd(args):
     """
     Process arguments for connect command
+
     :param object args: Command-line arguments
     :returns: True if processing was successful
     """
@@ -311,7 +305,6 @@ def process_connect_cmd(args):
         match = "max"
 
     daemon = args.daemon
-    config_ = args.config
     if args.openvpn_options:
         openvpn = args.openvpn_options[0]
     else:
@@ -334,7 +327,6 @@ def process_connect_cmd(args):
         load_,
         match,
         daemon,
-        config_,
         openvpn,
         protocol,
     )
@@ -342,6 +334,12 @@ def process_connect_cmd(args):
 
 @user.needs_root
 def process_iptables_cmd(args):
+    '''Process 'iptables' command
+
+    :param object args: command-line arguments as Namespace
+    :returns: True if processing was successful
+    '''
+
     if args.iptables_sub == "flush":
         if args.no_fallback:
             iptables.reset(fallback=False)
@@ -383,6 +381,11 @@ def process_iptables_cmd(args):
 
 @user.needs_root
 def process_kill_cmd(args):
+    '''Process 'kill' command
+
+    :param object args: Namespace object holding the command-line arguments
+    '''
+
     if args.all:
         connect.kill_openvpn()
     else:
@@ -393,7 +396,10 @@ def process_kill_cmd(args):
 # This function has a high complexity score but it's kept simple though
 # pylint: disable=too-many-branches
 def main():  # noqa: C901
-    """Entry Point for the program.
+    """Entry Point for the program. A first level argument processing method.
+    All Exceptions that lead to an exit of the program are catched here.
+
+    :raises: SystemExit either 0 or 1
     """
 
     if not sys.argv[1:]:

@@ -90,6 +90,7 @@ def map_types(types):
 
 
 def map_types_reverse(types):
+    '''Map types from descriptions to the internal used type codes.'''
 
     verify_types_description(types)
     mapped_types = [
@@ -100,6 +101,7 @@ def map_types_reverse(types):
 
 
 def has_type(server, server_type):
+    '''Return true if a server has server_type in categories.'''
     for category in server["categories"]:
         if category["name"] == server_type:
             return True

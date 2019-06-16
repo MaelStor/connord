@@ -15,6 +15,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
+'''Manage location database and formatting of areas'''
 
 import time
 import requests
@@ -35,6 +36,15 @@ API_URL = "https://nominatim.openstreetmap.org"
 
 @cached(cache=LRUCache(maxsize=50))
 def query_location(latitude, longitude):
+    '''Query location given with latitude and longitude coordinates
+    from remote nominatim api. The values are cached to reduce queries.
+    The nominatim api restricts queries to 1/sec.
+
+
+    :param latitude: string with the latitude in float notation
+    :param longitude: string with the longitude in float notation
+    :returns: dictionary of the response in json
+    '''
     header = {
         "User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:60.0) "
         "Gecko/20100101 Firefox/60.0"
@@ -60,11 +70,17 @@ def query_location(latitude, longitude):
 
 
 def init_database(connection):
+    '''Initialize location database
+
+    :param connection: a database connection
+    '''
+
     with connection:
         sqlite.create_location_table(connection)
 
 
 def update_database():
+    '''Updates the location database with least possible online queries.'''
     connection = sqlite.create_connection()
     with connection:
         init_database(connection)
@@ -105,12 +121,25 @@ def update_database():
 
 
 def get_server_angulars(server):
+    '''Return latitude and longitude from server
+
+    :param server: a dictionary describing a server
+    :returns: tuple with latitude and longitude
+    '''
     latitude = str(server["location"]["lat"])
     longitude = str(server["location"]["long"])
     return (latitude, longitude)
 
 
 def verify_areas(areas_):
+    '''Verify a list of areas if they can be resolved to valid areas saved in
+    the location database. Ambiguous strings resolve to more than one location.
+
+    :param areas_: list of areas
+    :returns: list of found areas
+    :raises: ValueError if an area could not be found
+             AreaError if the area string is ambiguous
+    '''
     if not isinstance(areas_, list):
         raise AreaError("Wrong areas: {!s}".format(areas_))
 
@@ -132,28 +161,38 @@ def verify_areas(areas_):
     if areas_not_found:
         raise ValueError("Areas not found: {!s}".format(areas_not_found))
 
-    ambigous_areas = {}
+    ambiguous_areas = {}
     for area, cities in areas_found.items():
         if len(cities) > 1:
-            ambigous_areas[area] = cities
+            ambiguous_areas[area] = cities
 
-    if ambigous_areas:
+    if ambiguous_areas:
         error_string = ""
-        for area, cities in ambigous_areas.items():
+        for area, cities in ambiguous_areas.items():
             error_string += " {}: {},".format(area, cities)
 
         error_string = error_string.rstrip(",")
-        raise AreaError("Ambigous Areas:{}".format(error_string))
+        raise AreaError("Ambiguous Areas:{}".format(error_string))
 
     return [area for area in areas_found.keys()]
 
 
 def get_translation_table():
+    '''Translate special characters to the english equivalent
+
+    :returns: a translation table
+    '''
     return str.maketrans("áãčëéşșť", "aaceesst")
 
 
 def filter_servers(servers_, areas_):
-    """Filter servers by areas"""
+    """Filter servers by areas
+
+    :param servers_: list of servers as dictionary
+    :param areas_: list of areas as string
+    :returns: servers which match the list of areas
+    :raises: TypeError when servers_ is None
+    """
 
     if servers_ is None:
         raise TypeError("Servers may not be None")
@@ -185,6 +224,12 @@ def filter_servers(servers_, areas_):
 
 
 def get_min_id(city):
+    '''Calculate the minimum string which must be given to identify an area
+    unambiguously
+
+    :param city: the area/city as string
+    :returns: the minimum string
+    '''
     min_id = ""
     word = ""
     translation_table = get_translation_table()
@@ -205,6 +250,11 @@ def get_min_id(city):
 
 @cached(cache=TTLCache(ttl=60, maxsize=1))
 def get_locations():
+    '''Return all locations found in the database. If the database does not exist
+    update the database
+
+    :returns: a list of all locations
+    '''
     connection = sqlite.create_connection()
     with connection:
         locations = sqlite.get_locations(connection)
@@ -216,7 +266,14 @@ def get_locations():
 
 
 class AreasPrettyFormatter(Formatter):
+    '''Format areas in pretty format'''
+
     def format_headline(self, sep="="):
+        '''Format the headline
+
+        :param sep: filling character and separator
+        :returns: the headline
+        '''
         headline = self.format_ruler(sep) + "\n"
         headline += "{:8}: {:^15} {:^15}  {:40}\n".format(
             "Mini ID", "Latitude", "Longitude", "City"
@@ -226,6 +283,11 @@ class AreasPrettyFormatter(Formatter):
         return headline
 
     def format_area(self, location):
+        '''Format the area
+
+        :param location: tuple of strings (latitude, longitude)
+        :returns: the area as string
+        '''
         lat = float(location["latitude"])
         lon = float(location["longitude"])
         display_name = location["display_name"]
@@ -239,6 +301,12 @@ class AreasPrettyFormatter(Formatter):
 
 
 def to_string(stream=False):
+    '''High-level command to format areas and returns the resulting string if not
+    streaming directly to screen.
+
+    :param stream: True if the output shall be streamed to stdout
+    :returns: When streaming an empty string or else the result of the formatter
+    '''
     formatter = AreasPrettyFormatter()
     file_ = formatter.get_stream_file(stream)
 
@@ -255,4 +323,5 @@ def to_string(stream=False):
 
 
 def print_areas():
+    '''High-level command to print areas to stdout'''
     to_string(stream=True)

@@ -17,7 +17,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-Everything around version
+Prints the version along with the copyright.
 """
 
 from connord import __version__
@@ -30,7 +30,7 @@ shipped with this software for details."""
 
 # TODO: Rename to show()
 def print_version():
-    """Prints the version of connord
+    """Prints the version of connord along with the copyright.
     """
     # TODO: Show config in use along with the version
     print("connord", __version__)

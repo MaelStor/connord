@@ -22,28 +22,41 @@ import sys
 
 
 class Formatter:
-    """Basic formatter"""
+    """Basic formatter class"""
 
     def __init__(self, output=None, max_line_length=80):
+        '''Init
+
+        :param output: if None set to ''. May be some leading output.
+        :param max_line_length: Every calculation depends on the maximum column width
+        '''
+
         self.max_line_length = max_line_length
         self.output = output if output else ""
 
     def format_ruler(self, sep="="):
+        '''Returns a ruler with sep as fill with max_line_length as width.'''
         return sep * self.max_line_length
 
     def center_string(self, string, sep=" "):
+        '''Return a string within sep as fill with max_line_length as width.'''
         left = (self.max_line_length - len(string) - 2) // 2
         right = self.max_line_length - left - len(string) - 2
         return "{} {} {}".format(left * sep, string, right * sep)
 
     def write(self, string):
+        '''Append the string to the output. Must be named write to be compatible
+        to the built-in print function.
+        '''
         self.output += string
 
     def get_output(self, rstrip=True):
+        '''Return the possibly stripped output collected so far'''
         if rstrip:
             return self.output.rstrip()
 
         return self.output
 
     def get_stream_file(self, stream=False):
+        '''Return self as stream if False else stdout'''
         return sys.stdout if stream else self

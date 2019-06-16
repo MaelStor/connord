@@ -39,6 +39,7 @@ class IptablesError(ConnordError):
 
 
 def get_table_name(config_file):
+    '''Return the table name extracted from the filename'''
     table_regex = re.compile(r"[0-9]*[-]?([a-zA-Z]+[6]?).(rules|fallback)")
     base = os.path.basename(config_file)
     result = table_regex.search(base)
@@ -53,6 +54,8 @@ def get_table_name(config_file):
 
 @user.needs_root
 def init_table(table_name):
+    '''Return a table object with table_name if present in iptc.Table[6].ALL else
+    raise a TypeError.'''
     if table_name.endswith("6"):
         table_name = table_name[:-1]
         for table in Table6.ALL:
@@ -70,15 +73,18 @@ def init_table(table_name):
 
 @user.needs_root
 def init_table_from_file_name(config_file):
+    '''Returns a table object with table name extracted from config_file'''
     table_name = get_table_name(config_file)
     return init_table(table_name)
 
 
 def is_table_v6(table):
+    '''Return true if the table is ivp6'''
     return isinstance(table, Table6)
 
 
 def flush_tables(ipv6=False):
+    '''Flush all tables and apply the default policy ACCEPT to standard tables'''
     iptc.easy.flush_all(ipv6=ipv6)
     policy = iptc.Policy("ACCEPT")
     for table_s in iptc.easy.get_tables(ipv6):
@@ -87,6 +93,7 @@ def flush_tables(ipv6=False):
 
 
 def reset(fallback=True):
+    '''Reset all tables to fallback if True else just flush them'''
     flush_tables()
     flush_tables(ipv6=True)
     if fallback:
@@ -95,6 +102,11 @@ def reset(fallback=True):
 
 @user.needs_root
 def apply_config(config_file, server=None, protocol=None):
+    '''Apply a configuration to ip[6]tables (depends on the file name)
+
+    :raises: IptablesError if an invalid rule is present. This leaves the
+             table intact with rules applied so far.
+    '''
     table = init_table_from_file_name(config_file)
     table_s = table.name
     is_ipv6 = is_table_v6(table)
@@ -122,9 +134,13 @@ def apply_config(config_file, server=None, protocol=None):
                     try:
                         iptc.easy.add_rule(table_s, chain_s, rule_d, ipv6=is_ipv6)
                     except ValueError:
-                        raise IptablesError("Malformed rule: {}".format(rule_d))
+                        raise IptablesError(
+                            "Malformed rule: {}\n  in {}.{}".format(
+                                rule_d, table_s, chain_s))
                 else:
-                    raise IptablesError("Malformed rule: {}".format(rule_d))
+                    raise IptablesError(
+                        "Malformed rule: {}\n  in {}.{}".format(
+                            rule_d, table_s, chain_s))
         except KeyError:
             pass
 
@@ -133,6 +149,14 @@ def apply_config(config_file, server=None, protocol=None):
 
 @user.needs_root
 def apply_config_dir(server=None, protocol=None, filetype="rules"):
+    '''High-level command to apply the whole configuration directory with rules or
+    fallback files in it.
+    
+    :param server: If None this applies 0.0.0.0/0 instead
+    :param protocol: If None the default 'udp' is taken
+    :param filetype: default is rules but may be fallback too.
+    :returns: True on success
+    '''
     config_files = resources.list_config_dir(filetype=filetype)
     retval = True
     for config_file in config_files:
@@ -163,6 +187,15 @@ def merge_environment(config_data_dict=None):
 
 
 def render_template(config_file, server=None, protocol=None):
+    '''Render a jinja2 template with data from config.yml per default. Adds some
+    useful variables to the environment which can be uses in rules and fallback
+    files.
+
+    :param config_file: the template
+    :param server: if None this defaults to 0.0.0.0/0
+    :param protocol: if None this defaults to 'udp'
+    :returns: the rendered template as string
+    '''
     config_data_file = resources.get_config_file()
     env = Environment(
         loader=FileSystemLoader(os.path.dirname(config_data_file)),
@@ -196,6 +229,14 @@ def render_template(config_file, server=None, protocol=None):
 
 @user.needs_root
 def read_config(config_file, server=None, protocol=None):
+    '''High-level abstraction for the render_template method
+
+    :param config_file: the template
+    :param server: the server as dict or None
+    :param protocol: the used protocol as string. may be one of 'udp' or 'tcp'
+    :returns: the rendered template file as dictionary
+    '''
+
     rendered_template = render_template(config_file, server, protocol)
     return yaml.safe_load(rendered_template)
 
@@ -204,6 +245,13 @@ class IptablesPrettyFormatter(Formatter):
     """Pretty format for iptables"""
 
     def format_table_header(self, table, sep="="):
+        '''Format the table header
+
+        :param object table: An iptables table
+        :param sep: Fill with separator
+        :returns: the table surrounded by line filled with sep
+        '''
+
         prefix = sep * 2
         string = table.name.upper()
         suffix = sep * (self.max_line_length - 4 - len(string))
@@ -212,6 +260,12 @@ class IptablesPrettyFormatter(Formatter):
         return table_header
 
     def format_chain_header(self, chain, sep="="):
+        '''Format the chain header
+
+        :param object chain: An iptables chain
+        :param sep: Fill or separator
+        :returns: the chain centered in a filled line with sep
+        '''
         policy = chain.get_policy()
         if policy:
             policy_s = policy.name
@@ -222,6 +276,14 @@ class IptablesPrettyFormatter(Formatter):
         return self.center_string(string, sep)
 
     def format_rule(self, rule, rule_number, sep="-"):
+        '''Format a rule
+
+        :param object rule: An iptables rule
+        :param rule_number: the number of the rule in the chain
+        :param sep: Separator/Fill
+        :returns: the formatted rule in 2 lines with a separating rule appended
+        '''
+
         # convert to short cidr notation
         src_net = str(netaddr.IPNetwork(str(rule.src)).cidr)
         dst_net = str(netaddr.IPNetwork(str(rule.dst)).cidr)
@@ -257,6 +319,14 @@ class IptablesPrettyFormatter(Formatter):
 
 @user.needs_root
 def to_string(tables=None, version="4", stream=False):
+    '''Formats tables, chains and rules. If stream is True print directly to
+    stdout else collect all lines in formatter.output
+
+    :param tables: list of tables defaults to ['filter']
+    :param version: either 6 for ip6tables else 4 for iptables
+    :param stream: If true stream to stdout instead of formatter.output
+    '''
+
     if tables is None:
         tables = ["filter"]
 
@@ -291,4 +361,5 @@ def to_string(tables=None, version="4", stream=False):
 
 
 def print_iptables(tables=None, version="4"):
+    '''Convenience function to print given tables in version to stdout'''
     to_string(tables, version, stream=True)

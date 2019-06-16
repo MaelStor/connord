@@ -91,7 +91,7 @@ COUNTRIES = {
 
 
 class CountryError(ConnordError):
-    """Thrown within this module"""
+    """Raised within this module"""
 
 
 def verify_countries(countries):

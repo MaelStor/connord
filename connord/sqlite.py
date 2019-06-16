@@ -42,6 +42,11 @@ def create_connection(db_file=None):
 
 
 def create_table(connection, create_table_sql):
+    '''Create the table. Prints errors to stdout.
+
+    :param connection: a database connection
+    :param create_table_sql: the sql to create the table.
+    '''
     try:
         cursor = connection.cursor()
         cursor.execute(create_table_sql)
@@ -50,6 +55,12 @@ def create_table(connection, create_table_sql):
 
 
 def create_location(connection, location):
+    '''Create a location in the location table. Prints errors to stdout.
+
+    :param connection: a database connection
+    :param location: tuple with (latitude, longitude, display_name, city, country,
+                     country_code)
+    '''
     sql = """ INSERT OR IGNORE INTO locations(
                 latitude,
                 longitude,
@@ -69,6 +80,9 @@ def create_location(connection, location):
 
 
 def location_exists(connection, latitude, longitude):
+    '''Return true if a location (latitude, longitude) exists. Prints errors to
+    stdout.'''
+
     sql = """SELECT latitude, longitude FROM locations
             WHERE latitude = {} AND longitude = {}""".format(
         latitude, longitude
@@ -83,6 +97,8 @@ def location_exists(connection, latitude, longitude):
 
 
 def get_city(connection, latitude, longitude):
+    '''Return the city specified with latitude and longitude. Prints errors to
+    stdout.'''
     sql = """SELECT city FROM locations
             WHERE latitude = {} AND longitude = {}""".format(
         latitude, longitude
@@ -98,6 +114,8 @@ def get_city(connection, latitude, longitude):
 
 @cached(cache=TTLCache(ttl=60, maxsize=5))
 def get_locations(connection):
+    '''Returns all locations found in the database as list. Prints errors to
+    stdout.'''
     connection.row_factory = sqlite3.Row
     sql = """SELECT * FROM locations"""
 
@@ -110,6 +128,8 @@ def get_locations(connection):
 
 
 def get_display_name(connection, latitude, longitude):
+    '''Return the display_name of the city specified by latitude, longitude. Prints
+    errors to stdout.'''
     sql = """SELECT display_name FROM locations
             WHERE latitude = {} AND longitude = {}""".format(
         latitude, longitude
@@ -124,6 +144,10 @@ def get_display_name(connection, latitude, longitude):
 
 
 def create_location_table(connection):
+    '''Creates the location table if it doesn't exist.
+
+    :raises: SqliteError if connection is None
+    '''
     sql_create_location_table = """ CREATE TABLE IF NOT EXISTS locations(
                                         latitude text NOT NULL,
                                         longitude text NOT NULL,
