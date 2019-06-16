@@ -24,9 +24,8 @@ def test_update_orig_when_zip_file_not_exists(mocker):
 
     try:
         update.update_orig()
+    except resources.ResourceNotFoundError:
         assert False
-    except resources.ResourceNotFoundError as error:
-        assert error.resource_file == zippath
 
     mocked_shutil.assert_not_called()
 
