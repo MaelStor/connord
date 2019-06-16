@@ -312,7 +312,10 @@ def process_connect_cmd(args):
 
     daemon = args.daemon
     config_ = args.config
-    openvpn = args.openvpn_options
+    if args.openvpn_options:
+        openvpn = args.openvpn_options[0]
+    else:
+        openvpn = args.openvpn_options
 
     if args.udp:
         protocol = "udp"
