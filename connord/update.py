@@ -43,8 +43,13 @@ def update_orig():
     Move the original file to make room for the newly downloaded file
     """
 
-    zip_file = resources.get_zip_file(create_dirs=True)
+    try:
+        zip_file = resources.get_zip_file(create_dirs=True)
+    except resources.ResourceNotFoundError:
+        return False
+
     move(zip_file, zip_file + ".orig")
+    return True
 
 
 def get():
@@ -76,7 +81,8 @@ def file_equals(file_, other_):
 def unzip():
     """Unzip the configuration files
     """
-    zip_dir = resources.get_zip_dir()
+
+    zip_dir = resources.get_zip_dir(create=True)
     zip_file = resources.get_zip_file()
     print("Unzipping {} ...".format(zip_file))
     with ZipFile(zip_file) as zip_stream:
@@ -90,8 +96,8 @@ def update(force=False):
         get()
         unzip()
     else:
-        zip_file = resources.get_zip_file()
-        orig_file = resources.get_zip_file("ovpn.zip.orig")
+        zip_file = resources.get_zip_path()
+        orig_file = resources.get_zip_path("ovpn.zip.orig")
         if update_needed():
             get()
             if not file_equals(orig_file, zip_file):
