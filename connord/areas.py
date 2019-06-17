@@ -200,6 +200,7 @@ def filter_servers(servers_, areas_):
     if areas_ is None or not areas_ or not servers_:
         return servers_
 
+    # TODO: already verified during command-line parsing
     areas_lower = [str.lower(area) for area in areas_]
     areas_found = verify_areas(areas_lower)
 
