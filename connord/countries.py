@@ -149,7 +149,6 @@ def filter_servers(servers, countries=None):
         return servers
 
     countries_lower = [str.lower(country) for country in countries]
-    verify_countries(countries_lower)
 
     # TODO: test if list comprehension is faster
     filtered_servers = []

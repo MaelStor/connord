@@ -86,8 +86,6 @@ def filter_servers(servers, features=None):
     if features is None or not features:
         features = ["openvpn_udp"]
 
-    verify_features(features)
-
     filtered_servers = []
     servers = servers.copy()
     for server in servers:

@@ -73,10 +73,8 @@ class AreaType:
     def __call__(self, value):
         try:
             areas.verify_areas([value])
-        except (areas.AreaError, ValueError):
-            raise argparse.ArgumentTypeError(
-                "'{}' is an unrecognized area.".format(value)
-            )
+        except (areas.AreaError, ValueError) as error:
+            raise argparse.ArgumentTypeError(str(error))
 
         return value
 
