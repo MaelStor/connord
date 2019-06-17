@@ -144,6 +144,7 @@ def verify_areas(areas_):
         raise AreaError("Wrong areas: {!s}".format(areas_))
 
     locations = get_locations()
+    translation_table = get_translation_table()
 
     areas_not_found = []
     # side effect: get rid of double entries in areas_ from command-line
@@ -151,7 +152,8 @@ def verify_areas(areas_):
     for area in areas_found.keys():
         for location in locations:
             city = location["city"]
-            city_lower = city.lower()
+            city_trans = city.translate(translation_table)
+            city_lower = city_trans.lower()
             if city_lower.startswith(area):
                 areas_found[area].append(city)
 
@@ -200,13 +202,13 @@ def filter_servers(servers_, areas_):
     if areas_ is None or not areas_ or not servers_:
         return servers_
 
+    translation_table = get_translation_table()
     areas_lower = [str.lower(area) for area in areas_]
-    areas_found = verify_areas(areas_lower)
+    areas_trans = [area.translate(translation_table) for area in areas_lower]
 
     filtered_servers = []
     connection = sqlite.create_connection()
     with connection:
-        translation_table = get_translation_table()
         for server in servers_:
             lat, lon = get_server_angulars(server)
             if not sqlite.location_exists(connection, lat, lon):
@@ -215,7 +217,7 @@ def filter_servers(servers_, areas_):
             city = sqlite.get_city(connection, lat, lon)[0]
             city = city.translate(translation_table)
             city = city.lower()
-            for area in areas_found:
+            for area in areas_trans:
                 if city.startswith(area):
                     filtered_servers.append(server)
                     break
@@ -230,15 +232,14 @@ def get_min_id(city):
     :param city: the area/city as string
     :returns: the minimum string
     '''
+
     min_id = ""
-    word = ""
     translation_table = get_translation_table()
     for char in city:
-        word += char.lower()
         char = char.translate(translation_table)
         min_id += char.lower()
         try:
-            verify_areas([word])
+            verify_areas([min_id])
             break
         except AreaError:
             continue

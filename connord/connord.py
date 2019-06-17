@@ -21,6 +21,7 @@
 
 import argparse
 import sys
+import re
 
 from requests.exceptions import RequestException
 
@@ -34,7 +35,104 @@ from connord import servers
 from connord import resources
 from connord import areas
 from connord import countries
+from connord import features
+from connord import types
 from .features import FeatureError
+
+
+# pylint: disable=too-few-public-methods
+class DomainType:
+
+    pattern = re.compile(r"(?P<country_code>[a-z]{2})(?P<number>[0-9]+)(.netflix.com)?")
+
+    def __call__(self, value):
+        match = self.pattern.match(value)
+        if not match:
+            raise argparse.ArgumentTypeError(
+                "'{}' is not a valid domain. Expected format is"
+                " {{country_code}}{{number}}[.netflix.com]".format(value)
+            )
+
+        country_code = match.groupdict()["country_code"]
+        CountryType().__call__(country_code)
+        return value
+
+
+class CountryType:
+    def __call__(self, value):
+        try:
+            countries.verify_countries([value])
+        except countries.CountryError:
+            raise argparse.ArgumentTypeError(
+                "'{}' is an unrecognized country.".format(value)
+            )
+        return value
+
+
+class AreaType:
+    def __call__(self, value):
+        try:
+            areas.verify_areas([value])
+        except (areas.AreaError, ValueError) as error:
+            raise argparse.ArgumentTypeError(str(error))
+
+        return value
+
+
+class TypeType:
+    def __call__(self, value):
+        try:
+            types.verify_types([value])
+        except types.ServerTypeError:
+            raise argparse.ArgumentTypeError(
+                "'{}' is an unrecognized type.".format(value)
+            )
+
+        return value
+
+
+class FeatureType:
+    def __call__(self, value):
+        try:
+            features.verify_features([value])
+        except FeatureError:
+            raise argparse.ArgumentTypeError(
+                "'{}' is an unrecognized feature.".format(value)
+            )
+
+        return value
+
+
+class LoadType:
+    def __call__(self, value):
+        try:
+            int_value = int(value)
+        except ValueError:
+            raise argparse.ArgumentTypeError(
+                "'{}' must be an integer between 0 and 100.".format(value)
+            )
+
+        if int_value < 0 or int_value > 100:
+            raise argparse.ArgumentTypeError(
+                "'{}' must be a value between 0 and 100.".format(value)
+            )
+
+        return int_value
+
+
+class TopType:
+    def __call__(self, value):
+        try:
+            int_value = int(value)
+        except ValueError:
+            raise argparse.ArgumentTypeError(
+                "'{}' must be a positive integer greater than 0.".format(value)
+            )
+
+        if int_value <= 0:
+            raise argparse.ArgumentTypeError(
+                "'{}' must be a positive integer greater than 0.".format(value)
+            )
 
 
 # pylint: disable=too-many-statements,too-many-locals
@@ -70,51 +168,63 @@ your connection safe.
         "--country",
         action="append",
         nargs="?",
-        help="select a specific country. may be specified multiple times. if \
-                one of these arguments has no specifier then all country \
-                codes are printed.",
+        type=CountryType(),
+        help="select a specific country. may be specified multiple times. if"
+             " one of these arguments has no specifier then all country"
+             " codes are printed.",
     )
     list_cmd.add_argument(
         "-a",
         "--area",
         action="append",
         nargs="?",
-        help="select a specific area.may be specified multiple times. if \
-                one of these arguments has no specifier then all areas \
-                are printed.",
+        type=AreaType(),
+        help="select a specific area.may be specified multiple times. if"
+             " one of these arguments has no specifier then all areas"
+             " are printed.",
     )
     list_cmd.add_argument(
         "-f",
         "--feature",
         action="append",
         nargs="?",
-        help="select servers with a specific list of features. may be  \
-                specified multiple times. if one of these arguments has no \
-                specifier then all possible features are printed.",
+        type=FeatureType(),
+        help="select servers with a specific list of features. may be"
+             " specified multiple times. if one of these arguments has no"
+             " specifier then all possible features are printed.",
     )
     list_cmd.add_argument(
         "-t",
         "--type",
         action="append",
         nargs="?",
-        help="select servers with a specific type. may be specified multiple \
-                times. if one of these arguments has no specifier then all \
-                possible types are printed.",
+        type=TypeType(),
+        help="select servers with a specific type. may be specified multiple"
+             " times. if one of these arguments has no specifier then all"
+             " possible types are printed.",
     )
     list_cmd.add_argument(
         "--netflix", action="store_true", help="Select servers configured for netflix."
     )
     list_load_group = list_cmd.add_mutually_exclusive_group()
     list_load_group.add_argument(
-        "--max-load", dest="max_load", type=int, help="Filter servers by maximum load."
+        "--max-load",
+        dest="max_load",
+        type=LoadType(),
+        help="Filter servers by maximum load.",
     )
     list_load_group.add_argument(
-        "--min-load", dest="min_load", type=int, help="Filter servers by minimum load."
+        "--min-load",
+        dest="min_load",
+        type=LoadType(),
+        help="Filter servers by minimum load.",
     )
     list_load_group.add_argument(
-        "--load", type=int, help="Filter servers by exact load match."
+        "--load", type=LoadType(), help="Filter servers by exact load match."
     )
-    list_cmd.add_argument("--top", type=int, help="Show TOP count resulting servers.")
+    list_cmd.add_argument(
+        "--top", type=TopType(), help="Show TOP count resulting servers."
+    )
     list_cmd.add_argument(
         "--iptables", action="store_true", help="List all rules in iptables"
     )
@@ -123,29 +233,31 @@ your connection safe.
     server_best.add_argument(
         "-s",
         "--server",
-        type=str,
+        type=DomainType(),
         nargs=1,
-        help="Connect to a specific server. Arguments -c, -a, -f, -t have no \
-        effect.",
+        help="Connect to a specific server. Arguments -c, -a, -f, -t have no"
+             " effect.",
     )
     server_best.add_argument(
         "-b",
         "--best",
         action="store_true",
-        help="Use best server depending on server load. When multiple servers \
-        got the same load use the one with the best ping.",
+        help="Use best server depending on server load. When multiple servers"
+             " got the same load use the one with the best ping.",
     )
     connect_cmd.add_argument(
         "-c",
         "--country",
         action="append",
         nargs="?",
+        type=CountryType(),
         help="Select a specific country. May be specified multiple times.",
     )
     connect_cmd.add_argument(
         "-a",
         "--area",
         action="append",
+        type=AreaType(),
         nargs="?",
         help="Select a specific area. May be specified multiple times.",
     )
@@ -154,29 +266,37 @@ your connection safe.
         "--feature",
         action="append",
         nargs="?",
-        help="Select servers with a specific list of features. May be  \
-                specified multiple times.",
+        type=FeatureType(),
+        help="Select servers with a specific list of features. May be"
+             " specified multiple times.",
     )
     connect_cmd.add_argument(
         "-t",
         "--type",
         action="append",
         nargs="?",
-        help="Select servers with a specific type. May be specified multiple \
-                times.",
+        type=TypeType(),
+        help="Select servers with a specific type. May be specified multiple"
+             " times.",
     )
     connect_cmd.add_argument(
         "--netflix", action="store_true", help="Select servers configured for netflix."
     )
     connect_load_group = connect_cmd.add_mutually_exclusive_group()
     connect_load_group.add_argument(
-        "--max-load", dest="max_load", type=int, help="Filter servers by maximum load."
+        "--max-load",
+        dest="max_load",
+        type=LoadType(),
+        help="Filter servers by maximum load.",
     )
     connect_load_group.add_argument(
-        "--min-load", dest="min_load", type=int, help="Filter servers by minimum load."
+        "--min-load",
+        dest="min_load",
+        type=LoadType(),
+        help="Filter servers by minimum load.",
     )
     connect_load_group.add_argument(
-        "--load", type=int, help="Filter servers by exact load match."
+        "--load", type=LoadType(), help="Filter servers by exact load match."
     )
     connect_cmd.add_argument(
         "-d", "--daemon", action="store_true", help="Start in daemon mode."
@@ -218,7 +338,7 @@ your connection safe.
         "apply", help="Apply iptables rules defined in configuration"
     )
     apply_cmd.add_argument(
-        "domain", type=str, nargs=1, help="Apply iptables rules with domain"
+        "domain", type=DomainType(), nargs=1, help="Apply iptables rules with domain"
     )
     udp_tcp = apply_cmd.add_mutually_exclusive_group()
     udp_tcp.add_argument(
@@ -334,11 +454,11 @@ def process_connect_cmd(args):
 
 @user.needs_root
 def process_iptables_cmd(args):
-    '''Process 'iptables' command
+    """Process 'iptables' command
 
     :param object args: command-line arguments as Namespace
     :returns: True if processing was successful
-    '''
+    """
 
     if args.iptables_sub == "flush":
         if args.no_fallback:
@@ -381,10 +501,10 @@ def process_iptables_cmd(args):
 
 @user.needs_root
 def process_kill_cmd(args):
-    '''Process 'kill' command
+    """Process 'kill' command
 
     :param object args: Namespace object holding the command-line arguments
-    '''
+    """
 
     if args.all:
         connect.kill_openvpn()

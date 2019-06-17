@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import re
 import requests
 from cachetools import cached, TTLCache
 from connord import ConnordError
@@ -48,11 +47,6 @@ class MalformedDomainError(ConnordError):
 
         super().__init__(message)
         self.problem = problem
-
-
-def get_domain_format():
-    '''Return a compiled pattern with the domain format.'''
-    return re.compile(r"(?P<country_code>[a-z]{2})(?P<number>[0-9]+)(.netflix.com)?")
 
 
 def get_server_by_domain(domain):
@@ -101,29 +95,6 @@ def get_servers_by_domains(domains):
         raise DomainNotFoundError(fqdns[0])
 
     return filtered_servers
-
-
-def validate_domain(domain):
-    '''Validate a domain as string with pattern. The domain must exist. The country is
-    verified in an extra step.
-
-    :raises: DomainNotFoundError if the domain does not exist
-             MalformedDomainError if the domain is in the wrong format
-    '''
-
-    pattern = get_domain_format()
-    match = pattern.match(domain)
-    if match:
-        domain_d = match.groupdict()
-        countries.verify_countries([domain_d["country_code"]])
-        if get_server_by_domain(domain):
-            return True
-
-        raise DomainNotFoundError(domain)
-
-    raise MalformedDomainError(
-        domain, "Expected format is {{country_code}}{{number}}[.netflix.com]"
-    )
 
 
 @cached(cache=TTLCache(maxsize=1, ttl=60))

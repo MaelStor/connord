@@ -83,8 +83,6 @@ def map_types(types):
     :returns: a list of mapped types.
     """
 
-    verify_types(types)
-
     mapped_types = [TYPES[type_] for type_ in types]
     return mapped_types
 
