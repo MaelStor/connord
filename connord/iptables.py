@@ -151,7 +151,7 @@ def apply_config(config_file, server=None, protocol=None):
 def apply_config_dir(server=None, protocol=None, filetype="rules"):
     '''High-level command to apply the whole configuration directory with rules or
     fallback files in it.
-    
+
     :param server: If None this applies 0.0.0.0/0 instead
     :param protocol: If None the default 'udp' is taken
     :param filetype: default is rules but may be fallback too.
@@ -275,6 +275,19 @@ class IptablesPrettyFormatter(Formatter):
         string = "{} ({:^6})".format(chain.name, policy_s)
         return self.center_string(string, sep)
 
+    @staticmethod
+    def _format_iprange(iprange):
+        '''Format an iprange to cidr notation
+
+        :param iprange: An iprange as string
+        :returns: iprange in cidr notation
+        '''
+
+        if iprange.startswith('!'):
+            return "!" + str(netaddr.IPNetwork(iprange.lstrip('!')).cidr)
+
+        return str(netaddr.IPNetwork(iprange).cidr)
+
     def format_rule(self, rule, rule_number, sep="-"):
         '''Format a rule
 
@@ -285,8 +298,8 @@ class IptablesPrettyFormatter(Formatter):
         '''
 
         # convert to short cidr notation
-        src_net = str(netaddr.IPNetwork(str(rule.src)).cidr)
-        dst_net = str(netaddr.IPNetwork(str(rule.dst)).cidr)
+        src_net = IptablesPrettyFormatter._format_iprange(str(rule.src))
+        dst_net = IptablesPrettyFormatter._format_iprange(str(rule.dst))
 
         parameters = rule.target.get_all_parameters()
         if parameters:
