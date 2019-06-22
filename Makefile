@@ -1,9 +1,5 @@
 .ONESHELL:
-install: connord/scripts/openvpn_up_down.bash
-	install -Dm750 connord/scripts/openvpn_up_down.bash \
-		/etc/openvpn/client/openvpn_up_down.bash
-	install -Dm750 connord/scripts/openvpn_up_down.bash \
-		/var/openvpn/etc/openvpn/client/openvpn_up_down.bash
+install: 
 	if [ -n "$$VIRTUALENV" ]; then deactivate; fi
 	pip install .
 
@@ -18,7 +14,7 @@ develop: requirements-devel.txt
 	python -m pip install -e .
 
 .ONESHELL:
-venv:
+venv: requirements-devel.txt
 	python -m venv .venv
 	. .venv/bin/activate
 	python -m pip install -U "pip>=18.0" "setuptools>=38.0" wheel
