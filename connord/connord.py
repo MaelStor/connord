@@ -626,24 +626,24 @@ def main():  # noqa: C901
             file=sys.stderr,
         )
     except resources.ResourceNotFoundError as error:
-        print(error)
+        print(error, file=sys.stderr)
     except resources.MalformedResourceError as error:
-        print(error)
+        print(error, file=sys.stderr)
     except areas.AreaError as error:
-        print(error)
+        print(error, file=sys.stderr)
     except iptables.IptablesError as error:
-        print(error)
+        print(error, file=sys.stderr)
     except countries.CountryError as error:
-        print(error)
+        print(error, file=sys.stderr)
     except FeatureError as error:
-        print(error)
+        print(error, file=sys.stderr)
     except servers.DomainNotFoundError as error:
-        print(error)
+        print(error, file=sys.stderr)
     except servers.MalformedDomainError as error:
-        print(error)
+        print(error, file=sys.stderr)
     except connect.ConnectError as error:
-        print(error)
+        print(error, file=sys.stderr)
     except RequestException as error:
-        print(error)
+        print(error, file=sys.stderr)
 
     sys.exit(1)
