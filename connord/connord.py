@@ -175,7 +175,42 @@ your connection safe.
     list_cmd = command.add_parser(
         "list", help="Prints all servers if no argument is given."
     )
-    list_cmd.add_argument(
+    list_ipt_parent = argparse.ArgumentParser(description="List iptables")
+    list_ipt_parent.add_argument(
+        "-4", dest="v4", action="store_true", help="(Default) List ipv4 rules"
+    )
+    list_ipt_parent.add_argument(
+        "-6", dest="v6", action="store_true", help="List ipv6 rules"
+    )
+    list_all_table = list_ipt_parent.add_mutually_exclusive_group()
+    list_all_table.add_argument(
+        "-t",
+        "--table",
+        type=TableType(),
+        action="append",
+        help="List TABLE. May be specified multiple times.",
+    )
+    list_all_table.add_argument(
+        "-a", "--all", action="store_true", help="List all tables."
+    )
+    list_cmd_sub = list_cmd.add_subparsers(dest="list_sub")
+    list_cmd_sub.add_parser(
+        "iptables",
+        add_help=False,
+        help=(
+            "List rules in netfilter tables."
+            " With no arguments list ipv4 'filter' table."
+        ),
+        parents=[list_ipt_parent],
+    )
+    list_servers = list_cmd_sub.add_parser(
+        "servers",
+        help=(
+            "List servers filtered by one of the specified arguments."
+            " If no arguments are given list all NordVPN servers."
+        ),
+    )
+    list_servers.add_argument(
         "-c",
         "--country",
         action="append",
@@ -185,7 +220,7 @@ your connection safe.
         " one of these arguments has no specifier then all country"
         " codes are printed.",
     )
-    list_cmd.add_argument(
+    list_servers.add_argument(
         "-a",
         "--area",
         action="append",
@@ -195,7 +230,7 @@ your connection safe.
         " one of these arguments has no specifier then all areas"
         " are printed.",
     )
-    list_cmd.add_argument(
+    list_servers.add_argument(
         "-f",
         "--feature",
         action="append",
@@ -205,7 +240,7 @@ your connection safe.
         " specified multiple times. if one of these arguments has no"
         " specifier then all possible features are printed.",
     )
-    list_cmd.add_argument(
+    list_servers.add_argument(
         "-t",
         "--type",
         action="append",
@@ -215,10 +250,10 @@ your connection safe.
         " times. if one of these arguments has no specifier then all"
         " possible types are printed.",
     )
-    list_cmd.add_argument(
+    list_servers.add_argument(
         "--netflix", action="store_true", help="Select servers configured for netflix."
     )
-    list_load_group = list_cmd.add_mutually_exclusive_group()
+    list_load_group = list_servers.add_mutually_exclusive_group()
     list_load_group.add_argument(
         "--max-load",
         dest="max_load",
@@ -234,29 +269,8 @@ your connection safe.
     list_load_group.add_argument(
         "--load", type=LoadType(), help="Filter servers by exact load match."
     )
-    list_cmd.add_argument(
+    list_servers.add_argument(
         "--top", type=TopType(), help="Show TOP count resulting servers."
-    )
-    list_cmd_sub = list_cmd.add_subparsers(dest="list_sub")
-    list_ipt_cmd = list_cmd_sub.add_parser(
-        "iptables", help="Per default list rules in filter table of ipv4."
-    )
-    list_ipt_cmd.add_argument(
-        "-4", dest="v4", action="store_true", help="(Default) List ipv4 rules"
-    )
-    list_ipt_cmd.add_argument(
-        "-6", dest="v6", action="store_true", help="List ipv6 rules"
-    )
-    list_all_table = list_ipt_cmd.add_mutually_exclusive_group()
-    list_all_table.add_argument(
-        "-t",
-        "--table",
-        type=TableType(),
-        action="append",
-        help="List TABLE. May be specified multiple times.",
-    )
-    list_all_table.add_argument(
-        "-a", "--all", action="store_true", help="List all tables."
     )
     connect_cmd = command.add_parser("connect", help="Connect to a server.")
     server_best = connect_cmd.add_mutually_exclusive_group()
@@ -355,6 +369,9 @@ your connection safe.
     )
     iptables_cmd = command.add_parser("iptables", help="Wrapper around iptables.")
     iptables_cmd_subparsers = iptables_cmd.add_subparsers(dest="iptables_sub")
+    iptables_cmd_subparsers.add_parser(
+        "list", parents=[list_ipt_parent], add_help=False
+    )
     iptables_cmd_subparsers.add_parser("reload", help="Reload iptables")
     flush_cmd = iptables_cmd_subparsers.add_parser("flush", help="Flush iptables")
     flush_cmd.add_argument(
@@ -383,33 +400,27 @@ your connection safe.
     return parser.parse_args(argv)
 
 
-def process_list_cmd(args):
-    """
-    Process arguments when command is 'list'
+def process_list_ipt_cmd(args):
+    if args.v4 and args.v6:
+        version_ = "all"
+    elif args.v4:
+        version_ = "4"
+    elif args.v6:
+        version_ = "6"
+    else:
+        version_ = "4"
 
-    :param args: Command-line arguments
-    :returns: True if processing was successful
-    """
+    if args.all:
+        tables = None
+    elif args.table:
+        tables = args.table
+    else:
+        tables = ["filter"]
 
-    if args.list_sub == "iptables":
-        if args.v4 and args.v6:
-            version_ = "all"
-        elif args.v4:
-            version_ = "4"
-        elif args.v6:
-            version_ = "6"
-        else:
-            version_ = "4"
+    return listings.list_iptables(tables, version_)
 
-        if args.all:
-            tables = None
-        elif args.table:
-            tables = args.table
-        else:
-            tables = ["filter"]
 
-        return listings.list_iptables(tables, version_)
-
+def process_list_servers_cmd(args):
     countries_ = args.country
     area_ = args.area
     types_ = args.type
@@ -433,6 +444,24 @@ def process_list_cmd(args):
     return listings.main(
         countries_, area_, types_, features_, netflix, load_, match, top
     )
+
+
+def process_list_cmd(args):
+    """
+    Process arguments when command is 'list'
+
+    :param args: Command-line arguments
+    :returns: True if processing was successful
+    """
+
+    if args.list_sub == "iptables":
+        return process_list_ipt_cmd(args)
+
+    if args.list_sub == "servers":
+        return process_list_servers_cmd(args)
+
+    # default: list all servers
+    return listings.main(None, None, None, None, None, 100, "max", None)
 
 
 def process_connect_cmd(args):
@@ -538,6 +567,8 @@ def process_iptables_cmd(args):
 
         iptables.reset(fallback=True)
         iptables.apply_config_dir(server, protocol)
+    elif args.iptables_sub == "list":
+        return process_list_ipt_cmd(args)
     else:
         raise NotImplementedError("Not implemented")
 
