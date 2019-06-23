@@ -43,33 +43,34 @@ def filter_servers_by_count(servers_, top):
 
 
 def list_iptables(tables, version):
-    '''Prints iptables to stdout
+    """Prints iptables to stdout
 
     :param tables: list of tables like ['filter']
     :param version: 6 or 4
     :returns: True
-    '''
+    """
     iptables.print_iptables(tables, version)
     return True
 
 
 # TODO: should be named OverviewPrettyPrinter
 class OverviewPrettyFormatter(Formatter):
-    '''Print countries, areas, types and features to stdout or formatter.output'''
+    """Print countries, areas, types and features to stdout or formatter.output"""
+
     def __init__(self, output=None, max_line_length=80, stream=False):
-        '''Init
+        """Init
 
         :param output: The prepending output
         :param max_line_length: the maximum column width
         :param stream: If true print to stdout
-        '''
+        """
 
         super().__init__(output, max_line_length)
         self.stream = stream
         self.has_output = False
 
     def print_countries(self, countries_):
-        '''Prints given countries_ in pretty format'''
+        """Prints given countries_ in pretty format"""
         if countries_ and None in countries_:
             self.has_output = True
             file_ = self.get_stream_file(self.stream)
@@ -81,7 +82,7 @@ class OverviewPrettyFormatter(Formatter):
             print(self.format_ruler(sep="-"), file=file_)
 
     def print_types(self, types_):
-        '''Prints given types_ in pretty format'''
+        """Prints given types_ in pretty format"""
         if types_ and None in types_:
             self.has_output = True
             file_ = self.get_stream_file(self.stream)
@@ -93,7 +94,7 @@ class OverviewPrettyFormatter(Formatter):
             print(self.format_ruler(sep="-"), file=file_)
 
     def print_features(self, features_):
-        '''Print given features_ in pretty format'''
+        """Print given features_ in pretty format"""
         if features_ and None in features_:
             self.has_output = True
             file_ = self.get_stream_file(self.stream)
@@ -105,7 +106,7 @@ class OverviewPrettyFormatter(Formatter):
             print(self.format_ruler(sep="-"), file=file_)
 
     def print_areas(self, areas_):
-        '''Print given areas_ in pretty format'''
+        """Print given areas_ in pretty format"""
         if areas_ and None in areas_:
             self.has_output = True
             areas.print_areas()
@@ -114,10 +115,10 @@ class OverviewPrettyFormatter(Formatter):
 def filter_servers(
     servers_, netflix, countries_, areas_, features_, types_, load_, match, top
 ):
-    '''High-level abstraction to filter servers by given filters
+    """High-level abstraction to filter servers by given filters
 
     :returns: the filtered servers
-    '''
+    """
     servers_ = servers_.copy()
     if load_:
         servers_ = load.filter_servers(servers_, load_, match)
@@ -163,15 +164,7 @@ def main(countries_, areas_, types_, features_, netflix, load_, match, top):
     if not formatter.has_output:
         servers_ = servers.get_servers()
         servers_ = filter_servers(
-            servers_,
-            netflix,
-            countries_,
-            areas_,
-            features_,
-            types_,
-            load_,
-            match,
-            top,
+            servers_, netflix, countries_, areas_, features_, types_, load_, match, top
         )
 
         servers.to_string(servers_, stream=True)

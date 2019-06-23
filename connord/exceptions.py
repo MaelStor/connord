@@ -1,1 +1,1 @@
-'''This module shall collect all exceptions currently scattered across the modules'''
+"""This module shall collect all exceptions currently scattered across the modules"""

@@ -50,10 +50,10 @@ class MalformedDomainError(ConnordError):
 
 
 def get_server_by_domain(domain):
-    '''Return server specified with domain as string. Queries the nordvpn api.
+    """Return server specified with domain as string. Queries the nordvpn api.
 
     :raises: ValueError if the domain can't be found
-    '''
+    """
     servers = get_servers()
     if ".nordvpn.com" in domain:
         fqdn = domain
@@ -68,11 +68,11 @@ def get_server_by_domain(domain):
 
 
 def get_servers_by_domains(domains):
-    '''Abstraction of get_server_by_domain for a list of domains.
+    """Abstraction of get_server_by_domain for a list of domains.
 
     :returns: list of filtered servers
     :raises: DomainNotFoundError if the domain doesn't exist.
-    '''
+    """
     fqdns = []
     for domain in domains:
         if ".nordvpn.com" in domain:
@@ -99,7 +99,7 @@ def get_servers_by_domains(domains):
 
 @cached(cache=TTLCache(maxsize=1, ttl=60))
 def get_servers():
-    '''Returns the queried servers from nordvpn's api as list of dictionaries.'''
+    """Returns the queried servers from nordvpn's api as list of dictionaries."""
     header = {
         "User-Agent": " ".join(
             (
@@ -114,16 +114,17 @@ def get_servers():
 
 
 def filter_netflix_servers(servers, countries_):
-    '''Return a list of netflix optimized servers'''
+    """Return a list of netflix optimized servers"""
     servers = servers.copy()
     servers = countries.filter_servers(servers, NETFLIX)
     return servers
 
 
 class ServersPrettyFormatter(Formatter):
-    '''Class to format servers pretty.'''
+    """Class to format servers pretty."""
+
     def format_headline(self, sep="="):
-        '''Return formatted headline'''
+        """Return formatted headline"""
 
         headline = self.format_ruler(sep) + "\n"
         headline += "      {:25}  {:6}  {:15}  {:>9}  {}\n".format(
@@ -134,7 +135,7 @@ class ServersPrettyFormatter(Formatter):
         return headline
 
     def format_server(self, server, count, sep="-"):
-        '''Return pretty formatted server on two lines'''
+        """Return pretty formatted server on two lines"""
         ident, _, _ = server["domain"].split(".")
         country = server["country"]
         ip = server["ip_address"]
@@ -158,11 +159,11 @@ class ServersPrettyFormatter(Formatter):
 
 
 def to_string(servers, stream=False):
-    '''If stream is True stream the formatted servers to stdout else to the
+    """If stream is True stream the formatted servers to stdout else to the
     formatter.output variable.
 
     :returns: the formatted string if stream is False else ''
-    '''
+    """
     if not servers:
         return str()
 

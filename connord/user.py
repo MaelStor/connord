@@ -38,7 +38,8 @@ def is_root():
 
 
 def needs_root(func):
-    '''Decorator for functions needing root access'''
+    """Decorator for functions needing root access"""
+
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         if is_root():

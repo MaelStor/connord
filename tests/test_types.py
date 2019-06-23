@@ -2,11 +2,7 @@
 """Test types module"""
 
 from connord import types
-from main_test_module import (
-    get_expected_servers_by_domain,
-    get_servers_stub,
-    get_stub,
-)
+from main_test_module import get_expected_servers_by_domain, get_servers_stub, get_stub
 
 
 def test_verify_types_good():

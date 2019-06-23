@@ -1,11 +1,7 @@
 #!/usr/bin/env python
 
 from connord import features
-from main_test_module import (
-    get_servers_stub,
-    get_expected_servers_by_domain,
-    get_stub,
-)
+from main_test_module import get_servers_stub, get_expected_servers_by_domain, get_stub
 
 
 def test_verify_features_bad():
