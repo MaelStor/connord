@@ -350,20 +350,17 @@ class IptablesPrettyFormatter(Formatter):
 
 def print_table(table, stream):
     formatter = IptablesPrettyFormatter()
-    if not stream:
-        stream = formatter
-    else:
-        stream = sys.stdout
+    stream_file = formatter.get_stream_file(stream)
 
     table_header = formatter.format_table_header(table)
-    print(table_header, file=stream)
+    print(table_header, file=stream_file)
     for chain in table.chains:
         chain_header = formatter.format_chain_header(chain)
-        print(chain_header, file=stream)
+        print(chain_header, file=stream_file)
         counter = 1
         for rule in chain.rules:
             rule_s = formatter.format_rule(rule, counter)
-            print(rule_s, file=stream)
+            print(rule_s, file=stream_file)
             counter += 1
 
     return formatter.get_output()
@@ -374,21 +371,24 @@ def to_string(tables=None, version="4", stream=False):
     """Formats tables, chains and rules. If stream is True print directly to
     stdout else collect all lines in formatter.output
 
-    :param tables: list of tables defaults to ['filter']
-    :param version: either 6 for ip6tables else 4 for iptables
+    :param tables: list of valid netfilter tables defaults to all netfilter tables
+    :param version: either '6' for ip6tables, '4' for iptables or 'all' for both
     :param stream: If true stream to stdout instead of formatter.output
     """
 
-    if tables is None:
-        tables = [table_s for table_s in Table.ALL if table_s in Table6.ALL]
-
     output = ""
     if version in ("4", "all"):
+        if tables is None:
+            tables = Table.ALL
+
         for table_s in tables:
             table = Table(table_s)
             output += print_table(table, stream)
 
     if version in ("6", "all"):
+        if tables is None:
+            tables = Table6.ALL
+
         for table_s in tables:
             table = Table6(table_s)
             output += print_table(table, stream)
