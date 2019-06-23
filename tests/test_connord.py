@@ -87,6 +87,11 @@ class ArgumentFixture:
         netflix=None,
         iptables=None,
         top=None,
+        list_sub=None,
+        v4=None,
+        v6=None,
+        all_=None,
+        table=None,
     ):
         self.country = country
         self.area = area
@@ -94,7 +99,11 @@ class ArgumentFixture:
         self.feature = feature
         self.netflix = netflix
         self.top = top
-        self.iptables = iptables
+        self.list_sub = list_sub
+        self.v4 = v4
+        self.v6 = v6
+        self.all = all_
+        self.table = table
 
     def set_max_load(self, load):
         self.max_load = load
@@ -107,7 +116,7 @@ class ArgumentFixture:
 
 
 def test_process_list_cmd_when_iptables_is_given(mocker):
-    args = ArgumentFixture(iptables=True)
+    args = ArgumentFixture(list_sub="iptables")
     mocked_listings = mocker.patch("connord.connord.listings")
     mocked_listings.list_iptables.return_value = True
 

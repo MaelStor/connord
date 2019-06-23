@@ -2,6 +2,7 @@ api
 args
 bool
 boolean
+catched
 chroot
 cidr
 cmd
@@ -18,6 +19,8 @@ iptables
 json
 mael
 maelstor
+namespace
+Namespace
 ne
 netflix
 nominatim

@@ -135,6 +135,18 @@ class TopType:
             )
 
 
+class TableType:
+    def __call__(self, value):
+        if iptables.verify_table(value):
+            return value
+
+        raise argparse.ArgumentTypeError(
+            "'{}' is not a valid table name. Consult man iptables for details.".format(
+                value
+            )
+        )
+
+
 # pylint: disable=too-many-statements,too-many-locals
 def parse_args(argv):
     """Parse arguments
@@ -170,8 +182,8 @@ your connection safe.
         nargs="?",
         type=CountryType(),
         help="select a specific country. may be specified multiple times. if"
-             " one of these arguments has no specifier then all country"
-             " codes are printed.",
+        " one of these arguments has no specifier then all country"
+        " codes are printed.",
     )
     list_cmd.add_argument(
         "-a",
@@ -180,8 +192,8 @@ your connection safe.
         nargs="?",
         type=AreaType(),
         help="select a specific area.may be specified multiple times. if"
-             " one of these arguments has no specifier then all areas"
-             " are printed.",
+        " one of these arguments has no specifier then all areas"
+        " are printed.",
     )
     list_cmd.add_argument(
         "-f",
@@ -190,8 +202,8 @@ your connection safe.
         nargs="?",
         type=FeatureType(),
         help="select servers with a specific list of features. may be"
-             " specified multiple times. if one of these arguments has no"
-             " specifier then all possible features are printed.",
+        " specified multiple times. if one of these arguments has no"
+        " specifier then all possible features are printed.",
     )
     list_cmd.add_argument(
         "-t",
@@ -200,8 +212,8 @@ your connection safe.
         nargs="?",
         type=TypeType(),
         help="select servers with a specific type. may be specified multiple"
-             " times. if one of these arguments has no specifier then all"
-             " possible types are printed.",
+        " times. if one of these arguments has no specifier then all"
+        " possible types are printed.",
     )
     list_cmd.add_argument(
         "--netflix", action="store_true", help="Select servers configured for netflix."
@@ -225,8 +237,26 @@ your connection safe.
     list_cmd.add_argument(
         "--top", type=TopType(), help="Show TOP count resulting servers."
     )
-    list_cmd.add_argument(
-        "--iptables", action="store_true", help="List all rules in iptables"
+    list_cmd_sub = list_cmd.add_subparsers(dest="list_sub")
+    list_ipt_cmd = list_cmd_sub.add_parser(
+        "iptables", help="Per default list rules in filter table of ipv4."
+    )
+    list_ipt_cmd.add_argument(
+        "-4", dest="v4", action="store_true", help="(Default) List ipv4 rules"
+    )
+    list_ipt_cmd.add_argument(
+        "-6", dest="v6", action="store_true", help="List ipv6 rules"
+    )
+    list_all_table = list_ipt_cmd.add_mutually_exclusive_group()
+    list_all_table.add_argument(
+        "-t",
+        "--table",
+        type=TableType(),
+        action="append",
+        help="List TABLE. May be specified multiple times.",
+    )
+    list_all_table.add_argument(
+        "-a", "--all", action="store_true", help="List all tables."
     )
     connect_cmd = command.add_parser("connect", help="Connect to a server.")
     server_best = connect_cmd.add_mutually_exclusive_group()
@@ -236,14 +266,14 @@ your connection safe.
         type=DomainType(),
         nargs=1,
         help="Connect to a specific server. Arguments -c, -a, -f, -t have no"
-             " effect.",
+        " effect.",
     )
     server_best.add_argument(
         "-b",
         "--best",
         action="store_true",
         help="Use best server depending on server load. When multiple servers"
-             " got the same load use the one with the best ping.",
+        " got the same load use the one with the best ping.",
     )
     connect_cmd.add_argument(
         "-c",
@@ -268,7 +298,7 @@ your connection safe.
         nargs="?",
         type=FeatureType(),
         help="Select servers with a specific list of features. May be"
-             " specified multiple times.",
+        " specified multiple times.",
     )
     connect_cmd.add_argument(
         "-t",
@@ -276,8 +306,7 @@ your connection safe.
         action="append",
         nargs="?",
         type=TypeType(),
-        help="Select servers with a specific type. May be specified multiple"
-             " times.",
+        help="Select servers with a specific type. May be specified multiple" " times.",
     )
     connect_cmd.add_argument(
         "--netflix", action="store_true", help="Select servers configured for netflix."
@@ -362,8 +391,24 @@ def process_list_cmd(args):
     :returns: True if processing was successful
     """
 
-    if args.iptables:
-        return listings.list_iptables(["filter"], "4")
+    if args.list_sub == "iptables":
+        if args.v4 and args.v6:
+            version_ = "all"
+        elif args.v4:
+            version_ = "4"
+        elif args.v6:
+            version_ = "6"
+        else:
+            version_ = "4"
+
+        if args.all:
+            tables = None
+        elif args.table:
+            tables = args.table
+        else:
+            tables = ["filter"]
+
+        return listings.list_iptables(tables, version_)
 
     countries_ = args.country
     area_ = args.area
