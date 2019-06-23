@@ -126,7 +126,7 @@ def test_process_list_cmd_when_iptables_is_given(mocker):
     assert retval
 
 
-def test_process_list_cmd_when_max_load_is_given(mocker):
+def test_process_list_servers_cmd_when_max_load_is_given(mocker):
     args = ArgumentFixture()
     args.set_max_load(10)
     args.set_min_load(None)
@@ -135,14 +135,14 @@ def test_process_list_cmd_when_max_load_is_given(mocker):
     mocked_list = mocker.patch("connord.connord.listings")
     mocked_list.main.return_value = True
 
-    connord.process_list_cmd(args)
+    connord.process_list_servers_cmd(args)
 
     mocked_list.main.assert_called_once_with(
         None, None, None, None, None, 10, "max", None
     )
 
 
-def test_process_list_cmd_when_min_load_is_given(mocker):
+def test_process_list_servers_cmd_when_min_load_is_given(mocker):
     args = ArgumentFixture()
     args.set_max_load(None)
     args.set_min_load(10)
@@ -151,14 +151,14 @@ def test_process_list_cmd_when_min_load_is_given(mocker):
     mocked_list = mocker.patch("connord.connord.listings")
     mocked_list.main.return_value = True
 
-    connord.process_list_cmd(args)
+    connord.process_list_servers_cmd(args)
 
     mocked_list.main.assert_called_once_with(
         None, None, None, None, None, 10, "min", None
     )
 
 
-def test_process_list_cmd_when_load_is_given(mocker):
+def test_process_list_servers_cmd_when_load_is_given(mocker):
     args = ArgumentFixture()
     args.set_max_load(None)
     args.set_min_load(None)
@@ -167,14 +167,14 @@ def test_process_list_cmd_when_load_is_given(mocker):
     mocked_list = mocker.patch("connord.connord.listings")
     mocked_list.main.return_value = True
 
-    connord.process_list_cmd(args)
+    connord.process_list_servers_cmd(args)
 
     mocked_list.main.assert_called_once_with(
         None, None, None, None, None, 10, "exact", None
     )
 
 
-def test_process_list_cmd_when_load_is_default(mocker):
+def test_process_list_servers_cmd_when_load_is_default(mocker):
     args = ArgumentFixture()
     args.set_max_load(None)
     args.set_min_load(None)
@@ -183,7 +183,7 @@ def test_process_list_cmd_when_load_is_default(mocker):
     mocked_list = mocker.patch("connord.connord.listings")
     mocked_list.main.return_value = True
 
-    connord.process_list_cmd(args)
+    connord.process_list_servers_cmd(args)
 
     mocked_list.main.assert_called_once_with(
         None, None, None, None, None, 100, "max", None
