@@ -18,7 +18,6 @@
 
 """Wrapper around iptables"""
 
-import sys
 import os
 import re
 import netaddr
@@ -290,7 +289,19 @@ class IptablesPrettyFormatter(Formatter):
         else:
             policy_s = "None"
 
-        string = "{} ({:^6})".format(chain.name, policy_s)
+        if chain.is_builtin():
+            packet_counter, byte_counter = chain.get_counters()
+            packet_counter_s = self._format_counter(packet_counter, true_byte=False)
+            byte_counter_s = self._format_counter(byte_counter)
+
+            counter_output = "packets: {:>4} bytes: {:>4}".format(
+                packet_counter_s, byte_counter_s
+            )
+
+            string = "{} ({:^6}) [{}]".format(chain.name, policy_s, counter_output)
+        else:
+            string = "{} ({:^6})".format(chain.name, policy_s)
+
         return self.center_string(string, sep)
 
     @staticmethod
@@ -305,6 +316,29 @@ class IptablesPrettyFormatter(Formatter):
             return "!" + str(netaddr.IPNetwork(iprange.lstrip("!")).cidr)
 
         return str(netaddr.IPNetwork(iprange).cidr)
+
+    @staticmethod
+    def _format_counter(counter, true_byte=True):
+        if true_byte:
+            multi = 1024
+        else:
+            multi = 1000
+
+        kilo = multi
+        mega = multi * kilo
+        giga = multi * mega
+
+        counter_s = ""
+        if counter > giga:
+            counter_s = str(int(counter / giga)) + "G"
+        elif counter > mega:
+            counter_s = str(int(counter / mega)) + "M"
+        elif counter > kilo:
+            counter_s = str(int(counter / kilo)) + "K"
+        else:
+            counter_s = str(counter)
+
+        return counter_s
 
     def format_rule(self, rule, rule_number, sep="-"):
         """Format a rule
@@ -344,7 +378,19 @@ class IptablesPrettyFormatter(Formatter):
             output += "     Matches: {}".format(matches.rstrip(","))
 
         output += "\n"
-        output += self.format_ruler(sep)
+
+        packet_counter, byte_counter = rule.get_counters()
+        packet_counter_s = self._format_counter(packet_counter, true_byte=False)
+        byte_counter_s = self._format_counter(byte_counter)
+
+        counter_output = "packets: {:>4} bytes: {:>4}".format(
+            packet_counter_s, byte_counter_s
+        )
+        output += "{} {} {}".format(
+            sep * (self.max_line_length - 4 - len(counter_output)),
+            counter_output,
+            sep * 2,
+        )
         return output
 
 
@@ -352,6 +398,7 @@ def print_table(table, stream):
     formatter = IptablesPrettyFormatter()
     stream_file = formatter.get_stream_file(stream)
 
+    table.refresh()
     table_header = formatter.format_table_header(table)
     print(table_header, file=stream_file)
     for chain in table.chains:
