@@ -198,7 +198,7 @@ def test_filter_servers_bad():
 
 
 def test_to_string():
-    expected_result = get_stub("countries_to_string_stub.txt").rstrip()
+    expected_result = get_stub("countries_pretty_formatted_fixture.txt").rstrip()
 
     actual_result = countries.to_string()
     assert actual_result == expected_result

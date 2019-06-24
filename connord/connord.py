@@ -203,6 +203,16 @@ your connection safe.
         ),
         parents=[list_ipt_parent],
     )
+    list_cmd_sub.add_parser(
+        "countries", help="List all countries with NordVPN servers."
+    )
+    list_cmd_sub.add_parser("areas", help="List all areas/cities with NordVPN servers.")
+    list_cmd_sub.add_parser(
+        "features", help="List all possible features of NordVPN servers."
+    )
+    list_cmd_sub.add_parser(
+        "types", help="List all possible types/categories of NordVPN servers."
+    )
     list_servers = list_cmd_sub.add_parser(
         "servers",
         help=(
@@ -214,7 +224,6 @@ your connection safe.
         "-c",
         "--country",
         action="append",
-        nargs="?",
         type=CountryType(),
         help="select a specific country. may be specified multiple times. if"
         " one of these arguments has no specifier then all country"
@@ -224,7 +233,6 @@ your connection safe.
         "-a",
         "--area",
         action="append",
-        nargs="?",
         type=AreaType(),
         help="select a specific area.may be specified multiple times. if"
         " one of these arguments has no specifier then all areas"
@@ -234,7 +242,6 @@ your connection safe.
         "-f",
         "--feature",
         action="append",
-        nargs="?",
         type=FeatureType(),
         help="select servers with a specific list of features. may be"
         " specified multiple times. if one of these arguments has no"
@@ -244,7 +251,6 @@ your connection safe.
         "-t",
         "--type",
         action="append",
-        nargs="?",
         type=TypeType(),
         help="select servers with a specific type. may be specified multiple"
         " times. if one of these arguments has no specifier then all"
@@ -441,7 +447,7 @@ def process_list_servers_cmd(args):
         load_ = 100
         match = "max"
 
-    return listings.main(
+    return listings.list_servers(
         countries_, area_, types_, features_, netflix, load_, match, top
     )
 
@@ -455,13 +461,20 @@ def process_list_cmd(args):
     """
 
     if args.list_sub == "iptables":
-        return process_list_ipt_cmd(args)
-
-    if args.list_sub == "servers":
-        return process_list_servers_cmd(args)
-
-    # default: list all servers
-    return listings.main(None, None, None, None, None, 100, "max", None)
+        process_list_ipt_cmd(args)
+    elif args.list_sub == "servers":
+        process_list_servers_cmd(args)
+    elif args.list_sub == "countries":
+        listings.list_countries()
+    elif args.list_sub == "areas":
+        listings.list_areas()
+    elif args.list_sub == "features":
+        listings.list_features()
+    elif args.list_sub == "types":
+        listings.list_types()
+    else:
+        # default: list all servers
+        listings.list_servers(None, None, None, None, None, 100, "max", None)
 
 
 def process_connect_cmd(args):

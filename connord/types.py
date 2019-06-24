@@ -20,6 +20,7 @@
 # TODO: Rename to categories
 
 from connord import ConnordError
+from connord.formatter import Formatter
 
 TYPES = {
     "double": "Double VPN",
@@ -72,8 +73,8 @@ def verify_types_description(descriptions):
 
     if wrong_types:
         raise ServerTypeError("Wrong type descriptions: {!s}".format(wrong_types))
-    else:
-        return True
+
+    return True
 
 
 def map_types(types):
@@ -136,17 +137,50 @@ def filter_servers(servers, types=None):
     return filtered_servers
 
 
-def to_string():
-    """Assemble all types in a printable string
-    :returns: Simple formatted string designed for output on screen
-    """
-    result = ""
-    for server_type, description in TYPES.items():
-        result += "{:26}{}\n".format(server_type, description)
+class TypesPrettyFormatter(Formatter):
+    """Format type in pretty format"""
 
-    return result.rstrip()
+    def format_headline(self, sep="="):
+        """Format headline
+
+        :param sep: the fill character
+        :returns: centered string
+        """
+
+        types_header = "Server Types"
+        return self.center_string(types_header, sep)
+
+    def format_type(self, server_type, description):
+        """Format a type
+
+        :param server_type: the type
+        :param description: the description
+        :returns: the formatted type as string
+        """
+
+        return "  {:26}{}".format(server_type, description)
+
+
+def to_string(stream=False):
+    """Gather all types in a printable string
+
+    :param stream: If True print to stdout else print to formatter.output variable
+    :returns: Formatted string if stream is False else an empty string
+    """
+    formatter = TypesPrettyFormatter()
+    file_ = formatter.get_stream_file(stream)
+
+    headline = formatter.format_headline()
+    print(headline, file=file_)
+
+    for server_type, description in TYPES.items():
+        formatted_type = formatter.format_type(server_type, description)
+        print(formatted_type, file=file_)
+
+    print(formatter.format_ruler(sep="-"), file=file_)
+    return formatter.get_output()
 
 
 def print_types():
     """Prints all possible types"""
-    print(to_string())
+    to_string(stream=True)

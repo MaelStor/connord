@@ -203,7 +203,7 @@ def test_map_types_reverse_bad():
 
 
 def test_to_string():
-    expected_result = get_stub("types_to_string_stub.txt").rstrip()
+    expected_result = get_stub("types_pretty_formatted_fixture.txt").rstrip()
     actual_result = types.to_string()
 
     assert actual_result == expected_result

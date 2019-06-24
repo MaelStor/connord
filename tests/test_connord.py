@@ -55,7 +55,7 @@ def test_main_when_command_is_list(mocker):
     mocker.patch.object(connord.sys, "argv", argv)
 
     mocked_list = mocker.patch("connord.connord.listings")
-    mocked_list.main.return_value = True
+    mocked_list.list_servers.return_value = True
 
     try:
         connord.main()
@@ -63,7 +63,7 @@ def test_main_when_command_is_list(mocker):
     except SystemExit as error:
         assert error.code == 0
 
-    mocked_list.main.assert_called_once()
+    mocked_list.list_servers.assert_called_once()
 
 
 def test_main_when_command_is_kill_user_is_not_root(mocker):
@@ -120,10 +120,9 @@ def test_process_list_cmd_when_iptables_is_given(mocker):
     mocked_listings = mocker.patch("connord.connord.listings")
     mocked_listings.list_iptables.return_value = True
 
-    retval = connord.process_list_cmd(args)
+    connord.process_list_cmd(args)
 
     mocked_listings.list_iptables.assert_called_once_with(["filter"], "4")
-    assert retval
 
 
 def test_process_list_servers_cmd_when_max_load_is_given(mocker):
@@ -133,11 +132,11 @@ def test_process_list_servers_cmd_when_max_load_is_given(mocker):
     args.set_load(None)
 
     mocked_list = mocker.patch("connord.connord.listings")
-    mocked_list.main.return_value = True
+    mocked_list.list_servers.return_value = True
 
     connord.process_list_servers_cmd(args)
 
-    mocked_list.main.assert_called_once_with(
+    mocked_list.list_servers.assert_called_once_with(
         None, None, None, None, None, 10, "max", None
     )
 
@@ -149,11 +148,11 @@ def test_process_list_servers_cmd_when_min_load_is_given(mocker):
     args.set_load(None)
 
     mocked_list = mocker.patch("connord.connord.listings")
-    mocked_list.main.return_value = True
+    mocked_list.list_servers.return_value = True
 
     connord.process_list_servers_cmd(args)
 
-    mocked_list.main.assert_called_once_with(
+    mocked_list.list_servers.assert_called_once_with(
         None, None, None, None, None, 10, "min", None
     )
 
@@ -165,11 +164,11 @@ def test_process_list_servers_cmd_when_load_is_given(mocker):
     args.set_load(10)
 
     mocked_list = mocker.patch("connord.connord.listings")
-    mocked_list.main.return_value = True
+    mocked_list.list_servers.return_value = True
 
     connord.process_list_servers_cmd(args)
 
-    mocked_list.main.assert_called_once_with(
+    mocked_list.list_servers.assert_called_once_with(
         None, None, None, None, None, 10, "exact", None
     )
 
@@ -181,11 +180,11 @@ def test_process_list_servers_cmd_when_load_is_default(mocker):
     args.set_load(None)
 
     mocked_list = mocker.patch("connord.connord.listings")
-    mocked_list.main.return_value = True
+    mocked_list.list_servers.return_value = True
 
     connord.process_list_servers_cmd(args)
 
-    mocked_list.main.assert_called_once_with(
+    mocked_list.list_servers.assert_called_once_with(
         None, None, None, None, None, 100, "max", None
     )
 

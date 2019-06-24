@@ -25,6 +25,7 @@
 # head -c -2 | sed -e '$a\'
 
 from connord import ConnordError
+from connord.formatter import Formatter
 
 COUNTRIES = {
     "ae": "United Arab Emirates",
@@ -163,19 +164,40 @@ def filter_servers(servers, countries=None):
     return filtered_servers
 
 
-def to_string():
-    """
-    Assemble all countries to a printable string
+class CountriesPrettyFormatter(Formatter):
+    """Format countries in pretty format"""
 
-    : returns: A simple formatted string for use as output on screen
+    def format_headline(self, sep="="):
+        """Returns the centered headline filled with sep"""
+        countries_header = "Countries"
+        return self.center_string(countries_header, sep)
+
+    def format_country(self, country_code, country):
+        """Returns the formatted country string"""
+        return "  {:6}{}".format(country_code, country)
+
+
+def to_string(stream=False):
+    """Gather all countries  in a printable string
+
+    :param stream: If True print to stdout else print to formatter.output variable
+    :returns: Formatted string if stream is False else an empty string
     """
-    result = ""
+
+    formatter = CountriesPrettyFormatter()
+    file_ = formatter.get_stream_file(stream)
+
+    headline = formatter.format_headline()
+    print(headline, file=file_)
+
     for country_code, country in COUNTRIES.items():
-        result += "{:6}{}\n".format(country_code, country)
+        formatted_country = formatter.format_country(country_code, country)
+        print(formatted_country, file=file_)
 
-    return result.rstrip()
+    print(formatter.format_ruler(sep="-"), file=file_)
+    return formatter.get_output()
 
 
 def print_countries():
     """Prints all possible countries"""
-    print(to_string())
+    to_string(stream=True)

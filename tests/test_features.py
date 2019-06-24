@@ -237,7 +237,7 @@ def test_filter_servers_with_every_feature():
 
 
 def test_to_string():
-    expected_result = get_stub("features_to_string_stub.txt").rstrip()
+    expected_result = get_stub("features_pretty_formatted_fixture.txt").rstrip()
     actual_result = features.to_string()
 
     assert actual_result == expected_result
