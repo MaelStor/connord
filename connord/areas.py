@@ -20,7 +20,8 @@
 import time
 import requests
 from progress.bar import IncrementalBar
-from cachetools import cached, LRUCache, TTLCache
+from cachetools import cached, LRUCache
+import cachetools.func
 from connord import ConnordError
 from connord import servers
 from connord import sqlite
@@ -141,7 +142,9 @@ def verify_areas(areas_):
              AreaError if the area string is ambiguous
     """
     if not isinstance(areas_, list):
-        raise AreaError("Wrong areas: {!s}".format(areas_))
+        raise TypeError(
+            "Expected areas to be <class 'list'>: But found {!s}".format(type(areas_))
+        )
 
     locations = get_locations()
     translation_table = get_translation_table()
@@ -243,13 +246,11 @@ def get_min_id(city):
             break
         except AreaError:
             continue
-        except ValueError:
-            continue
 
     return min_id
 
 
-@cached(cache=TTLCache(ttl=60, maxsize=1))
+@cachetools.func.ttl_cache(ttl=60, maxsize=1)
 def get_locations():
     """Return all locations found in the database. If the database does not exist
     update the database
@@ -276,7 +277,7 @@ class AreasPrettyFormatter(Formatter):
         :returns: the headline
         """
         headline = self.format_ruler(sep) + "\n"
-        headline += "{:8}: {:^15} {:^15}  {:40}\n".format(
+        headline += "{:8}: {:^15} {:^15}  {:4}\n".format(
             "Mini ID", "Latitude", "Longitude", "City"
         )
         headline += "{}\n".format("Address")
