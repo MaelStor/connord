@@ -386,8 +386,8 @@ class IptablesPrettyFormatter(Formatter):
         counter_output = "packets: {:>4} bytes: {:>4}".format(
             packet_counter_s, byte_counter_s
         )
-        output += "{} {} {}".format(
-            sep * (self.max_line_length - 4 - len(counter_output)),
+        output += "{} [{}] {}".format(
+            sep * (self.max_line_length - 6 - len(counter_output)),
             counter_output,
             sep * 2,
         )
