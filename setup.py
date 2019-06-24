@@ -42,6 +42,7 @@ setup(
         "PyYAML>=5.1,<6.0",
         "python-iptables>=0.14.0,<1.0.0",
         "progress>=1.5,<2.0",
+        "netifaces>=0.10.9,<1.0.0",
     ],
     tests_require=["pytest", "pytest-cov", "vermin", "mock"],
     python_requires=">=3.6",

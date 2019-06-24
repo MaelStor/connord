@@ -27,6 +27,7 @@ import yaml
 
 from jinja2 import Environment, FileSystemLoader
 
+import netifaces
 from connord import ConnordError
 from connord import user
 from connord import resources
@@ -198,6 +199,50 @@ def merge_environment(config_data_dict=None):
     return env_dict
 
 
+def get_default_gateway(ipv6=False):
+    """Returns a tuple with ipaddress and interface of the default gateway.
+
+    :param ipv6: If true return ip6 address and interface else ip4 address
+    :raises IptablesError: If there is no default gateway.
+    :returns: a tuple with (ip_address, interface) on success or (None, None) on failure
+    """
+    try:
+        default_gateway = netifaces.gateways()["default"]
+    except KeyError:
+        raise IptablesError("Could not find a default gateway. Are you connected?")
+
+    if ipv6:
+        try:
+            gateway = default_gateway[netifaces.AF_INET6]
+            return gateway
+        except KeyError:
+            return (None, None)
+
+    try:
+        gateway = default_gateway[netifaces.AF_INET]
+        return gateway
+    except KeyError:
+        return (None, None)
+
+
+def get_interface_addresses(iface):
+    """Returns the iface addresses as dictionary of the given interface."""
+    iface_addresses = netifaces.ifaddresses(iface)
+
+    default_iface_dict = {"link": iface_addresses[netifaces.AF_LINK]}
+    try:
+        default_iface_dict["inet"] = iface_addresses[netifaces.AF_INET]
+    except KeyError:
+        pass
+
+    try:
+        default_iface_dict["inet6"] = iface_addresses[netifaces.AF_INET6]
+    except KeyError:
+        pass
+
+    return default_iface_dict
+
+
 def render_template(config_file, server=None, protocol=None):
     """Render a jinja2 template with data from config.yml per default. Adds some
     useful variables to the environment which can be uses in rules and fallback
@@ -233,6 +278,19 @@ def render_template(config_file, server=None, protocol=None):
             config_data_dict["vpn_port"] = "443"
         else:
             raise TypeError("Unknown protocol '{}'.".format(protocol))
+
+        default_ip, default_iface = get_default_gateway(ipv6=False)
+        if default_iface:
+            try:
+                interface_addresses = get_interface_addresses(default_iface)
+                config_data_dict["gateway"] = {
+                    "ip_address": default_ip,
+                    "interface": default_iface,
+                }
+                config_data_dict["lan"] = interface_addresses
+            except KeyError:
+                config_data_dict["gateway"] = {}
+                config_data_dict["lan"] = {}
 
         config_data_dict = merge_environment(config_data_dict)
         template = env.get_template(os.path.basename(config_file))
@@ -380,11 +438,11 @@ class IptablesPrettyFormatter(Formatter):
         output += "\n"
 
         packet_counter, byte_counter = rule.get_counters()
-        packet_counter_s = self._format_counter(packet_counter, true_byte=False)
-        byte_counter_s = self._format_counter(byte_counter)
+        packet_counter = self._format_counter(packet_counter, true_byte=False)
+        byte_counter = self._format_counter(byte_counter)
 
         counter_output = "packets: {:>4} bytes: {:>4}".format(
-            packet_counter_s, byte_counter_s
+            packet_counter, byte_counter
         )
         output += "{} [{}] {}".format(
             sep * (self.max_line_length - 6 - len(counter_output)),
