@@ -48,65 +48,242 @@
 #         documentation there.
 ################################################################################
 
-connord-lo-input:
+connord-icmp-in:
   policy: None
   action: create
   rules:
-  - conntrack:
-      ctstate: RELATED,ESTABLISHED
-    target: ACCEPT
-  - src: 127.0.0.0/8
-    target: ACCEPT
-connord-lan-input:
-  policy: None
-  action: create
-  rules:
-  - conntrack:
-      ctstate: RELATED,ESTABLISHED
+  - protocol: icmp
+    icmp:
+      icmp-type: echo-reply
     target: ACCEPT
   - target:
       LOG:
-        log-prefix: '[LAN_I_D]: '
-  - target: DROP
-INPUT:
-  policy: DROP
-  action: None
-  rules:
-  - in-interface: lo
-    target: connord-lo-input
-  - in-interface: "{{ gateway.interface }}"
-    target: connord-lan-input
+        log-prefix: '[ICMP_I_R]: '
   - target:
-      LOG:
-        log-prefix: '[IN_D]: '
-connord-lo-output:
-  policy: None
-  action: create
-  rules:
-  - conntrack:
-      ctstate: RELATED,ESTABLISHED
-    target: ACCEPT
-  - dst: 127.0.0.0/8
-    target: ACCEPT
-connord-lan-output:
+      REJECT:
+        reject-with: icmp-proto-unreachable
+
+connord-lo-in:
   policy: None
   action: create
   rules:
   - target: ACCEPT
+
+connord-lan-in-tcp:
+  policy: None
+  action: create
+  rules:
+  - target:
+      LOG:
+        log-prefix: '[LAN_I_T_R]: '
+  - protocol: tcp
+    target:
+      REJECT:
+        reject-with: tcp-reset
+
+connord-lan-in-udp:
+  policy: None
+  action: create
+  rules:
+  - target:
+      LOG:
+        log-prefix: '[LAN_I_U_R]: '
+  - target:
+      REJECT:
+        reject-with: icmp-port-unreachable
+
+connord-lan-in:
+  policy: None
+  action: create
+  rules:
+  - protocol: icmp
+    target: connord-icmp-in
+  - protocol: tcp
+    target: connord-lan-in-tcp
+  - protocol: udp
+    target: connord-lan-in-udp
+  - target:
+      LOG:
+        log-prefix: '[LAN_I_R]: '
+  - target:
+      REJECT:
+        reject-with: icmp-proto-unreachable
+
+INPUT:
+  policy: DROP
+  action: None
+  rules:
+  - conntrack:
+      ctstate: RELATED,ESTABLISHED
+    target: ACCEPT
+  - conntrack:
+      ctstate: INVALID
+    target: DROP
+  - protocol: tcp
+    tcp:
+      tcp-flags:
+      - '!'
+      - 'FIN,SYN,RST,ACK'
+      - 'SYN'
+    conntrack:
+      ctstate: NEW
+    target: DROP
+  - in-interface: lo
+    conntrack:
+      ctstate: NEW
+    target: connord-lo-in
+  - in-interface: "{{ gateway.interface }}"
+    conntrack:
+      ctstate: NEW
+    target: connord-lan-in
+  - target:
+      LOG:
+        log-prefix: '[IN_R]: '
+  - protocol: tcp
+    target:
+      REJECT:
+        reject-with: tcp-reset
+  - protocol: udp
+    target:
+      REJECT:
+        reject-with: icmp-port-unreachable
+  - target:
+      REJECT:
+        reject-with: icmp-proto-unreachable
+
+connord-icmp-out:
+  policy: None
+  action: create
+  rules:
+  - icmp:
+      icmp-type: echo-request
+    protocol: icmp
+    target: ACCEPT
+  - icmp:
+      icmp-type: destination-unreachable
+    protocol: icmp
+    target: ACCEPT
+  - protocol: icmp
+    target:
+      LOG:
+        log-prefix: '[ICMP_O_R]: '
+  - protocol: icmp
+    target:
+      REJECT:
+        reject-with: icmp-proto-unreachable
+
+connord-lo-out:
+  policy: None
+  action: create
+  rules:
+  - target: ACCEPT
+
+connord-lan-out-udp:
+  policy: None
+  action: create
+  rules:
+  - protocol: udp
+    udp:
+      dport: '53'
+    target: ACCEPT
+  - protocol: udp
+    udp:
+      sport: 67:68
+      dport: 67:68
+    target: ACCEPT
+  - protocol: udp
+    udp:
+      dport: '1194' 
+    target: ACCEPT
+  - target:
+      LOG:
+        log-prefix: '[LAN_O_T_R]: '
+  - protocol: udp
+    target:
+      REJECT:
+        reject-with: icmp-port-unreachable
+
+connord-lan-out-tcp:
+  policy: None
+  action: create
+  rules:
+  - protocol: tcp
+    tcp:
+      sport: 67:68
+      dport: 67:68
+    target: ACCEPT
+  - protocol: tcp
+    mulitport:
+      dports: '80,443'
+    target: ACCEPT
+  - target:
+      LOG:
+        log-prefix: '[LAN_O_T_R]: '
+  - protocol: tcp
+    target:
+      REJECT:
+        reject-with: tcp-reset
+
+
+connord-lan-out:
+  policy: None
+  action: create
+  rules:
+  - protocol: icmp
+    target: connord-icmp-out
+  - protocol: tcp
+    target: connord-lan-out-tcp
+  - protocol: udp
+    target: connord-lan-out-udp
+  - target:
+      LOG:
+        log-prefix: '[LAN_O_R]: '
+  - target:
+      REJECT:
+        reject-with: icmp-proto-unreachable
+
 OUTPUT:
   policy: ACCEPT
   action: None
   rules:
+  - conntrack:
+      ctstate: RELATED,ESTABLISHED
+    target: ACCEPT
+  - conntrack:
+      ctstate: INVALID
+    target: DROP
+  - protocol: tcp
+    tcp:
+      tcp-flags:
+      - '!'
+      - 'FIN,SYN,RST,ACK'
+      - 'SYN'
+    conntrack:
+      ctstate: NEW
+    target: DROP
   - out-interface: lo
-    target: connord-lo-output
+    conntrack:
+      ctstate: NEW
+    target: connord-lo-out
   - out-interface: "{{ gateway.interface }}"
-    target: connord-lan-output
+    conntrack:
+      ctstate: NEW
+    target: connord-lan-out
   - target:
       LOG:
         log-prefix: '[OUT_D]: '
-  - target:
+  - protocol: tcp
+    target:
+      REJECT:
+        reject-with: tcp-reset
+  - protocol: udp
+    target:
       REJECT:
         reject-with: icmp-port-unreachable
+  - target:
+      REJECT:
+        reject-with: icmp-proto-unreachable
+
 FORWARD:
   policy: DROP
   action: None

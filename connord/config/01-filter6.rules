@@ -51,14 +51,18 @@
 INPUT:
   policy: DROP
   action: None
-  rules: []
+  rules:
+  - in-interface: lo
+    target: ACCEPT
 OUTPUT:
   policy: ACCEPT 
   action: None
   rules:
+  - out-interface: lo
+    target: ACCEPT
   - target:
       LOG:
-        log-prefix: '[OUT_D]: '
+        log-prefix: '[OUT6_D]: '
   - target:
       REJECT:
         reject-with: icmp-port-unreachable

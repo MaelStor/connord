@@ -58,7 +58,7 @@ OUTPUT:
   rules:
   - target:
       LOG:
-        log-prefix: '[OUT_D]: '
+        log-prefix: '[OUT6_D]: '
   - target:
       REJECT:
         reject-with: icmp-port-unreachable
