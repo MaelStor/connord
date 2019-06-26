@@ -74,7 +74,7 @@ INPUT:
   rules:
   - in-interface: lo
     target: connord-lo-input
-  - in-interface: "{{ iptables.lan_interface }}"
+  - in-interface: "{{ gateway.interface }}"
     target: connord-lan-input
   - target:
       LOG:
@@ -99,7 +99,7 @@ OUTPUT:
   rules:
   - out-interface: lo
     target: connord-lo-output
-  - out-interface: "{{ iptables.lan_interface }}"
+  - out-interface: "{{ gateway.interface }}"
     target: connord-lan-output
   - target:
       LOG:
