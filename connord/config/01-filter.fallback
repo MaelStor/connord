@@ -208,13 +208,13 @@ connord-lan-out-tcp:
   action: create
   rules:
   - protocol: tcp
+    multiport:
+      dports: '80,443'
+    target: ACCEPT
+  - protocol: tcp
     tcp:
       sport: 67:68
       dport: 67:68
-    target: ACCEPT
-  - protocol: tcp
-    mulitport:
-      dports: '80,443'
     target: ACCEPT
   - target:
       LOG:
