@@ -187,15 +187,6 @@ def connect(
     if "best" not in domain:
         return connect_to_specific_server(domain, openvpn, daemon, protocol)
 
-    if protocol:
-        feature = "openvpn_" + protocol
-        if features_ is None:
-            features_ = [feature]
-        elif feature in features_:
-            pass
-        else:
-            features_.append("openvpn" + protocol)
-
     servers_ = servers.get_servers()
     servers_ = filter_servers(
         servers_, netflix, countries_, areas_, features_, types_, load_, match
@@ -308,7 +299,7 @@ class OpenvpnCommand:
         :param key: the flag
         :param value: the value related to the flag
         """
-        if value and value not in ("False", "false"):
+        if value in (True, "True", "true"):
             flag = self._format_flag(key)
             self._add_openvpn_cmd_option(flag)
 
@@ -323,7 +314,12 @@ class OpenvpnCommand:
             self._forge_scripts(list_)
         else:
             flag = self._format_flag(key)
-            self._add_openvpn_cmd_option(flag, list_)
+            if list_:
+                self._add_openvpn_cmd_option(flag)
+                for value in list_:
+                    self._add_openvpn_cmd_option(value)
+            else:
+                self._add_openvpn_cmd_option(flag)
 
     @staticmethod
     def _format_script_arg(script_name, path, file_):
@@ -343,7 +339,7 @@ class OpenvpnCommand:
             script_path = path
             env_file = file_
 
-        return "{} {}".format(script_path, env_file)
+        return "'{}' {}".format(script_path, env_file)
 
     def _forge_scripts(self, scripts):
         """Adds the formatted script paths to the resulting command-line
@@ -362,7 +358,7 @@ class OpenvpnCommand:
             else:
                 if path == "built-in":
                     raise resources.ResourceNotFoundError(
-                        "No built-in found for {!r}.".format(name)
+                        path, "No built-in found for {!r}.".format(name)
                     )
 
                 arg = self._format_script_arg(name, path, file_)

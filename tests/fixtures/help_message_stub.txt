@@ -6,7 +6,7 @@ the firewall through iptables to keep your connection safe.
 positional arguments:
   {update,list,connect,kill,iptables,version}
     update              Update nordvpn configuration files.
-    list                Prints all servers if no argument is given.
+    list                List features, types, ... or servers.
     connect             Connect to a server.
     kill                Kill openvpn processes. Useful in daemon mode.
     iptables            Wrapper around iptables.
