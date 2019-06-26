@@ -172,9 +172,7 @@ your connection safe.
         action="store_true",
         help="Force update no matter of configuration.",
     )
-    list_cmd = command.add_parser(
-        "list", help="Prints all servers if no argument is given."
-    )
+    list_cmd = command.add_parser("list", help="List features, types, ... or servers.")
     list_ipt_parent = argparse.ArgumentParser(description="List iptables")
     list_ipt_parent.add_argument(
         "-4", dest="v4", action="store_true", help="(Default) List ipv4 rules"
@@ -225,36 +223,29 @@ your connection safe.
         "--country",
         action="append",
         type=CountryType(),
-        help="select a specific country. may be specified multiple times. if"
-        " one of these arguments has no specifier then all country"
-        " codes are printed.",
+        help="Select a specific country. May be specified multiple times.",
     )
     list_servers.add_argument(
         "-a",
         "--area",
         action="append",
         type=AreaType(),
-        help="select a specific area.may be specified multiple times. if"
-        " one of these arguments has no specifier then all areas"
-        " are printed.",
+        help="Select a specific area. May be specified multiple times.",
     )
     list_servers.add_argument(
         "-f",
         "--feature",
         action="append",
         type=FeatureType(),
-        help="select servers with a specific list of features. may be"
-        " specified multiple times. if one of these arguments has no"
-        " specifier then all possible features are printed.",
+        help="Select servers with a specific list of features. May be"
+        " specified multiple times.",
     )
     list_servers.add_argument(
         "-t",
         "--type",
         action="append",
         type=TypeType(),
-        help="select servers with a specific type. may be specified multiple"
-        " times. if one of these arguments has no specifier then all"
-        " possible types are printed.",
+        help="Select servers with a specific type. May be specified multiple" " times.",
     )
     list_servers.add_argument(
         "--netflix", action="store_true", help="Select servers configured for netflix."
@@ -378,8 +369,17 @@ your connection safe.
     iptables_cmd_subparsers.add_parser(
         "list", parents=[list_ipt_parent], add_help=False
     )
-    iptables_cmd_subparsers.add_parser("reload", help="Reload iptables")
-    flush_cmd = iptables_cmd_subparsers.add_parser("flush", help="Flush iptables")
+    iptables_cmd_subparsers.add_parser(
+        "reload",
+        help="Reload iptables rules files with current environment. "
+        "Useful after editing a rules file and you wish to apply "
+        "them instantly.",
+    )
+    flush_cmd = iptables_cmd_subparsers.add_parser(
+        "flush",
+        help="Flush iptables to fallback configuration or with "
+        "--no-fallback to nothing.",
+    )
     flush_cmd.add_argument(
         "--no-fallback",
         dest="no_fallback",
@@ -387,7 +387,7 @@ your connection safe.
         help="Flush tables ignoring fallback files",
     )
     apply_cmd = iptables_cmd_subparsers.add_parser(
-        "apply", help="Apply iptables rules defined in configuration"
+        "apply", help="Apply iptables rules defined in DOMAIN configuration"
     )
     apply_cmd.add_argument(
         "domain", type=DomainType(), nargs=1, help="Apply iptables rules with domain"
