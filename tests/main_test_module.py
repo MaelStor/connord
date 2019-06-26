@@ -11,6 +11,11 @@ def get_stub(stub):
         return file_handle.read()
 
 
+def get_json(fixture):
+    with open("tests/fixtures/" + fixture) as file_handle:
+        return json.load(file_handle)
+
+
 def get_servers_stub():
     with open("tests/fixtures/servers_stub.json") as json_file:
         return json.load(json_file)

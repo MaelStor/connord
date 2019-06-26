@@ -180,7 +180,7 @@ def test_update_when_force_is_false_files_are_updated(mocker):
     zippath = "/etc/openvpn/client/nordvpn/ovpn.zip"
     origpath = "/etc/openvpn/client/nordvpn/ovpn.zip.orig"
 
-    mocked_zip_file = mocker.patch("connord.update.resources.get_zip_file")
+    mocked_zip_file = mocker.patch("connord.update.resources.get_zip_path")
     mocked_zip_file.side_effect = [zippath, origpath]
 
     mocked_get = mocker.patch.object(update, "get")
@@ -203,7 +203,7 @@ def test_update_when_force_is_false_files_are_uptodate(capsys, mocker):
     zippath = "/etc/openvpn/client/nordvpn/ovpn.zip"
     origpath = "/etc/openvpn/client/nordvpn/ovpn.zip.orig"
 
-    mocked_zip_file = mocker.patch("connord.update.resources.get_zip_file")
+    mocked_zip_file = mocker.patch("connord.update.resources.get_zip_path")
     mocked_zip_file.side_effect = [zippath, origpath]
 
     mocked_get = mocker.patch.object(update, "get")
@@ -229,7 +229,7 @@ def test_update_when_force_is_false_no_update_needed(capsys, mocker):
     zippath = "/etc/openvpn/client/nordvpn/ovpn.zip"
     origpath = "/etc/openvpn/client/nordvpn/ovpn.zip.orig"
 
-    mocked_zip_file = mocker.patch("connord.update.resources.get_zip_file")
+    mocked_zip_file = mocker.patch("connord.update.resources.get_zip_path")
     mocked_zip_file.side_effect = [zippath, origpath]
 
     mocked_update_needed = mocker.patch.object(update, "update_needed")
@@ -249,3 +249,30 @@ def test_update_when_force_is_false_no_update_needed(capsys, mocker):
 
     assert retval
     assert captured.out == "No update needed. Next update needed at 9\n"
+
+
+class MockZipFile:
+    def __init__(self):
+        self.dir_ = ""
+
+    def extractall(self, zdir):
+        self.dir_ = zdir
+
+
+def test_unzip(capsys, mocker):
+    # setup
+    mocked_resources = mocker.patch("connord.update.resources")
+    mocked_resources.get_zip_dir.return_value = "/test"
+    mocked_resources.get_zip_file.return_value = "/test/ovpn.zip"
+    mocked_zip_file = mocker.patch("connord.update.ZipFile")
+    zip_file_mock = MockZipFile()
+    mocked_zip_file.return_value.__enter__.return_value = zip_file_mock
+
+    # run
+    update.unzip()
+
+    # assert
+    captured = capsys.readouterr()
+    assert zip_file_mock.dir_ == "/test"
+    assert captured.out == "Unzipping /test/ovpn.zip ...\n"
+    assert captured.err == ""

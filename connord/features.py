@@ -19,6 +19,7 @@
 """Manages server features"""
 
 from connord import ConnordError
+from connord.formatter import Formatter
 
 FEATURES = {
     "ikev2": "IKEv2/IPSec Protocol",
@@ -86,8 +87,6 @@ def filter_servers(servers, features=None):
     if features is None or not features:
         features = ["openvpn_udp"]
 
-    verify_features(features)
-
     filtered_servers = []
     servers = servers.copy()
     for server in servers:
@@ -103,20 +102,38 @@ def filter_servers(servers, features=None):
     return filtered_servers
 
 
-def to_string():
-    """
-    Assemble all features as printable string
+class FeaturesPrettyFormatter(Formatter):
+    """Format Features in pretty format"""
 
-    :returns: A simple formatted string to use as output on screen
+    def format_headline(self, sep="="):
+        features_header = "Server Features"
+        return self.center_string(features_header, sep)
+
+    def format_feature(self, feature, description):
+        return "  {:26}{}".format(feature, description)
+
+
+def to_string(stream=False):
+    """Gather all features in a printable string
+
+    :param stream: If True print to stdout else print to formatter.output variable
+    :returns: Formatted string if stream is False else an empty string
     """
 
-    result = ""
+    formatter = FeaturesPrettyFormatter()
+    file_ = formatter.get_stream_file(stream)
+
+    headline = formatter.format_headline()
+    print(headline, file=file_)
+
     for feature, description in FEATURES.items():
-        result += "{:26}{}\n".format(feature, description)
+        formatted_feature = formatter.format_feature(feature, description)
+        print(formatted_feature, file=file_)
 
-    return result.rstrip()
+    print(formatter.format_ruler(sep="-"), file=file_)
+    return formatter.get_output()
 
 
 def print_features():
-    """Prints all possible features"""
-    print(to_string())
+    """Prints all features to stdout"""
+    to_string(stream=True)

@@ -2,11 +2,7 @@
 """Test types module"""
 
 from connord import types
-from main_test_module import (
-    get_expected_servers_by_domain,
-    get_servers_stub,
-    get_stub,
-)
+from main_test_module import get_expected_servers_by_domain, get_servers_stub, get_stub
 
 
 def test_verify_types_good():
@@ -141,17 +137,6 @@ def test_filter_servers_with_every_type():
         assert False
 
 
-def test_filter_servers_bad():
-    servers_stub = get_servers_stub()
-
-    # test error message with multiple wrong types
-    try:
-        types.filter_servers(servers_stub, ["wrong", "alsowrong"])
-        assert False
-    except types.ServerTypeError as error:
-        assert str(error) == "Wrong server types: ['wrong', 'alsowrong']"
-
-
 def test_map_types_good():
     # test mapping with one correct type
     types_ = ["standard"]
@@ -164,36 +149,6 @@ def test_map_types_good():
     expected_mapped_types = ["Standard VPN servers", "Dedicated IP"]
     actual_mapped_types = types.map_types(types_)
     assert actual_mapped_types == expected_mapped_types
-
-
-def test_map_types_bad():
-    # test with one wrong type
-    try:
-        types.map_types(["wrong"])
-        assert False
-    except types.ServerTypeError:
-        assert True
-
-    # test with multiple wrong types
-    try:
-        types.map_types(["wrong", "alsowrong"])
-        assert False
-    except types.ServerTypeError:
-        assert True
-
-    # test error message
-    try:
-        types.map_types(["wrong"])
-        assert False
-    except types.ServerTypeError as error:
-        assert str(error) == "Wrong server types: ['wrong']"
-
-    # test error message with multiple wrong types
-    try:
-        types.map_types(["wrong", "alsowrong"])
-        assert False
-    except types.ServerTypeError as error:
-        assert str(error) == "Wrong server types: ['wrong', 'alsowrong']"
 
 
 def test_map_types_reverse_good():
@@ -248,7 +203,7 @@ def test_map_types_reverse_bad():
 
 
 def test_to_string():
-    expected_result = get_stub("types_to_string_stub.txt").rstrip()
+    expected_result = get_stub("types_pretty_formatted_fixture.txt").rstrip()
     actual_result = types.to_string()
 
     assert actual_result == expected_result

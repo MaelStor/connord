@@ -15,6 +15,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
+"""Manage all resources of connord in a centralized module"""
 
 import os
 import getpass
@@ -50,7 +51,15 @@ class ResourceNotFoundError(ConnordError):
 
 
 class MalformedResourceError(ConnordError):
+    """Raise when a resource (like yaml) could not be parsed due to parsing errors."""
+
     def __init__(self, resource_file, problem, problem_mark):
+        """Init
+
+        :param resource_file: the file in question
+        :param problem: description of the problem
+        :param problem_mark: hint where the problem arose
+        """
         super().__init__(
             "Malformed resource: {!r}\n{!s}\n{!s}".format(
                 resource_file, problem, problem_mark
@@ -63,6 +72,9 @@ class MalformedResourceError(ConnordError):
 
 
 def list_dir(directory, filetype=None):
+    """Return a file list of a directory with absolute paths. May be filtered by a
+    specific filetype (extension).
+    """
     files = os.listdir(directory)
 
     if filetype:
@@ -172,6 +184,7 @@ def verify_file_permissions(path, permissions=0o600):
 
 
 def get_credentials_dir(create=True):
+    """Return the directory where the default credentials file can be found"""
     creds_dir = __NORDVPN_DIR
     if not os.path.exists(__NORDVPN_DIR):
         if create:
@@ -184,6 +197,7 @@ def get_credentials_dir(create=True):
 
 @user.needs_root
 def get_credentials_file(file_name="credentials", create=True):
+    """Return the credentials file path"""
     creds_dir = get_credentials_dir()
     creds_file = "{}/{}".format(creds_dir, file_name)
     if not os.path.exists(creds_file):
@@ -197,10 +211,12 @@ def get_credentials_file(file_name="credentials", create=True):
 
 
 def _get_username():
+    """Ask for the username in the terminal and return the value"""
     return input("Enter username: ")
 
 
 def create_credentials_file(credentials_file):
+    """Create the credentials file from user input. Returns the resulting path"""
     username = _get_username()
     password = getpass.getpass("Enter password: ")
 
@@ -215,6 +231,9 @@ def create_credentials_file(credentials_file):
 
 @user.needs_root
 def get_ovpn_dir(create=True):
+    """Return the directory path where the ovpn_udp and ovpn_tcp directories can be
+    found. Raises a ResourceNotFoundError if the directory does not exist.
+    """
     if os.path.exists(__NORDVPN_DIR):
         return __NORDVPN_DIR
 
@@ -223,6 +242,10 @@ def get_ovpn_dir(create=True):
 
 @user.needs_root
 def get_ovpn_protocol_dir(protocol="udp"):
+    """Return either the ovpn_udp or ovpn_tcp directory path.
+
+    :raises: ResourceNotFoundError if the directory does not exist.
+    """
     base_dir = get_ovpn_dir()
     config_dir = "{}/ovpn_{}".format(base_dir, protocol)
 
@@ -234,6 +257,11 @@ def get_ovpn_protocol_dir(protocol="udp"):
 
 @user.needs_root
 def get_ovpn_config(domain, protocol="udp"):
+    """Returns the configuration file of the corresponding domain with protocol either
+    'udp' or 'tcp'
+
+    :raises: ResourceNotFoundError if the file does not exist
+    """
     config_dir = get_ovpn_protocol_dir(protocol)
     if ".nordvpn.com" not in domain:
         domain = "{}.nordvpn.com".format(domain)
@@ -246,6 +274,8 @@ def get_ovpn_config(domain, protocol="udp"):
 
 
 def get_scripts_dir():
+    """Return the directory where the scripts are stored."""
+
     if os.path.exists(__SCRIPTS_DIR):
         scripts_dir = __SCRIPTS_DIR
     else:
@@ -255,6 +285,11 @@ def get_scripts_dir():
 
 
 def get_scripts_file(script_name="openvpn_up_down.bash"):
+    """Return an absolute file path to script_name.
+
+    :raises: ResourceNotFoundError if the file not exists.
+    """
+
     scripts_dir = get_scripts_dir()
     scripts_file = "{}/{}".format(scripts_dir, script_name)
     if os.path.exists(scripts_file):
@@ -264,6 +299,7 @@ def get_scripts_file(script_name="openvpn_up_down.bash"):
 
 
 def get_config_dir():
+    """Return the directory path to configuration files"""
     if os.path.exists(__CONFIG_DIR):
         config_dir = __CONFIG_DIR
     else:
@@ -276,11 +312,18 @@ def get_config_dir():
 
 
 def list_config_dir(filetype=None):
+    """Returns a file list of the configuration directory. May be filtered by
+    filetype."""
     config_dir = get_config_dir()
     return list_dir(config_dir, filetype)
 
 
 def get_config_file(config_name="config.yml"):
+    """Return a configuration file from the configuration directory
+
+    :raises: ResourceNotFoundError if the file does not exist.
+    """
+
     config_dir = get_config_dir()
     config_file = "{}/{}".format(config_dir, config_name)
     if os.path.exists(config_file):
@@ -289,7 +332,12 @@ def get_config_file(config_name="config.yml"):
     raise ResourceNotFoundError(config_file)
 
 
+# TODO: rename to read_config
 def get_config():
+    """Returns a dictionary parsed from a yaml configuration file
+
+    :raises: MalformedResourceError in case of parsing errors
+    """
     config_file = get_config_file()
     try:
         with open(config_file, "r") as config_fd:
@@ -301,6 +349,10 @@ def get_config():
 
 
 def write_config(config_dict):
+    """Write to the yaml configuration file (config.yml) parsed from config_dict.
+
+    :raises: TypeError if config_dict is not a dictionary
+    """
     config_file = get_config_file()
     if not isinstance(config_dict, dict):
         raise TypeError(
@@ -316,6 +368,10 @@ def write_config(config_dict):
 
 @user.needs_root
 def get_stats_dir(create=True):
+    """Return path to the stats directory.
+
+    :raises: ResourceNotFoundError if path doesn't exist and create is false.
+    """
     stats_dir = __RUN_DIR
     if not os.path.exists(stats_dir):
         if create:
@@ -328,6 +384,7 @@ def get_stats_dir(create=True):
 
 @user.needs_root
 def remove_stats_dir():
+    """Delete the content of the stats directory. Does nothing if it doesn't exists."""
     try:
         stats_dir = get_stats_dir(create=False)
         rmtree(stats_dir)
@@ -338,13 +395,18 @@ def remove_stats_dir():
 
 
 def list_stats_dir(filetype=None):
+    """Return the content of the stats directory. Files can be filtered by filetype.
+    """
     stats_dir = get_stats_dir()
     return list_dir(stats_dir, filetype)
 
 
 @user.needs_root
 def get_stats_file(stats_name=None, create=True):
-    """Get stats file"""
+    """Return the path to the stats_name file.
+
+    :raises: ResourceNotFoundError if the file doesn't exist and create is false.
+    """
     if not stats_name:
         stats_name = "stats"
 
@@ -360,8 +422,13 @@ def get_stats_file(stats_name=None, create=True):
     return stats_file
 
 
+# TODO: Rename to read_stats
 @user.needs_root
 def get_stats(stats_name="stats"):
+    """Return a dictionary parsed from a yaml stats file.
+
+    :raises: MalformedResourceError if errors occurred during parsing.
+    """
     stats_file = get_stats_file(stats_name=stats_name)
     try:
         with open(stats_file, "r") as stats_fd:
@@ -376,6 +443,10 @@ def get_stats(stats_name="stats"):
 
 @user.needs_root
 def write_stats(stats_dict, stats_name="stats"):
+    """Write a dictionary to a stats_file name stats_name.
+
+    :raises: TypeError if stats_dict is not of type dict
+    """
     stats_file = get_stats_file(stats_name=stats_name)
     if not isinstance(stats_dict, dict):
         raise TypeError(
@@ -390,16 +461,22 @@ def write_stats(stats_dict, stats_name="stats"):
 
 
 def read_pid(pid_name="openvpn.pid"):
+    """Return the content of a pid file as integer. Pid files reside in stats_dir.
+    """
     pid_file = get_stats_file(stats_name=pid_name)
     with open(pid_file, "r") as pid_fd:
         return int(pid_fd.readline())
 
 
 def get_ovpn_tmp_path():
+    """Return the path to the temporary file to be used for temporarily
+    created ovpn files.
+    """
     temp_dir = tempfile.gettempdir()
     return "{}/{}".format(temp_dir, "ovpn.conf")
 
 
 def remove_ovpn_tmp_file():
+    """Delete the temporary file used for ovpn."""
     temp_dir = tempfile.gettempdir()
     os.remove("{}/{}".format(temp_dir, "ovpn.conf"))

@@ -1,11 +1,7 @@
 #!/usr/bin/env python
 
 from connord import countries
-from main_test_module import (
-    get_servers_stub,
-    get_expected_servers_by_domain,
-    get_stub,
-)
+from main_test_module import get_servers_stub, get_expected_servers_by_domain, get_stub
 
 
 def test_verify_coutries_bad():
@@ -202,7 +198,7 @@ def test_filter_servers_bad():
 
 
 def test_to_string():
-    expected_result = get_stub("countries_to_string_stub.txt").rstrip()
+    expected_result = get_stub("countries_pretty_formatted_fixture.txt").rstrip()
 
     actual_result = countries.to_string()
     assert actual_result == expected_result

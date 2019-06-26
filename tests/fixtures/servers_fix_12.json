@@ -1,0 +1,518 @@
+[
+    {
+        "id": 590703,
+        "ip_address": "185.145.66.248",
+        "search_keywords": [],
+        "categories": [
+            {
+                "name": "Standard VPN servers"
+            },
+            {
+                "name": "P2P"
+            }
+        ],
+        "name": "Germany #111",
+        "domain": "de111.nordvpn.com",
+        "price": 0,
+        "flag": "DE",
+        "country": "Germany",
+        "location": {
+            "lat": 50.116667,
+            "long": 8.683333
+        },
+        "load": 53,
+        "features": {
+            "ikev2": true,
+            "openvpn_udp": true,
+            "openvpn_tcp": true,
+            "socks": true,
+            "proxy": true,
+            "pptp": false,
+            "l2tp": false,
+            "openvpn_xor_udp": false,
+            "openvpn_xor_tcp": false,
+            "proxy_cybersec": true,
+            "proxy_ssl": false,
+            "proxy_ssl_cybersec": true,
+            "ikev2_v6": false,
+            "openvpn_udp_v6": false,
+            "openvpn_tcp_v6": false,
+            "wireguard_udp": false,
+            "openvpn_udp_tls_crypt": false,
+            "openvpn_tcp_tls_crypt": false
+        }
+    },
+    {
+        "id": 590704,
+        "ip_address": "185.145.66.249",
+        "search_keywords": [],
+        "categories": [
+            {
+                "name": "Standard VPN servers"
+            },
+            {
+                "name": "P2P"
+            }
+        ],
+        "name": "Germany #112",
+        "domain": "de112.nordvpn.com",
+        "price": 0,
+        "flag": "DE",
+        "country": "Germany",
+        "location": {
+            "lat": 50.116667,
+            "long": 8.683333
+        },
+        "load": 20,
+        "features": {
+            "ikev2": true,
+            "openvpn_udp": true,
+            "openvpn_tcp": true,
+            "socks": true,
+            "proxy": true,
+            "pptp": false,
+            "l2tp": false,
+            "openvpn_xor_udp": false,
+            "openvpn_xor_tcp": false,
+            "proxy_cybersec": true,
+            "proxy_ssl": true,
+            "proxy_ssl_cybersec": true,
+            "ikev2_v6": false,
+            "openvpn_udp_v6": false,
+            "openvpn_tcp_v6": false,
+            "wireguard_udp": false,
+            "openvpn_udp_tls_crypt": false,
+            "openvpn_tcp_tls_crypt": false
+        }
+    },
+    {
+        "id": 590705,
+        "ip_address": "185.145.66.250",
+        "search_keywords": [],
+        "categories": [
+            {
+                "name": "Standard VPN servers"
+            },
+            {
+                "name": "P2P"
+            }
+        ],
+        "name": "Germany #113",
+        "domain": "de113.nordvpn.com",
+        "price": 0,
+        "flag": "DE",
+        "country": "Germany",
+        "location": {
+            "lat": 50.116667,
+            "long": 8.683333
+        },
+        "load": 20,
+        "features": {
+            "ikev2": true,
+            "openvpn_udp": true,
+            "openvpn_tcp": true,
+            "socks": true,
+            "proxy": true,
+            "pptp": false,
+            "l2tp": false,
+            "openvpn_xor_udp": false,
+            "openvpn_xor_tcp": false,
+            "proxy_cybersec": true,
+            "proxy_ssl": true,
+            "proxy_ssl_cybersec": false,
+            "ikev2_v6": false,
+            "openvpn_udp_v6": false,
+            "openvpn_tcp_v6": false,
+            "wireguard_udp": false,
+            "openvpn_udp_tls_crypt": false,
+            "openvpn_tcp_tls_crypt": false
+        }
+    },
+    {
+        "id": 590706,
+        "ip_address": "185.145.66.251",
+        "search_keywords": [],
+        "categories": [
+            {
+                "name": "Standard VPN servers"
+            },
+            {
+                "name": "P2P"
+            }
+        ],
+        "name": "Germany #114",
+        "domain": "de114.nordvpn.com",
+        "price": 0,
+        "flag": "DE",
+        "country": "Germany",
+        "location": {
+            "lat": 50.116667,
+            "long": 8.683333
+        },
+        "load": 27,
+        "features": {
+            "ikev2": true,
+            "openvpn_udp": true,
+            "openvpn_tcp": true,
+            "socks": true,
+            "proxy": true,
+            "pptp": false,
+            "l2tp": false,
+            "openvpn_xor_udp": false,
+            "openvpn_xor_tcp": false,
+            "proxy_cybersec": true,
+            "proxy_ssl": true,
+            "proxy_ssl_cybersec": true,
+            "ikev2_v6": false,
+            "openvpn_udp_v6": false,
+            "openvpn_tcp_v6": false,
+            "wireguard_udp": false,
+            "openvpn_udp_tls_crypt": false,
+            "openvpn_tcp_tls_crypt": false
+        }
+    },
+    {
+        "id": 590711,
+        "ip_address": "185.151.58.112",
+        "search_keywords": [],
+        "categories": [
+            {
+                "name": "Standard VPN servers"
+            },
+            {
+                "name": "P2P"
+            }
+        ],
+        "name": "Germany #119",
+        "domain": "de119.nordvpn.com",
+        "price": 0,
+        "flag": "DE",
+        "country": "Germany",
+        "location": {
+            "lat": 50.116667,
+            "long": 8.683333
+        },
+        "load": 84,
+        "features": {
+            "ikev2": true,
+            "openvpn_udp": true,
+            "openvpn_tcp": true,
+            "socks": true,
+            "proxy": true,
+            "pptp": false,
+            "l2tp": false,
+            "openvpn_xor_udp": false,
+            "openvpn_xor_tcp": false,
+            "proxy_cybersec": true,
+            "proxy_ssl": true,
+            "proxy_ssl_cybersec": true,
+            "ikev2_v6": false,
+            "openvpn_udp_v6": false,
+            "openvpn_tcp_v6": false,
+            "wireguard_udp": false,
+            "openvpn_udp_tls_crypt": false,
+            "openvpn_tcp_tls_crypt": false
+        }
+    },
+    {
+        "id": 590712,
+        "ip_address": "185.151.58.113",
+        "search_keywords": [],
+        "categories": [
+            {
+                "name": "Standard VPN servers"
+            },
+            {
+                "name": "P2P"
+            }
+        ],
+        "name": "Germany #120",
+        "domain": "de120.nordvpn.com",
+        "price": 0,
+        "flag": "DE",
+        "country": "Germany",
+        "location": {
+            "lat": 50.116667,
+            "long": 8.683333
+        },
+        "load": 19,
+        "features": {
+            "ikev2": true,
+            "openvpn_udp": true,
+            "openvpn_tcp": true,
+            "socks": true,
+            "proxy": true,
+            "pptp": false,
+            "l2tp": false,
+            "openvpn_xor_udp": false,
+            "openvpn_xor_tcp": false,
+            "proxy_cybersec": true,
+            "proxy_ssl": true,
+            "proxy_ssl_cybersec": true,
+            "ikev2_v6": false,
+            "openvpn_udp_v6": false,
+            "openvpn_tcp_v6": false,
+            "wireguard_udp": false,
+            "openvpn_udp_tls_crypt": false,
+            "openvpn_tcp_tls_crypt": false
+        }
+    },
+    {
+        "id": 590713,
+        "ip_address": "185.151.58.114",
+        "search_keywords": [],
+        "categories": [
+            {
+                "name": "Standard VPN servers"
+            },
+            {
+                "name": "P2P"
+            }
+        ],
+        "name": "Germany #121",
+        "domain": "de121.nordvpn.com",
+        "price": 0,
+        "flag": "DE",
+        "country": "Germany",
+        "location": {
+            "lat": 50.116667,
+            "long": 8.683333
+        },
+        "load": 28,
+        "features": {
+            "ikev2": true,
+            "openvpn_udp": true,
+            "openvpn_tcp": true,
+            "socks": true,
+            "proxy": true,
+            "pptp": false,
+            "l2tp": false,
+            "openvpn_xor_udp": false,
+            "openvpn_xor_tcp": false,
+            "proxy_cybersec": true,
+            "proxy_ssl": true,
+            "proxy_ssl_cybersec": true,
+            "ikev2_v6": false,
+            "openvpn_udp_v6": false,
+            "openvpn_tcp_v6": false,
+            "wireguard_udp": false,
+            "openvpn_udp_tls_crypt": false,
+            "openvpn_tcp_tls_crypt": false
+        }
+    },
+    {
+        "id": 590714,
+        "ip_address": "185.151.58.115",
+        "search_keywords": [],
+        "categories": [
+            {
+                "name": "Standard VPN servers"
+            },
+            {
+                "name": "P2P"
+            }
+        ],
+        "name": "Germany #122",
+        "domain": "de122.nordvpn.com",
+        "price": 0,
+        "flag": "DE",
+        "country": "Germany",
+        "location": {
+            "lat": 50.116667,
+            "long": 8.683333
+        },
+        "load": 12,
+        "features": {
+            "ikev2": true,
+            "openvpn_udp": true,
+            "openvpn_tcp": true,
+            "socks": true,
+            "proxy": true,
+            "pptp": false,
+            "l2tp": false,
+            "openvpn_xor_udp": false,
+            "openvpn_xor_tcp": false,
+            "proxy_cybersec": true,
+            "proxy_ssl": true,
+            "proxy_ssl_cybersec": true,
+            "ikev2_v6": false,
+            "openvpn_udp_v6": false,
+            "openvpn_tcp_v6": false,
+            "wireguard_udp": false,
+            "openvpn_udp_tls_crypt": false,
+            "openvpn_tcp_tls_crypt": false
+        }
+    },
+    {
+        "id": 590737,
+        "ip_address": "209.58.185.46",
+        "search_keywords": [],
+        "categories": [
+            {
+                "name": "Standard VPN servers"
+            },
+            {
+                "name": "P2P"
+            }
+        ],
+        "name": "Hong Kong #7",
+        "domain": "hk7.nordvpn.com",
+        "price": 0,
+        "flag": "HK",
+        "country": "Hong Kong",
+        "location": {
+            "lat": 22.2833333,
+            "long": 114.15
+        },
+        "load": 58,
+        "features": {
+            "ikev2": true,
+            "openvpn_udp": true,
+            "openvpn_tcp": true,
+            "socks": true,
+            "proxy": true,
+            "pptp": false,
+            "l2tp": false,
+            "openvpn_xor_udp": false,
+            "openvpn_xor_tcp": false,
+            "proxy_cybersec": true,
+            "proxy_ssl": true,
+            "proxy_ssl_cybersec": true,
+            "ikev2_v6": false,
+            "openvpn_udp_v6": false,
+            "openvpn_tcp_v6": false,
+            "wireguard_udp": false,
+            "openvpn_udp_tls_crypt": false,
+            "openvpn_tcp_tls_crypt": false
+        }
+    },
+    {
+        "id": 590738,
+        "ip_address": "209.58.185.47",
+        "search_keywords": [],
+        "categories": [
+            {
+                "name": "Standard VPN servers"
+            },
+            {
+                "name": "P2P"
+            }
+        ],
+        "name": "Hong Kong #8",
+        "domain": "hk8.nordvpn.com",
+        "price": 0,
+        "flag": "HK",
+        "country": "Hong Kong",
+        "location": {
+            "lat": 22.2833333,
+            "long": 114.15
+        },
+        "load": 58,
+        "features": {
+            "ikev2": true,
+            "openvpn_udp": true,
+            "openvpn_tcp": true,
+            "socks": true,
+            "proxy": true,
+            "pptp": false,
+            "l2tp": false,
+            "openvpn_xor_udp": false,
+            "openvpn_xor_tcp": false,
+            "proxy_cybersec": true,
+            "proxy_ssl": true,
+            "proxy_ssl_cybersec": true,
+            "ikev2_v6": false,
+            "openvpn_udp_v6": false,
+            "openvpn_tcp_v6": false,
+            "wireguard_udp": false,
+            "openvpn_udp_tls_crypt": false,
+            "openvpn_tcp_tls_crypt": false
+        }
+    },
+    {
+        "id": 590739,
+        "ip_address": "209.58.185.48",
+        "search_keywords": [],
+        "categories": [
+            {
+                "name": "Standard VPN servers"
+            },
+            {
+                "name": "P2P"
+            }
+        ],
+        "name": "Hong Kong #9",
+        "domain": "hk9.nordvpn.com",
+        "price": 0,
+        "flag": "HK",
+        "country": "Hong Kong",
+        "location": {
+            "lat": 22.2833333,
+            "long": 114.15
+        },
+        "load": 4,
+        "features": {
+            "ikev2": true,
+            "openvpn_udp": true,
+            "openvpn_tcp": true,
+            "socks": true,
+            "proxy": true,
+            "pptp": false,
+            "l2tp": false,
+            "openvpn_xor_udp": false,
+            "openvpn_xor_tcp": false,
+            "proxy_cybersec": true,
+            "proxy_ssl": true,
+            "proxy_ssl_cybersec": true,
+            "ikev2_v6": false,
+            "openvpn_udp_v6": false,
+            "openvpn_tcp_v6": false,
+            "wireguard_udp": false,
+            "openvpn_udp_tls_crypt": false,
+            "openvpn_tcp_tls_crypt": false
+        }
+    },
+    {
+        "id": 590740,
+        "ip_address": "209.58.185.49",
+        "search_keywords": [],
+        "categories": [
+            {
+                "name": "Standard VPN servers"
+            },
+            {
+                "name": "P2P"
+            }
+        ],
+        "name": "Hong Kong #10",
+        "domain": "hk10.nordvpn.com",
+        "price": 0,
+        "flag": "HK",
+        "country": "Hong Kong",
+        "location": {
+            "lat": 22.2833333,
+            "long": 114.15
+        },
+        "load": 34,
+        "features": {
+            "ikev2": true,
+            "openvpn_udp": true,
+            "openvpn_tcp": true,
+            "socks": true,
+            "proxy": true,
+            "pptp": false,
+            "l2tp": false,
+            "openvpn_xor_udp": false,
+            "openvpn_xor_tcp": false,
+            "proxy_cybersec": true,
+            "proxy_ssl": true,
+            "proxy_ssl_cybersec": true,
+            "ikev2_v6": false,
+            "openvpn_udp_v6": false,
+            "openvpn_tcp_v6": false,
+            "wireguard_udp": false,
+            "openvpn_udp_tls_crypt": false,
+            "openvpn_tcp_tls_crypt": false
+        }
+    }
+]
