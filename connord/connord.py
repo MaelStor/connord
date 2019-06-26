@@ -371,8 +371,9 @@ your connection safe.
     )
     iptables_cmd_subparsers.add_parser(
         "reload",
-        help="Reload iptables rules files with current environment. "
-        "Useful after editing a rules file and you wish to apply "
+        help="Reload iptables 'rules' configuration when connected to NordVPN or else "
+        "the 'fallback' configuration. "
+        "Useful after editing a configuration file and you wish to apply "
         "them instantly.",
     )
     flush_cmd = iptables_cmd_subparsers.add_parser(
@@ -387,19 +388,20 @@ your connection safe.
         help="Flush tables ignoring fallback files",
     )
     apply_cmd = iptables_cmd_subparsers.add_parser(
-        "apply", help="Apply iptables rules defined in DOMAIN configuration"
+        "apply",
+        description="Apply iptables rules defined in 'rules' or 'fallback' configuration files.",
     )
     apply_cmd.add_argument(
-        "domain", type=DomainType(), nargs=1, help="Apply iptables rules with domain"
+        "table", type=TableType(), help="Apply iptables rules for 'table'."
     )
-    udp_tcp = apply_cmd.add_mutually_exclusive_group()
-    udp_tcp.add_argument(
-        "--udp", action="store_true", help="Use UDP protocol. This is the default"
-    )
-    udp_tcp.add_argument(
-        "--tcp",
+    apply_cmd.add_argument(
+        "-f",
+        "--fallback",
         action="store_true",
-        help="Use TCP protocol. Only one of --udp or --tcp may be present.",
+        help="Apply fallback instead of the rules configuration.",
+    )
+    apply_cmd.add_argument(
+        "-6", dest="ipv6", action="store_true", help="Apply the ipv6 configuration."
     )
     command.add_parser("version", help="Show version")
 
@@ -553,33 +555,32 @@ def process_iptables_cmd(args):
         else:
             iptables.reset(fallback=True)
 
-    # TODO: rearrange apply to apply a specific set of rules like filter.rules
     elif args.iptables_sub == "apply":
-        iptables.reset(fallback=True)
-        if args.tcp:
-            protocol = "tcp"
+        config_file = iptables.get_config_path(
+            args.table, args.fallback, ipv6=args.ipv6
+        )
+
+        if args.fallback:
+            server = None
+            protocol = None
         else:
-            protocol = "udp"
-
-        domain = args.domain[0]
-        server = servers.get_server_by_domain(domain)
-        # TODO: which action to take when applying rules fails?
-        iptables.apply_config_dir(server, protocol)
+            try:
+                server = resources.get_stats(stats_name="server")
+                protocol = resources.get_stats()["last_server"]["protocol"]
+            except (resources.ResourceNotFoundError, KeyError):
+                raise iptables.IptablesError(
+                    "Cannot apply 'rules' files when not connected to a NordVPN server."
+                )
+        return iptables.apply_config(config_file, server, protocol)
     elif args.iptables_sub == "reload":
-        stats_dict = resources.get_stats()
-        domain = str()
-        protocol = str()
         try:
-            domain = stats_dict["last_server"]["domain"]
-            protocol = stats_dict["last_server"]["protocol"]
-        except KeyError:
-            print("Could not reload iptables. Run 'connect' or apply iptables first.")
-            return False
+            server = resources.get_stats(stats_name="server")
+            protocol = resources.get_stats()["last_server"]["protocol"]
+            filetype = "rules"
+        except (resources.ResourceNotFoundError, KeyError):
+            filetype = "fallback"
 
-        server = resources.get_stats(stats_name="server")
-
-        iptables.reset(fallback=True)
-        iptables.apply_config_dir(server, protocol)
+        return iptables.apply_config_dir(server, protocol, filetype=filetype)
     elif args.iptables_sub == "list":
         return process_list_ipt_cmd(args)
     else:

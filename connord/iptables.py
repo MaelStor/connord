@@ -38,6 +38,46 @@ class IptablesError(ConnordError):
     """Raise within this module"""
 
 
+def get_config_path(table, fallback=False, ipv6=False):
+    """Return rules path of the table"""
+    if fallback:
+        if ipv6:
+            table_regex = re.compile(r"[0-9]*[-]?{}6.fallback".format(table))
+        else:
+            table_regex = re.compile(r"[0-9]*[-]?{}.fallback".format(table))
+
+        file_list = resources.list_config_dir(filetype="fallback")
+    else:
+        if ipv6:
+            table_regex = re.compile(r"[0-9]*[-]?{}6.rules".format(table))
+        else:
+            table_regex = re.compile(r"[0-9]*[-]?{}.rules".format(table))
+
+        file_list = resources.list_config_dir(filetype="rules")
+
+    configs_found = []
+    for file_ in file_list:
+        result = table_regex.search(file_)
+        if result:
+            configs_found.append(file_)
+
+    if len(configs_found) == 0:
+        if fallback:
+            error_message = "Could not find a fallback configuration for '{}' table.".format(
+                table
+            )
+        else:
+            error_message = "Could not find a configuration for '{}' table.".format(
+                table
+            )
+        raise resources.ResourceNotFoundError(table, error_message)
+
+    elif len(configs_found) > 1:
+        raise IptablesError("Ambiguous file paths: {}.".format(configs_found))
+
+    return configs_found[0]
+
+
 def get_table_name(config_file):
     """Return the table name extracted from the filename"""
     table_regex = re.compile(r"[0-9]*[-]?([a-zA-Z]+[6]?).(rules|fallback)")
