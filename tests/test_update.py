@@ -199,7 +199,7 @@ def test_update_when_force_is_false_files_are_updated(mocker):
     assert retval
 
 
-def test_update_when_force_is_false_files_are_uptodate(capsys, mocker):
+def test_update_when_non_verbose_force_is_false_files_are_uptodate(mocker):
     zippath = "/etc/openvpn/client/nordvpn/ovpn.zip"
     origpath = "/etc/openvpn/client/nordvpn/ovpn.zip.orig"
 
@@ -215,17 +215,14 @@ def test_update_when_force_is_false_files_are_uptodate(capsys, mocker):
 
     retval = update.update(False)
 
-    captured = capsys.readouterr()
-
     mocked_get.assert_called_once()
     mocked_update_needed.assert_called_once()
     mocked_file_equals.assert_called_once_with(origpath, zippath)
     mocked_unzip.assert_not_called()
     assert retval
-    assert captured.out == zippath + " already up-to-date\n"
 
 
-def test_update_when_force_is_false_no_update_needed(capsys, mocker):
+def test_update_when_non_verbose_force_is_false_no_update_needed(mocker):
     zippath = "/etc/openvpn/client/nordvpn/ovpn.zip"
     origpath = "/etc/openvpn/client/nordvpn/ovpn.zip.orig"
 
@@ -245,10 +242,8 @@ def test_update_when_force_is_false_no_update_needed(capsys, mocker):
     mocked_update_needed.assert_called_once()
     mocked_os.path.getctime.assert_called_once_with(zippath)
     mocked_datetime.fromtimestamp.assert_called_once_with(5)
-    captured = capsys.readouterr()
 
     assert retval
-    assert captured.out == "No update needed. Next update needed at 9\n"
 
 
 class MockZipFile:
@@ -259,7 +254,7 @@ class MockZipFile:
         self.dir_ = zdir
 
 
-def test_unzip(capsys, mocker):
+def test_unzip_when_non_verbose(capsys, mocker):
     # setup
     mocked_resources = mocker.patch("connord.update.resources")
     mocked_resources.get_zip_dir.return_value = "/test"
@@ -272,7 +267,4 @@ def test_unzip(capsys, mocker):
     update.unzip()
 
     # assert
-    captured = capsys.readouterr()
     assert zip_file_mock.dir_ == "/test"
-    assert captured.out == "Unzipping /test/ovpn.zip ...\n"
-    assert captured.err == ""

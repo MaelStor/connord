@@ -25,9 +25,10 @@ from shutil import move
 from zipfile import ZipFile
 from datetime import datetime, timedelta
 import requests
-from connord import ConnordError
+from connord import ConnordError, Printer
 from connord import resources
 from connord import user
+from connord import areas
 
 __URL = "https://downloads.nordcdn.com/configs/archives/servers/ovpn.zip"
 TIMEOUT = timedelta(days=1)
@@ -58,7 +59,8 @@ def get():
     zip_path = resources.get_zip_path()
     update_orig()
 
-    print("Downloading {} ...".format(zip_path))
+    printer = Printer()
+    printer.info("Downloading {} ...".format(zip_path))
     with requests.get(__URL, stream=True, timeout=1) as response, open(
         zip_path, "wb"
     ) as zip_fd:
@@ -84,7 +86,8 @@ def unzip():
 
     zip_dir = resources.get_zip_dir(create=True)
     zip_file = resources.get_zip_file()
-    print("Unzipping {} ...".format(zip_file))
+    printer = Printer()
+    printer.info("Unzipping {} ...".format(zip_file))
     with ZipFile(zip_file) as zip_stream:
         zip_stream.extractall(zip_dir)
 
@@ -92,6 +95,8 @@ def unzip():
 def update(force=False):
     """Update the nordvpn configuration files
     """
+
+    printer = Printer()
     if force:
         get()
         unzip()
@@ -103,11 +108,16 @@ def update(force=False):
             if not file_equals(orig_file, zip_file):
                 unzip()
             else:
-                print(zip_file + " already up-to-date")
+                printer.info(zip_file + " already up-to-date")
         else:
             next_update = datetime.fromtimestamp(os.path.getctime(zip_file)) + TIMEOUT
-            print("No update needed. Next update needed at {!s}".format(next_update))
+            printer.info(
+                "No update needed. Next necesseray update needed at {!s}".format(
+                    next_update
+                )
+            )
 
+    areas.update_database()
     return True
 
 
