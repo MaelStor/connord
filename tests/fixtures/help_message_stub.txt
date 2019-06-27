@@ -14,5 +14,5 @@ positional arguments:
 
 optional arguments:
   -h, --help            show this help message and exit
-  -q, --quiet           Be quiet
-  -v, --verbose         Be verbose
+  -q, --quiet           Suppress error messages.
+  -v, --verbose         Show what's going

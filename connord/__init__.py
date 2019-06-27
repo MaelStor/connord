@@ -20,9 +20,49 @@
 Init file
 """
 
+import sys
+
 
 class ConnordError(Exception):
     """Main Exception class for connord module"""
+
+
+# pylint: disable=too-few-public-methods
+class Borg:
+    """Define a borg class"""
+
+    _shared_state = {}
+
+    def __init__(self):
+        self.__dict__ = self._shared_state
+
+
+class Printer(Borg):
+    """Generic printer. Every intentional output must go through this printer
+    to recognize quiet and verbose mode set on the command-line or in the
+    configuration.
+    """
+
+    def __init__(self, verbose=False, quiet=False):
+        """Initialize the printer. The attributes don't change once they are set.
+
+        :param verbose: if True print info messages
+        :param quiet: if True suppress error and info messages
+        """
+
+        Borg.__init__(self)
+        if "verbose" not in self.__dict__.keys():
+            self.verbose = verbose
+        if "quiet" not in self.__dict__.keys():
+            self.quiet = quiet
+
+    def error(self, error):
+        if not self.quiet:
+            print(error, file=sys.stderr)
+
+    def info(self, info):
+        if self.verbose and not self.quiet:
+            print(info)
 
 
 # TODO: Introduce ValidationError to be used verifying command-line arguments

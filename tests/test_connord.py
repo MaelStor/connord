@@ -199,4 +199,4 @@ def test_main_provoking_not_implemented_error(mocker):
         connord.main()
         assert False
     except NotImplementedError as error:
-        assert str(error) == "Could not process commandline arguments."
+        assert str(error) == "Could not process command-line arguments."

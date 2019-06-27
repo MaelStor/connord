@@ -37,6 +37,7 @@ from connord import areas
 from connord import countries
 from connord import features
 from connord import types
+from connord import Printer
 from .features import FeatureError
 
 
@@ -160,8 +161,12 @@ your connection safe.
 """
     parser = argparse.ArgumentParser(description=description)
     verbosity = parser.add_mutually_exclusive_group()
-    verbosity.add_argument("-q", "--quiet", action="store_true", help="Be quiet")
-    verbosity.add_argument("-v", "--verbose", action="store_true", help="Be verbose")
+    verbosity.add_argument(
+        "-q", "--quiet", action="store_true", help="Suppress error messages."
+    )
+    verbosity.add_argument(
+        "-v", "--verbose", action="store_true", help="Show what's going"
+    )
     command = parser.add_subparsers(dest="command")
     update_cmd = command.add_parser(
         "update", help="Update nordvpn configuration files."
@@ -389,7 +394,10 @@ your connection safe.
     )
     apply_cmd = iptables_cmd_subparsers.add_parser(
         "apply",
-        description="Apply iptables rules defined in 'rules' or 'fallback' configuration files.",
+        description=(
+            "Apply iptables rules defined in 'rules' or 'fallback' "
+            "configuration files."
+        ),
     )
     apply_cmd.add_argument(
         "table", type=TableType(), help="Apply iptables rules for 'table'."
@@ -616,6 +624,9 @@ def main():  # noqa: C901
         sys.argv.extend(["-h"])
 
     args = parse_args(sys.argv[1:])
+    # TODO: recognize configuration in config.yml
+    printer = Printer(verbose=args.verbose, quiet=args.quiet)
+
     try:
         if args.command == "update":
             update.update(force=args.force)
@@ -630,34 +641,34 @@ def main():  # noqa: C901
         elif args.command == "iptables":
             process_iptables_cmd(args)
         else:
-            raise NotImplementedError("Could not process commandline arguments.")
+            # This should only happen when someone tampers with sys.argv
+            raise NotImplementedError("Could not process command-line arguments.")
         sys.exit(0)
     except PermissionError:
-        print(
+        printer.error(
             'Permission Denied: You need to run "connord {}" as root'.format(
                 args.command
-            ),
-            file=sys.stderr,
+            )
         )
     except resources.ResourceNotFoundError as error:
-        print(error, file=sys.stderr)
+        printer.error(error)
     except resources.MalformedResourceError as error:
-        print(error, file=sys.stderr)
+        printer.error(error)
     except areas.AreaError as error:
-        print(error, file=sys.stderr)
+        printer.error(error)
     except iptables.IptablesError as error:
-        print(error, file=sys.stderr)
+        printer.error(error)
     except countries.CountryError as error:
-        print(error, file=sys.stderr)
+        printer.error(error)
     except FeatureError as error:
-        print(error, file=sys.stderr)
+        printer.error(error)
     except servers.DomainNotFoundError as error:
-        print(error, file=sys.stderr)
+        printer.error(error)
     except servers.MalformedDomainError as error:
-        print(error, file=sys.stderr)
+        printer.error(error)
     except connect.ConnectError as error:
-        print(error, file=sys.stderr)
+        printer.error(error)
     except RequestException as error:
-        print(error, file=sys.stderr)
+        printer.error(error)
 
     sys.exit(1)

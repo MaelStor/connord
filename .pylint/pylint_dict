@@ -1,5 +1,6 @@
 api
 args
+argv
 bool
 boolean
 catched
@@ -46,6 +47,7 @@ stor
 str
 subclasses
 sudo
+sys
 tcp
 udp
 uid
