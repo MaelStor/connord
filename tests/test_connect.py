@@ -66,6 +66,7 @@ def openvpn_command_no_options():
 def test_ping(mocker, ping_output_good):
     test_server = {}
     test_server["ip_address"] = "100.100.100.100"
+    test_server["domain"] = "us1000"
 
     mocked_popen = mocker.patch("connord.connect.subprocess.Popen")
     process_mock = mocker.MagicMock()
@@ -82,6 +83,7 @@ def test_ping(mocker, ping_output_good):
 def test_ping_bad(mocker, ping_output_bad):
     test_server = {}
     test_server["ip_address"] = "100.100.100.100"
+    test_server["domain"] = "us1000"
 
     mocked_popen = mocker.patch("connord.connect.subprocess.Popen")
     process_mock = mocker.MagicMock()
@@ -100,6 +102,7 @@ def test_ping_bad(mocker, ping_output_bad):
 def test_ping_servers_parallelness(mocker):
     test_server = {}
     test_server["ip_address"] = "100.100.100.100"
+    test_server["domain"] = "us1000"
 
     def ping_fix(ip):
         time.sleep(0.2)

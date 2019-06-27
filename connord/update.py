@@ -21,7 +21,7 @@
 # TODO: improve exception handling
 
 import os
-from shutil import move
+from shutil import move, rmtree
 from zipfile import ZipFile
 from datetime import datetime, timedelta
 import requests
@@ -60,12 +60,16 @@ def get():
     update_orig()
 
     printer = Printer()
-    printer.info("Downloading {} ...".format(zip_path))
+    spinner = printer.spinner("Downloading configuration files")
     with requests.get(__URL, stream=True, timeout=1) as response, open(
         zip_path, "wb"
     ) as zip_fd:
-        for chunk in response.iter_content(chunk_size=512):
+        chunk_size = 512
+        for chunk in response.iter_content(chunk_size=chunk_size):
+            spinner.next()
             zip_fd.write(chunk)
+
+    spinner.finish()
 
     return True
 
@@ -76,20 +80,33 @@ def file_equals(file_, other_):
     """
     if os.path.exists(file_) and os.path.exists(other_):
         return os.path.getsize(file_) == os.path.getsize(other_)
-    else:
-        return False
+
+    return False
 
 
 def unzip():
     """Unzip the configuration files
     """
 
+    printer = Printer()
     zip_dir = resources.get_zip_dir(create=True)
     zip_file = resources.get_zip_file()
-    printer = Printer()
-    printer.info("Unzipping {} ...".format(zip_file))
-    with ZipFile(zip_file) as zip_stream:
-        zip_stream.extractall(zip_dir)
+
+    with printer.Do("Deleting old configuration files"):
+        for ovpn_dir in ("ovpn_udp", "ovpn_tcp"):
+            remove_dir = "{}/{}".format(zip_dir, ovpn_dir)
+            if os.path.exists(remove_dir):
+                rmtree(remove_dir, ignore_errors=True)
+
+    with ZipFile(zip_file, "r") as zip_stream:
+        name_list = zip_stream.namelist()
+
+        with printer.incremental_bar(
+            "Unzipping '{}'".format(os.path.basename(zip_file)), max=len(name_list)
+        ) as incremental_bar:
+            for file_name in name_list:
+                zip_stream.extract(file_name, zip_dir)
+                incremental_bar.next()
 
 
 def update(force=False):

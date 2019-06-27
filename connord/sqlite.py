@@ -26,6 +26,14 @@ from connord import resources
 class SqliteError(ConnordError):
     """Thrown within this module"""
 
+    def __init__(self, error, message=""):
+        self.error = error
+
+        if not message:
+            self.message = "Database Error:\n  {}".format(error)
+        else:
+            self.message = "Database Error: {}\n  {}".format(message, error)
+
 
 def create_connection(db_file=None):
     """Create a database connection"""
@@ -36,7 +44,9 @@ def create_connection(db_file=None):
         connection = sqlite3.connect(db_file)
         return connection
     except Error as error:
-        print(error)
+        raise SqliteError(
+            error, "Could not create a connection to database '{}'".format(db_file)
+        )
 
     return None
 
@@ -51,7 +61,7 @@ def create_table(connection, create_table_sql):
         cursor = connection.cursor()
         cursor.execute(create_table_sql)
     except Error as error:
-        print(error)
+        raise SqliteError(error, "Could not create table")
 
 
 def create_location(connection, location):
@@ -76,7 +86,7 @@ def create_location(connection, location):
         cursor.execute(sql, location)
         return cursor.lastrowid
     except Error as error:
-        print(error)
+        raise SqliteError(error, "Could not create location '{}'".format(location))
 
 
 def location_exists(connection, latitude, longitude):
@@ -93,7 +103,12 @@ def location_exists(connection, latitude, longitude):
         result = cursor.execute(sql).fetchone()
         return bool(result)
     except Error as error:
-        print(error)
+        raise SqliteError(
+            error,
+            "Failed location 'exists' query: lat: {}, lon: {}".format(
+                longitude, latitude
+            ),
+        )
 
 
 def get_city(connection, latitude, longitude):
@@ -109,7 +124,9 @@ def get_city(connection, latitude, longitude):
         result = cursor.execute(sql).fetchone()
         return result
     except Error as error:
-        print(error)
+        raise SqliteError(
+            error, "Failed location query: lat: {}, lon: {}".format(longitude, latitude)
+        )
 
 
 @cached(cache=TTLCache(ttl=60, maxsize=5))
@@ -124,7 +141,7 @@ def get_locations(connection):
         result = cursor.execute(sql).fetchall()
         return result
     except Error as error:
-        print(error)
+        raise SqliteError(error, "Failed query of locations")
 
 
 def get_display_name(connection, latitude, longitude):
@@ -140,7 +157,7 @@ def get_display_name(connection, latitude, longitude):
         result = cursor.execute(sql).fetchone()
         return result
     except Error as error:
-        print(error)
+        raise SqliteError(error, "Failed query of display name")
 
 
 def create_location_table(connection):
@@ -158,7 +175,4 @@ def create_location_table(connection):
                                         UNIQUE(latitude, longitude)
                                     ); """
 
-    if connection:
-        create_table(connection, sql_create_location_table)
-    else:
-        raise SqliteError("Could not create a database connection.")
+    create_table(connection, sql_create_location_table)

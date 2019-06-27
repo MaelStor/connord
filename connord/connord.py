@@ -38,6 +38,7 @@ from connord import countries
 from connord import features
 from connord import types
 from connord import Printer
+from connord import sqlite
 from .features import FeatureError
 
 
@@ -416,6 +417,7 @@ your connection safe.
     return parser.parse_args(argv)
 
 
+@user.needs_root
 def process_list_ipt_cmd(args):
     if args.v4 and args.v6:
         version_ = "all"
@@ -487,6 +489,7 @@ def process_list_cmd(args):
         listings.list_servers(None, None, None, None, None, 100, "max", None)
 
 
+@user.needs_root
 def process_connect_cmd(args):
     """
     Process arguments for connect command
@@ -669,6 +672,8 @@ def main():  # noqa: C901
     except connect.ConnectError as error:
         printer.error(error)
     except RequestException as error:
+        printer.error(error)
+    except sqlite.SqliteError as error:
         printer.error(error)
 
     sys.exit(1)

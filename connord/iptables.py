@@ -28,7 +28,7 @@ import yaml
 from jinja2 import Environment, FileSystemLoader
 
 import netifaces
-from connord import ConnordError
+from connord import ConnordError, Printer
 from connord import user
 from connord import resources
 from connord.formatter import Formatter
@@ -61,11 +61,11 @@ def get_config_path(table, fallback=False, ipv6=False):
         if result:
             configs_found.append(file_)
 
-    if len(configs_found) == 0:
+    if not configs_found:
         if fallback:
-            error_message = "Could not find a fallback configuration for '{}' table.".format(
-                table
-            )
+            error_message = (
+                "Could not find a fallback configuration for '{}' " "table."
+            ).format(table)
         else:
             error_message = "Could not find a configuration for '{}' table.".format(
                 table
@@ -134,11 +134,15 @@ def verify_table(table):
 
 def flush_tables(ipv6=False):
     """Flush all tables and apply the default policy ACCEPT to standard tables"""
-    iptc.easy.flush_all(ipv6=ipv6)
-    policy = iptc.Policy("ACCEPT")
-    for table_s in iptc.easy.get_tables(ipv6):
-        for chain_s in iptc.easy.get_chains(table_s, ipv6):
-            iptc.easy.set_policy(table_s, chain_s, policy=policy, ipv6=ipv6)
+    printer = Printer()
+    with printer.Do("Flushing all tables: ipv6={!r}".format(ipv6)):
+        iptc.easy.flush_all(ipv6=ipv6)
+
+    with printer.Do("Setting ACCEPT policy in all chains"):
+        policy = iptc.Policy("ACCEPT")
+        for table_s in iptc.easy.get_tables(ipv6):
+            for chain_s in iptc.easy.get_chains(table_s, ipv6):
+                iptc.easy.set_policy(table_s, chain_s, policy=policy, ipv6=ipv6)
 
 
 def reset(fallback=True):
@@ -147,6 +151,37 @@ def reset(fallback=True):
     flush_tables(ipv6=True)
     if fallback:
         apply_config_dir(filetype="fallback")
+
+
+def _apply_config(table, config_d, ipv6):
+    for chain_s in config_d:
+        if not iptc.easy.has_chain(table, chain_s, ipv6=ipv6):
+            iptc.easy.add_chain(table, chain_s, ipv6=ipv6)
+
+        try:
+            if config_d[chain_s]["policy"] != "None":
+                policy = iptc.Policy(config_d[chain_s]["policy"])
+                iptc.easy.set_policy(table, chain_s, policy=policy, ipv6=ipv6)
+        except KeyError:
+            pass
+
+        try:
+            for rule_d in config_d[chain_s]["rules"]:
+                if iptc.easy.test_rule(rule_d, ipv6=ipv6):
+                    try:
+                        iptc.easy.add_rule(table, chain_s, rule_d, ipv6=ipv6)
+                    except ValueError:
+                        raise IptablesError(
+                            "Malformed rule: {}\n  in {}.{}".format(
+                                rule_d, table, chain_s
+                            )
+                        )
+                else:
+                    raise IptablesError(
+                        "Malformed rule: {}\n  in {}.{}".format(rule_d, table, chain_s)
+                    )
+        except KeyError:
+            pass
 
 
 @user.needs_root
@@ -159,43 +194,18 @@ def apply_config(config_file, server=None, protocol=None):
     table = init_table_from_file_name(config_file)
     table_s = table.name
     is_ipv6 = is_table_v6(table)
-    iptc.easy.flush_table(table_s, ipv6=is_ipv6)
-    policy = iptc.Policy("ACCEPT")
-    for chain_s in iptc.easy.get_chains(table_s, ipv6=is_ipv6):
-        iptc.easy.set_policy(table_s, chain_s, policy=policy, ipv6=is_ipv6)
 
-    config_d = read_config(config_file, server, protocol)
+    printer = Printer()
+    with printer.Do("Flushing table '{}', ipv6={!r}".format(table_s, is_ipv6)):
+        iptc.easy.flush_table(table_s, ipv6=is_ipv6)
+        policy = iptc.Policy("ACCEPT")
+        for chain_s in iptc.easy.get_chains(table_s, ipv6=is_ipv6):
+            iptc.easy.set_policy(table_s, chain_s, policy=policy, ipv6=is_ipv6)
 
-    for chain_s in config_d:
-        if not iptc.easy.has_chain(table_s, chain_s, ipv6=is_ipv6):
-            iptc.easy.add_chain(table_s, chain_s, ipv6=is_ipv6)
-
-        try:
-            if config_d[chain_s]["policy"] != "None":
-                policy = iptc.Policy(config_d[chain_s]["policy"])
-                iptc.easy.set_policy(table_s, chain_s, policy=policy, ipv6=is_ipv6)
-        except KeyError:
-            pass
-
-        try:
-            for rule_d in config_d[chain_s]["rules"]:
-                if iptc.easy.test_rule(rule_d, ipv6=is_ipv6):
-                    try:
-                        iptc.easy.add_rule(table_s, chain_s, rule_d, ipv6=is_ipv6)
-                    except ValueError:
-                        raise IptablesError(
-                            "Malformed rule: {}\n  in {}.{}".format(
-                                rule_d, table_s, chain_s
-                            )
-                        )
-                else:
-                    raise IptablesError(
-                        "Malformed rule: {}\n  in {}.{}".format(
-                            rule_d, table_s, chain_s
-                        )
-                    )
-        except KeyError:
-            pass
+    config_base = os.path.basename(config_file)
+    with printer.Do("Applying '{}'".format(config_base)):
+        config_d = read_config(config_file, server, protocol)
+        _apply_config(table_s, config_d, ipv6=is_ipv6)
 
     return True
 

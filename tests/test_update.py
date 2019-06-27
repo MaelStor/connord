@@ -253,6 +253,13 @@ class MockZipFile:
     def extractall(self, zdir):
         self.dir_ = zdir
 
+    def extract(self, file_name, zdir):
+        self.dir_ = zdir
+        setattr(self, "file_name", file_name)
+
+    def namelist(self):
+        return ["ovpn_udp/test.nordvpn.com"]
+
 
 def test_unzip_when_non_verbose(capsys, mocker):
     # setup

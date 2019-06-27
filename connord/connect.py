@@ -26,7 +26,7 @@ import time
 import os
 import re
 import signal
-from connord import ConnordError
+from connord import ConnordError, Printer
 from connord import iptables
 from connord import servers
 from connord import load
@@ -66,6 +66,10 @@ def ping(server):
         else:
             server_copy["ping"] = float("inf")
 
+        printer = Printer()
+        printer.info(
+            "{:6}: ping: {}".format(server_copy["domain"], server_copy["ping"])
+        )
         return server_copy
 
 
@@ -194,11 +198,13 @@ def connect(
 
     best_servers = filter_best_servers(servers_)
     max_retries = 3
+    printer = Printer()
     for i, server in enumerate(best_servers):
         if i == max_retries:
             raise ConnectError("Maximum retries reached.")
 
         if server["ping"] != inf:
+            printer.info("Trying to connect to {}".format(server["domain"]))
             if run_openvpn(server, openvpn, daemon, protocol):
                 return True
             # else give the next server a try
@@ -487,6 +493,8 @@ class OpenvpnCommand:
         config_dict = resources.get_config()["openvpn"]
         self.cleanup()
 
+        printer = Printer()
+        printer.info("Running openvpn with '{}'".format(self.cmd))
         with subprocess.Popen(self.cmd) as ovpn:
             # give openvpn a maximum of 60 seconds to startup. A lower value is bad if
             # asked for username/password.

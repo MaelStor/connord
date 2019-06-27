@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from connord import connord
-from main_test_module import get_stub
+from main_test_module import get_stub, MockBase
 
 
 def test_main_when_sys_argv_has_no_arguments(capsys, mocker):
@@ -117,6 +117,10 @@ class ArgumentFixture:
 
 def test_process_list_cmd_when_iptables_is_given(mocker):
     args = ArgumentFixture(list_sub="iptables")
+    mockbase = MockBase("connord")
+    mockbase.mock_user_is_root(mocker, True)
+    mockbase.setup(connord)
+
     mocked_listings = mocker.patch("connord.connord.listings")
     mocked_listings.list_iptables.return_value = True
 
