@@ -15,24 +15,30 @@ def readme():
 setup(
     name="connord",
     version=__version__,
-    description="Connect to NordVPN servers secure and fast",
+    description="Connect to NordVPN servers secure with Iptables and fast with OpenVPN",
     long_description=readme(),
     long_description_content_type="text/markdown; charset=UTF-8; variant=GFM",
-    keywords="nordvpn vpn secure privacy openvpn iptables",
+    keywords=(
+        "linux network system firewall utility tool console shell terminal "
+        "nordvpn vpn security privacy openvpn iptables dynamic fast"
+    ),
     classifiers=[
-        "Development Status :: 4 - Beta",
+        "Development Status :: 5 - Production/Stable",
         "Environment :: Console",
         "Intended Audience :: System Administrators",
         "Intended Audience :: End Users/Desktop",
+        "Intended Audience :: Telecommunications Industry",
         "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
         "Natural Language :: English",
         "Operating System :: POSIX :: Linux",
+        "Programming Language :: Python :: 3 :: Only",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.6",
         "Topic :: Security",
         "Topic :: System :: Networking",
         "Topic :: System :: Networking :: Firewalls",
         "Topic :: System :: Systems Administration",
+        "Topic :: Utilities",
     ],
     install_requires=[
         "requests>=2.22.0,<3.0.0",
