@@ -570,7 +570,6 @@ double                    Double VPN
 dedicated                 Dedicated IP
 standard                  Standard VPN servers
 p2p                       P2P
-obfuscated                Obfuscated Servers
 onion                     Onion Over VPN
 </pre>
 
