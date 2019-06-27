@@ -155,30 +155,48 @@ def parse_args(argv):
 
     :returns: list of args
     """
-    description = """
-Connect to NordVPN servers secure and fast.
-DNS is managed with resolvconf and the firewall through iptables to keep
-your connection safe.
-"""
-    parser = argparse.ArgumentParser(description=description)
+    description = (
+        "CønNørD connects you to NordVPN servers with "
+        "OpenVPN (https://openvpn.net) and you can choose between a high amount "
+        "of possible filters, to make it easy for you to connect "
+        "to servers with the best performance and features the server offers to "
+        "you. It's taken care that your DNS isn't leaked."
+    )
+    epilog = "Run a command with -h or --help for more information."
+    parser = argparse.ArgumentParser(description=description, epilog=epilog)
     verbosity = parser.add_mutually_exclusive_group()
     verbosity.add_argument(
         "-q", "--quiet", action="store_true", help="Suppress error messages."
     )
     verbosity.add_argument(
-        "-v", "--verbose", action="store_true", help="Show what's going"
+        "-v", "--verbose", action="store_true", help="Show what's going."
     )
     command = parser.add_subparsers(dest="command")
+    description = (
+        "Update NordVPN configuration files and the location "
+        "database. Use --force to force an update. Normally 'update' allows for "
+        "one update per day."
+    )
+    help_message = "Update nordvpn configuration files and the location database."
     update_cmd = command.add_parser(
-        "update", help="Update nordvpn configuration files."
+        "update", help=help_message, description=description
     )
     update_cmd.add_argument(
         "-f",
         "--force",
         action="store_true",
-        help="Force update no matter of configuration.",
+        help="Force an update of the configuration files.",
     )
-    list_cmd = command.add_parser("list", help="List features, types, ... or servers.")
+    description = (
+        "The 'list' command allows some powerful filtering so you can "
+        "select a server tailored to your demands. 'types', 'features', "
+        "'areas', 'countries' give you an overview output of possible "
+        "arguments to the respective flag."
+    )
+    help_message = "List features, types, ... and servers."
+    list_cmd = command.add_parser(
+        "list", help=help_message, description=description, epilog=epilog
+    )
     list_ipt_parent = argparse.ArgumentParser(description="List iptables")
     list_ipt_parent.add_argument(
         "-4", dest="v4", action="store_true", help="(Default) List ipv4 rules"
@@ -217,12 +235,15 @@ your connection safe.
     list_cmd_sub.add_parser(
         "types", help="List all possible types/categories of NordVPN servers."
     )
+    description = (
+        "List servers filtered by one or more of the specified arguments."
+        " If no arguments are given list all NordVPN servers. To see possible "
+        "values for --area, --country, --feature and --type have a look at the "
+        "respective 'list' commands."
+    )
+    help_message = "List servers filtered by specified arguments."
     list_servers = list_cmd_sub.add_parser(
-        "servers",
-        help=(
-            "List servers filtered by one of the specified arguments."
-            " If no arguments are given list all NordVPN servers."
-        ),
+        "servers", help=help_message, description=description
     )
     list_servers.add_argument(
         "-c",
@@ -275,28 +296,39 @@ your connection safe.
     list_servers.add_argument(
         "--top", type=TopType(), help="Show TOP count resulting servers."
     )
-    connect_cmd = command.add_parser("connect", help="Connect to a server.")
+    description = (
+        "Connect to NordVPN servers. You may specify a single server of "
+        "your choice with -s SERVER, where SERVER is a COUNTRY_CODE followed by "
+        "a number. This must be a SERVER for which a configuration file exists. "
+        "The same filters --area, --country ... like in the 'list' command can "
+        "be applied here. For a list of possible values see the respective "
+        "command in the 'list' command. "
+        "IMPORTANT: Note that currently obfuscated servers aren't supported. "
+    )
+    connect_cmd = command.add_parser(
+        "connect", help="Connect to a server.", description=description
+    )
     server_best = connect_cmd.add_mutually_exclusive_group()
     server_best.add_argument(
         "-s",
         "--server",
         type=DomainType(),
         nargs=1,
-        help="Connect to a specific server. Arguments -c, -a, -f, -t have no"
-        " effect.",
+        help="Connect to a specific server. Only -d, -o, --udp and --tcp have an "
+        "effect.",
     )
     server_best.add_argument(
         "-b",
         "--best",
         action="store_true",
         help="Use best server depending on server load. When multiple servers"
-        " got the same load use the one with the best ping.",
+        " got the same load use the one with the best ping. This is the default "
+        "behaviour if not specified on the command-line",
     )
     connect_cmd.add_argument(
         "-c",
         "--country",
         action="append",
-        nargs="?",
         type=CountryType(),
         help="Select a specific country. May be specified multiple times.",
     )
@@ -305,23 +337,20 @@ your connection safe.
         "--area",
         action="append",
         type=AreaType(),
-        nargs="?",
         help="Select a specific area. May be specified multiple times.",
     )
     connect_cmd.add_argument(
         "-f",
         "--feature",
         action="append",
-        nargs="?",
         type=FeatureType(),
-        help="Select servers with a specific list of features. May be"
+        help="Select servers with a specific feature. May be"
         " specified multiple times.",
     )
     connect_cmd.add_argument(
         "-t",
         "--type",
         action="append",
-        nargs="?",
         type=TypeType(),
         help="Select servers with a specific type. May be specified multiple" " times.",
     )
@@ -364,41 +393,63 @@ your connection safe.
         action="store_true",
         help="Use TCP protocol. Only one of --udp or --tcp may be present.",
     )
+    description = (
+        "Kill the openvpn process spawned by connord or all openvpn "
+        "processes with --all"
+    )
     kill_cmd = command.add_parser(
-        "kill", help="Kill openvpn processes. Useful in daemon mode."
+        "kill", help="Kill the openvpn process.", description=description
     )
     kill_cmd.add_argument(
         "-a", "--all", action="store_true", help="Kill all openvpn processes."
     )
-    iptables_cmd = command.add_parser("iptables", help="Wrapper around iptables.")
+    description = (
+        "Manage your iptables configuration with this command. Under normal "
+        "cirumstances your rules files are automatically applied when running "
+        "'connect'. "
+        "If somethings going wrong or you are modifying  rules you can try one "
+        "of the commands defined here. "
+        "You can list your current iptables rules with the 'list' command as an "
+        "alternative to the native iptables -L -vn --line-num."
+    )
+    iptables_cmd = command.add_parser(
+        "iptables", help="Manage iptables.", description=description, epilog=epilog
+    )
     iptables_cmd_subparsers = iptables_cmd.add_subparsers(dest="iptables_sub")
     iptables_cmd_subparsers.add_parser(
         "list", parents=[list_ipt_parent], add_help=False
     )
+    help_message = "Reload iptables configuration."
+    description = (
+        "Reload iptables 'rules' configuration when connected to "
+        "NordVPN or else the 'fallback' configuration. Especially useful after "
+        "editing a configuration file and you wish to apply it to your running "
+        "iptables rules."
+    )
     iptables_cmd_subparsers.add_parser(
-        "reload",
-        help="Reload iptables 'rules' configuration when connected to NordVPN or else "
-        "the 'fallback' configuration. "
-        "Useful after editing a configuration file and you wish to apply "
-        "them instantly.",
+        "reload", help=help_message, description=description
+    )
+    help_message = "Flush iptables."
+    description = (
+        "Flush iptables to fallback configuration or with --no-fallback to no "
+        "rules at all and apply ACCEPT policy to builtin chains."
     )
     flush_cmd = iptables_cmd_subparsers.add_parser(
-        "flush",
-        help="Flush iptables to fallback configuration or with "
-        "--no-fallback to nothing.",
+        "flush", help=help_message, description=description
     )
     flush_cmd.add_argument(
         "--no-fallback",
         dest="no_fallback",
         action="store_true",
-        help="Flush tables ignoring fallback files",
+        help="Flush tables ignoring fallback files.",
+    )
+    help_message = "Apply iptables rules per 'table'."
+    description = (
+        "Apply iptables rules defined in 'rules' or 'fallback' "
+        "configuration files for a specific 'table'."
     )
     apply_cmd = iptables_cmd_subparsers.add_parser(
-        "apply",
-        description=(
-            "Apply iptables rules defined in 'rules' or 'fallback' "
-            "configuration files."
-        ),
+        "apply", help=help_message, description=description
     )
     apply_cmd.add_argument(
         "table", type=TableType(), help="Apply iptables rules for 'table'."
