@@ -6,7 +6,7 @@ import time
 import pytest
 from connord import connect
 from connord.resources import ResourceNotFoundError
-from main_test_module import (
+from tests.main_test_module import (
     get_servers_stub,
     get_json,
     MockBase,
@@ -127,9 +127,9 @@ def test_filter_servers(mocker, servers_fix):
     mocked_countries.filter_countries.return_value = servers_fix
     mocked_areas = mocker.patch("connord.connect.areas")
     mocked_areas.filter_servers.return_value = servers_fix
-    mocked_types = mocker.patch("connord.connect.types")
-    mocked_types.filter_servers.return_value = servers_fix
-    mocked_types.has_type.return_value = False
+    mocked_categories = mocker.patch("connord.connect.categories")
+    mocked_categories.filter_servers.return_value = servers_fix
+    mocked_categories.has_category.return_value = False
     mocked_features = mocker.patch("connord.connect.features")
     mocked_features.filter_servers.return_value = servers_fix
 
@@ -186,7 +186,7 @@ def test_connect_when_bet_not_in_domain(mocker):
     countries_ = None
     areas_ = None
     features_ = None
-    types_ = None
+    categories_ = None
     netflix = False
     load_ = 10
     match = "max"
@@ -199,7 +199,7 @@ def test_connect_when_bet_not_in_domain(mocker):
         countries_,
         areas_,
         features_,
-        types_,
+        categories_,
         netflix,
         load_,
         match,
@@ -236,7 +236,7 @@ def test_connect_when_domain_is_best(mocker, pinged_servers, servers_fix):
     countries_ = None
     areas_ = None
     features_ = None
-    types_ = None
+    categories_ = None
     netflix = False
     load_ = 10
     match = "max"
@@ -249,7 +249,7 @@ def test_connect_when_domain_is_best(mocker, pinged_servers, servers_fix):
         countries_,
         areas_,
         features_,
-        types_,
+        categories_,
         netflix,
         load_,
         match,
@@ -262,7 +262,7 @@ def test_connect_when_domain_is_best(mocker, pinged_servers, servers_fix):
     mocked_con_spec.assert_not_called()
     mocked_servers.assert_called_once()
     mocked_filter.assert_called_once_with(
-        servers_fix, netflix, countries_, areas_, features_, types_, load_, match
+        servers_fix, netflix, countries_, areas_, features_, categories_, load_, match
     )
     mocked_best.assert_called_once_with(servers_fix)
     mocked_run.assert_called_once_with(pinged_servers[0], openvpn, daemon, protocol)
@@ -295,7 +295,7 @@ def test_connect_when_domain_is_best_max_retries_reached(
     countries_ = None
     areas_ = None
     features_ = None
-    types_ = None
+    categories_ = None
     netflix = False
     load_ = 10
     match = "max"
@@ -309,7 +309,7 @@ def test_connect_when_domain_is_best_max_retries_reached(
             countries_,
             areas_,
             features_,
-            types_,
+            categories_,
             netflix,
             load_,
             match,
@@ -325,7 +325,7 @@ def test_connect_when_domain_is_best_max_retries_reached(
     mocked_con_spec.assert_not_called()
     mocked_servers.assert_called_once()
     mocked_filter.assert_called_once_with(
-        servers_fix, netflix, countries_, areas_, features_, types_, load_, match
+        servers_fix, netflix, countries_, areas_, features_, categories_, load_, match
     )
     mocked_best.assert_called_once_with(servers_fix)
     mocked_run.assert_called()
@@ -361,7 +361,7 @@ def test_connect_when_domain_is_best_no_server_left_with_valid_ping(
     countries_ = None
     areas_ = None
     features_ = None
-    types_ = None
+    categories_ = None
     netflix = False
     load_ = 10
     match = "max"
@@ -375,7 +375,7 @@ def test_connect_when_domain_is_best_no_server_left_with_valid_ping(
             countries_,
             areas_,
             features_,
-            types_,
+            categories_,
             netflix,
             load_,
             match,
@@ -391,7 +391,7 @@ def test_connect_when_domain_is_best_no_server_left_with_valid_ping(
     mocked_con_spec.assert_not_called()
     mocked_servers.assert_called_once()
     mocked_filter.assert_called_once_with(
-        servers_fix, netflix, countries_, areas_, features_, types_, load_, match
+        servers_fix, netflix, countries_, areas_, features_, categories_, load_, match
     )
     mocked_best.assert_called_once_with(servers_fix)
     mocked_run.assert_not_called()
@@ -429,7 +429,7 @@ def test_connect_when_domain_is_best_two_servers_run_openvpn_fails(
     countries_ = None
     areas_ = None
     features_ = None
-    types_ = None
+    categories_ = None
     netflix = False
     load_ = 10
     match = "max"
@@ -443,7 +443,7 @@ def test_connect_when_domain_is_best_two_servers_run_openvpn_fails(
             countries_,
             areas_,
             features_,
-            types_,
+            categories_,
             netflix,
             load_,
             match,
@@ -459,7 +459,7 @@ def test_connect_when_domain_is_best_two_servers_run_openvpn_fails(
     mocked_con_spec.assert_not_called()
     mocked_servers.assert_called_once()
     mocked_filter.assert_called_once_with(
-        servers_fix, netflix, countries_, areas_, features_, types_, load_, match
+        servers_fix, netflix, countries_, areas_, features_, categories_, load_, match
     )
     mocked_best.assert_called_once_with(servers_fix)
     mocked_run.assert_called()

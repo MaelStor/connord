@@ -19,7 +19,7 @@
 import requests
 from cachetools import cached, TTLCache
 from connord import ConnordError
-from connord.types import map_types_reverse
+from connord.categories import map_categories_reverse
 from connord import countries
 from connord.formatter import Formatter
 
@@ -142,7 +142,7 @@ class ServersPrettyFormatter(Formatter):
         load = server["load"]
 
         categories = [category["name"] for category in server["categories"]]
-        categories = ",".join(map_types_reverse(categories))
+        categories = ",".join(map_categories_reverse(categories))
 
         features = [
             feature for feature in server["features"] if server["features"][feature]

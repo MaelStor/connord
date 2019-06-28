@@ -38,7 +38,7 @@ from connord import resources
 from connord import areas
 from connord import countries
 from connord import features
-from connord import types
+from connord import categories
 from connord import Printer
 from connord import sqlite
 from .features import FeatureError
@@ -83,13 +83,13 @@ class AreaType:
         return value
 
 
-class TypeType:
+class CategoryType:
     def __call__(self, value):
         try:
-            types.verify_types([value])
-        except types.ServerTypeError:
+            categories.verify_categories([value])
+        except categories.CategoriesError:
             raise argparse.ArgumentTypeError(
-                "'{}' is an unrecognized type.".format(value)
+                "'{}' is an unrecognized categories.".format(value)
             )
 
         return value
@@ -191,11 +191,11 @@ def parse_args(argv):
     )
     description = (
         "The 'list' command allows some powerful filtering so you can "
-        "select a server tailored to your demands. 'types', 'features', "
+        "select a server tailored to your demands. 'categories', 'features', "
         "'areas', 'countries' give you an overview output of possible "
         "arguments to the respective flag."
     )
-    help_message = "List features, types, ... and servers."
+    help_message = "List features, categories, ... and servers."
     list_cmd = command.add_parser(
         "list", help=help_message, description=description, epilog=epilog
     )
@@ -235,12 +235,12 @@ def parse_args(argv):
         "features", help="List all possible features of NordVPN servers."
     )
     list_cmd_sub.add_parser(
-        "types", help="List all possible types/categories of NordVPN servers."
+        "categories", help="List all possible categories of NordVPN servers."
     )
     description = (
         "List servers filtered by one or more of the specified arguments."
         " If no arguments are given list all NordVPN servers. To see possible "
-        "values for --area, --country, --feature and --type have a look at the "
+        "values for --area, --country, --feature and --category have a look at the "
         "respective 'list' commands."
     )
     help_message = "List servers filtered by specified arguments."
@@ -271,7 +271,7 @@ def parse_args(argv):
     )
     list_servers.add_argument(
         "-t",
-        "--type",
+        "--category",
         action="append",
         type=CategoryType(),
         help="Select servers with a specific category. May be specified multiple"
@@ -352,7 +352,7 @@ def parse_args(argv):
     )
     connect_cmd.add_argument(
         "-t",
-        "--type",
+        "--category",
         action="append",
         type=CategoryType(),
         help="Select servers with a specific category. May be specified multiple"
@@ -496,7 +496,7 @@ def process_list_ipt_cmd(args):
 def process_list_servers_cmd(args):
     countries_ = args.country
     area_ = args.area
-    types_ = args.type
+    categories_ = args.category
     features_ = args.feature
     netflix = args.netflix
     top = args.top
@@ -515,7 +515,7 @@ def process_list_servers_cmd(args):
         match = "max"
 
     return listings.list_servers(
-        countries_, area_, types_, features_, netflix, load_, match, top
+        countries_, area_, categories_, features_, netflix, load_, match, top
     )
 
 
@@ -537,8 +537,8 @@ def process_list_cmd(args):
         listings.list_areas()
     elif args.list_sub == "features":
         listings.list_features()
-    elif args.list_sub == "types":
-        listings.list_types()
+    elif args.list_sub == "categories":
+        listings.list_categories()
     else:
         # default: list all servers
         listings.list_servers(None, None, None, None, None, 100, "max", None)
@@ -563,7 +563,7 @@ def process_connect_cmd(args):
     countries_ = args.country
     areas_ = args.area
     features_ = args.feature
-    types_ = args.type
+    categories_ = args.category
     netflix = args.netflix
 
     if args.max_load:
@@ -597,7 +597,7 @@ def process_connect_cmd(args):
         countries_,
         areas_,
         features_,
-        types_,
+        categories_,
         netflix,
         load_,
         match,

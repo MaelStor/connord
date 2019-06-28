@@ -20,7 +20,7 @@
 
 from connord import servers
 from connord import countries
-from connord import types
+from connord import categories
 from connord import features
 from connord import load
 from connord import iptables
@@ -64,12 +64,12 @@ def list_features():
     features.print_features()
 
 
-def list_types():
-    types.print_types()
+def list_categories():
+    categories.print_categories()
 
 
 def filter_servers(
-    servers_, netflix, countries_, areas_, features_, types_, load_, match, top
+    servers_, netflix, countries_, areas_, features_, categories_, load_, match, top
 ):
     """High-level abstraction to filter servers by given filters
 
@@ -84,8 +84,8 @@ def filter_servers(
         servers_ = countries.filter_servers(servers_, countries_)
     if areas_:
         servers_ = areas.filter_servers(servers_, areas_)
-    if types_:
-        servers_ = types.filter_servers(servers_, types_)
+    if categories_:
+        servers_ = categories.filter_servers(servers_, categories_)
     if features_:
         servers_ = features.filter_servers(servers_, features_)
     if top:
@@ -94,14 +94,13 @@ def filter_servers(
     return servers_
 
 
-# TODO: rename to list_servers
-def list_servers(countries_, areas_, types_, features_, netflix, load_, match, top):
+def list_servers(countries_, areas_, categories_, features_, netflix, load_, match, top):
     """
     List servers filtered by one or more arguments
 
     :param countries_: List of countries
     :param area_: List of areas
-    :param types_: List of types
+    :param categories_: List of categories
     :param features_: List of features
     :param netflix: If set filter servers optimized for netflix
     :param load_: An integer to filter servers by load.
@@ -112,7 +111,7 @@ def list_servers(countries_, areas_, types_, features_, netflix, load_, match, t
 
     servers_ = servers.get_servers()
     servers_ = filter_servers(
-        servers_, netflix, countries_, areas_, features_, types_, load_, match, top
+        servers_, netflix, countries_, areas_, features_, categories_, load_, match, top
     )
 
     servers.to_string(servers_, stream=True)

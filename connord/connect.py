@@ -32,7 +32,7 @@ from connord import servers
 from connord import load
 from connord import countries
 from connord import areas
-from connord import types
+from connord import categories
 from connord import features
 from connord import resources
 from connord import update
@@ -93,7 +93,7 @@ def ping_servers_parallel(servers_):
 
 # pylint: disable=too-many-arguments
 def filter_servers(
-    servers_, netflix, countries_, areas_, features_, types_, load_, match
+    servers_, netflix, countries_, areas_, features_, categories_, load_, match
 ):
     """Filter servers by keys from command-line options
     :param servers_: a list of servers given as dictionary
@@ -101,7 +101,7 @@ def filter_servers(
     :param countries_: a list of countries each given as string
     :param areas_: a list of areas each given as string
     :param features_: a list of features each given as string
-    :param types_: a list of types each given as string
+    :param categories_: a list of categories each given as string
     :param load_: depending on match filter max, min or equal load servers
     :param match: may be 'max', 'min' or 'equal'
     :returns: the filtered list of servers
@@ -115,11 +115,11 @@ def filter_servers(
         servers_ = countries.filter_servers(servers_, countries_)
     if areas_:
         servers_ = areas.filter_servers(servers_, areas_)
-    if types_:
-        if "obfuscated" in types_:
+    if categories_:
+        if "obfuscated" in categories_:
             raise ConnectError("Connecting to obfuscated servers isn't supported yet.")
 
-        servers_ = types.filter_servers(servers_, types_)
+        servers_ = categories.filter_servers(servers_, categories_)
     if features_:
         servers_ = features.filter_servers(servers_, features_)
 
@@ -127,7 +127,7 @@ def filter_servers(
     filtered_servers = [
         server
         for server in servers_
-        if not types.has_type(server, "Obfuscated Servers")
+        if not categories.has_category(server, "Obfuscated Servers")
     ]
 
     return filtered_servers
@@ -158,7 +158,7 @@ def connect_to_specific_server(domain, openvpn, daemon, protocol):
     :returns: True if openvpn was run successfully
     """
     server = servers.get_server_by_domain(domain[0])
-    if types.has_type(server, "Obfuscated Servers"):
+    if categories.has_category(server, "Obfuscated Servers"):
         raise ConnectError("Connecting to obfuscated servers isn't supported yet.")
     return run_openvpn(server, openvpn, daemon, protocol)
 
@@ -169,7 +169,7 @@ def connect(
     countries_,
     areas_,
     features_,
-    types_,
+    categories_,
     netflix,
     load_,
     match,
@@ -185,7 +185,7 @@ def connect(
     :param countries_: list of countries
     :param areas_: list of areas
     :param features_: list of features
-    :param types_: list of types
+    :param categories_: list of categories
     :param netflix: True to filter netflix optimized servers
     :param load_: depending on match, filter by max, min or equal load servers
     :param match: may be 'max', 'min' or 'equal'
@@ -202,7 +202,7 @@ def connect(
 
     servers_ = servers.get_servers()
     servers_ = filter_servers(
-        servers_, netflix, countries_, areas_, features_, types_, load_, match
+        servers_, netflix, countries_, areas_, features_, categories_, load_, match
     )
 
     best_servers = filter_best_servers(servers_)

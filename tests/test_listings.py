@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from connord import listings
-from main_test_module import get_stub, get_servers_stub
+from tests.main_test_module import get_stub, get_servers_stub
 
 
 def test_list_iptables(mocker):
@@ -45,15 +45,15 @@ def test_listings_when_every_option_is_given_and_countries_is_empty(capsys, mock
     assert captured.err == ""
 
 
-def test_listings_when_every_option_is_given_with_types_features(capsys, mocker):
+def test_listings_when_every_option_is_given_with_categories_features(capsys, mocker):
     servers_ = get_servers_stub()
 
     mocked_servers = mocker.patch("connord.listings.servers")
     mocked_servers.get_servers.return_value = servers_
 
-    types_ = ["standard"]
+    categories_ = ["standard"]
     features_ = ["openvpn_udp"]
-    listings.list_servers(list(), None, types_, features_, True, 10, "max", 10)
+    listings.list_servers(list(), None, categories_, features_, True, 10, "max", 10)
     captured = capsys.readouterr()
 
     mocked_servers.get_servers.assert_called_once()
