@@ -22,6 +22,8 @@
 import argparse
 import sys
 import re
+import time
+import errno
 
 from requests.exceptions import RequestException
 
@@ -271,8 +273,9 @@ def parse_args(argv):
         "-t",
         "--type",
         action="append",
-        type=TypeType(),
-        help="Select servers with a specific type. May be specified multiple" " times.",
+        type=CategoryType(),
+        help="Select servers with a specific category. May be specified multiple"
+        " times.",
     )
     list_servers.add_argument(
         "--netflix", action="store_true", help="Select servers configured for netflix."
@@ -351,8 +354,9 @@ def parse_args(argv):
         "-t",
         "--type",
         action="append",
-        type=TypeType(),
-        help="Select servers with a specific type. May be specified multiple" " times.",
+        type=CategoryType(),
+        help="Select servers with a specific category. May be specified multiple"
+        " times.",
     )
     connect_cmd.add_argument(
         "--netflix", action="store_true", help="Select servers configured for netflix."
@@ -726,5 +730,12 @@ def main():  # noqa: C901
         printer.error(str(error))
     except sqlite.SqliteError as error:
         printer.error(str(error))
+    except IOError as error:
+        # Don't handle broken pipe
+        if error.errno != errno.EPIPE:
+            raise
+    except KeyboardInterrupt:
+        time.sleep(0.5)
+        sys.exit(0)
 
     sys.exit(1)

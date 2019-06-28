@@ -21,6 +21,7 @@ Init file
 """
 
 import sys
+import errno
 from progress.bar import IncrementalBar
 from progress.spinner import Spinner
 
@@ -77,14 +78,6 @@ class Printer(Borg):
             else:
                 print(message_prefixed)
 
-    #
-    # def suffix(self, message, no_newline=False):
-    #     if self.verbose and not self.quiet:
-    #         if no_newline:
-    #             print(message, end="")
-    #         else:
-    #             print(message)
-
     @staticmethod
     def write(message):
         """Prints messages independently from verbose and quiet settings
@@ -93,7 +86,11 @@ class Printer(Borg):
 
         Example: print('something', file=Printer())
         """
-        print(message, end="")
+        try:
+            print(message, end="")
+        except IOError as error:
+            if error.errno != errno.EPIPE:
+                raise
 
     @staticmethod
     def format_prefix(prefix):
