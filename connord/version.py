@@ -20,18 +20,14 @@
 Prints the version along with the copyright.
 """
 
-from connord import __version__
-
-__COPYRIGHT = """connord  Copyright (C) 2019  Mael Stor <maelstor@posteo.de>
-This program comes with ABSOLUTELY NO WARRANTY; This is free software, and you
-are welcome to redistribute it under certain conditions; See the LICENSE file
-shipped with this software for details."""
+from connord import __version__, __copyright__, Printer
+from connord import resources
 
 
-# TODO: Rename to show()
 def print_version():
     """Prints the version of connord along with the copyright.
     """
-    # TODO: Show config in use along with the version
-    print("connord", __version__)
-    print(__COPYRIGHT)
+    printer = Printer()
+    print("connord {}".format(__version__), file=printer)
+    print(__copyright__, file=printer)
+    printer.info("\nConfiguration directory: '{}'".format(resources.get_config_dir()))

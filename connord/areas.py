@@ -19,10 +19,9 @@
 
 import time
 import requests
-from progress.bar import IncrementalBar
 from cachetools import cached, LRUCache
 import cachetools.func
-from connord import ConnordError
+from connord import ConnordError, Printer
 from connord import servers
 from connord import sqlite
 from connord.formatter import Formatter
@@ -87,16 +86,19 @@ def update_database():
         init_database(connection)
 
     servers_ = servers.get_servers()
-    for server in IncrementalBar("Updating locations", max=len(servers_)).iter(
-        servers_
-    ):
+    printer = Printer()
+    progress_bar = printer.incremental_bar(
+        "Updating location database", max=len(servers_)
+    )
 
+    for server in servers_:
         longitude = str(server["location"]["long"])
         latitude = str(server["location"]["lat"])
 
         connection = sqlite.create_connection()
         with connection:
             if sqlite.location_exists(connection, latitude, longitude):
+                progress_bar.next()
                 continue
             else:
                 location_d = query_location(latitude, longitude)
@@ -119,6 +121,11 @@ def update_database():
         connection = sqlite.create_connection()
         with connection:
             sqlite.create_location(connection, location)
+
+        # if not printer.quiet:
+        progress_bar.next()
+
+    progress_bar.finish()
 
 
 def get_server_angulars(server):

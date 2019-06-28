@@ -96,6 +96,30 @@ or globally with
 
     $ sudo pip install .
 
+## General section
+
+C&#xF8;nN&#xF8;rD per default doesn't output anything on stdout and behaves like
+any other standard command-line tool. If you experience problems running 
+connord, try the same command in verbose mode
+ with
+
+    connord -v COMMAND
+
+or
+
+    connord --verbose COMMAND
+
+for debugging purposes. You should see in most cases where the error occurred. 
+There may be still hard to track bugs, please report them to the Issue board on 
+[Github](https://github.com/MaelStor/connord/issues).
+
+Error messages are written to stderr in your shell. You can suppress error 
+messages with `-q` or `--quiet` if you like to.
+
+Verbose mode of `openvpn` can be set in `config.yml` in the openvpn
+section or at the command-line when using `connord connect` adding it to the
+openvpn command with `-o '--verb 3'`.
+
 ## Configuration
 
 Default configuration files are located in your python
@@ -104,6 +128,8 @@ location and copy them to `/etc/connord/`. The folder needs to be created if not
 already done. Configuration files in site-packages don't survive an upgrade in
 contrast to `/etc/connord`. If the `/etc/connord` folder exists no configuration
 files in `site-packages` are read.
+
+To see which configuration folder is active run `connord --verbose version`.
 
 #### config.yml
 
@@ -268,8 +294,8 @@ In `fallback` files `vpn_remote` is `0.0.0.0/0`, `vpn_protocol` is `udp` and
 
 Variables exposed from OpenVPN scripts can be seen when starting connord
 not in daemon mode. The list given here may be incomplete or too exhaustive for
-your network and is just an incomplete overview. Look at the output of connord
-for your environment.
+your network and is therfor just an incomplete overview. Look at the output of 
+connord for your environment.
 
 <pre>
 connord 'ipchange' enviroment variables: '/var/run/connord/ipchange.env'
@@ -354,28 +380,37 @@ Command-line options overwrite the configuration in `config.yml`
 <pre>
 usage: connord [-h] [-q | -v] {update,list,connect,kill,iptables,version} ...
 
-Connect to NordVPN servers secure and fast. DNS is managed with resolvconf and
-the firewall through iptables to keep your connection safe.
+CønNørD connects you to NordVPN servers with OpenVPN (https://openvpn.net) and
+you can choose between a high amount of possible filters, to make it easy for
+you to connect to servers with the best performance and features the server
+offers to you. It's taken care that your DNS isn't leaked.
 
 positional arguments:
   {update,list,connect,kill,iptables,version}
-    update              Update nordvpn configuration files.
-    list                Prints all servers if no argument is given.
+    update              Update nordvpn configuration files and the location
+                        database.
+    list                List features, types, ... and servers.
     connect             Connect to a server.
-    kill                Kill openvpn processes. Useful in daemon mode.
-    iptables            Wrapper around iptables.
+    kill                Kill the openvpn process.
+    iptables            Manage iptables.
     version             Show version
 
 optional arguments:
   -h, --help            show this help message and exit
-  -q, --quiet           Be quiet
-  -v, --verbose         Be verbose
+  -q, --quiet           Suppress error messages.
+  -v, --verbose         Show what's going.
+
+Run a command with -h or --help for more information.
 </pre>
 
 #### Listings
 
 <pre>
 usage: connord list [-h] {iptables,countries,areas,features,types,servers} ...
+
+The 'list' command allows some powerful filtering so you can select a server
+tailored to your demands. 'types', 'features', 'areas', 'countries' give you
+an overview output of possible arguments to the respective flag.
 
 positional arguments:
   {iptables,countries,areas,features,types,servers}
@@ -385,12 +420,12 @@ positional arguments:
     areas               List all areas/cities with NordVPN servers.
     features            List all possible features of NordVPN servers.
     types               List all possible types/categories of NordVPN servers.
-    servers             List servers filtered by one of the specified
-                        arguments. If no arguments are given list all NordVPN
-                        servers.
+    servers             List servers filtered by specified arguments.
 
 optional arguments:
   -h, --help            show this help message and exit
+
+Run a command with -h or --help for more information.
 </pre>
 
 ###### servers
@@ -401,17 +436,22 @@ usage: connord list servers [-h] [-c COUNTRY] [-a AREA] [-f FEATURE] [-t TYPE]
                             [--max-load MAX_LOAD | --min-load MIN_LOAD | --load LOAD]
                             [--top TOP]
 
+List servers filtered by one or more of the specified arguments. If no
+arguments are given list all NordVPN servers. To see possible values for
+--area, --country, --feature and --type have a look at the respective 'list'
+commands.
+
 optional arguments:
   -h, --help            show this help message and exit
   -c COUNTRY, --country COUNTRY
-                        select a specific country. may be specified multiple
+                        Select a specific country. May be specified multiple
                         times.
-  -a AREA, --area AREA  select a specific area.may be specified multiple
+  -a AREA, --area AREA  Select a specific area. May be specified multiple
                         times.
   -f FEATURE, --feature FEATURE
-                        select servers with a specific list of features. may
+                        Select servers with a specific list of features. May
                         be specified multiple times.
-  -t TYPE, --type TYPE  select servers with a specific type. may be specified
+  -t TYPE, --type TYPE  Select servers with a specific type. May be specified
                         multiple times.
   --netflix             Select servers configured for netflix.
   --max-load MAX_LOAD   Filter servers by maximum load.
@@ -420,7 +460,7 @@ optional arguments:
   --top TOP             Show TOP count resulting servers.
 </pre>
 
-#### Update NordVPN server configuration files
+#### Update NordVPN server configuration files and the location database
 
 <pre>
 usage: connord update [-h] [-f]
@@ -433,32 +473,36 @@ optional arguments:
 #### Connect to NordVPN servers
 
 <pre>
-usage: connord connect [-h] [-s SERVER | -b] [-c [COUNTRY]] [-a [AREA]]
-                       [-f [FEATURE]] [-t [TYPE]] [--netflix]
+usage: connord connect [-h] [-s SERVER | -b] [-c COUNTRY] [-a AREA]
+                       [-f FEATURE] [-t TYPE] [--netflix]
                        [--max-load MAX_LOAD | --min-load MIN_LOAD | --load LOAD]
                        [-d] [-o OPENVPN_OPTIONS] [--udp | --tcp]
+
+Connect to NordVPN servers. You may specify a single server of your choice
+with -s SERVER, where SERVER is a COUNTRY_CODE followed by a number. This must
+be a SERVER for which a configuration file exists. The same filters --area,
+--country ... like in the 'list' command can be applied here. For a list of
+possible values see the respective command in the 'list' command. IMPORTANT:
+Note that currently obfuscated servers aren't supported.
 
 optional arguments:
   -h, --help            show this help message and exit
   -s SERVER, --server SERVER
-                        Connect to a specific server. Arguments -c, -a, -f, -t
-                        have no effect. SERVER must be specified as
-                        $country_code$number for example us1111.
+                        Connect to a specific server. Only -d, -o, --udp and
+                        --tcp have an effect.
   -b, --best            Use best server depending on server load. When
                         multiple servers got the same load use the one with
-                        the best ping. This is the default behaviour and is
-                        applied after every other filter.
-  -c [COUNTRY], --country [COUNTRY]
+                        the best ping. This is the default behaviour if not
+                        specified on the command-line
+  -c COUNTRY, --country COUNTRY
                         Select a specific country. May be specified multiple
                         times.
-  -a [AREA], --area [AREA]
-                        Select a specific area. May be specified multiple
+  -a AREA, --area AREA  Select a specific area. May be specified multiple
                         times.
-  -f [FEATURE], --feature [FEATURE]
-                        Select servers with a specific list of features. May
-                        be specified multiple times.
-  -t [TYPE], --type [TYPE]
-                        Select servers with a specific type. May be specified
+  -f FEATURE, --feature FEATURE
+                        Select servers with a specific feature. May be
+                        specified multiple times.
+  -t TYPE, --type TYPE  Select servers with a specific type. May be specified
                         multiple times.
   --netflix             Select servers configured for netflix.
   --max-load MAX_LOAD   Filter servers by maximum load.
@@ -475,19 +519,25 @@ optional arguments:
 #### Manage IPTables
 
 <pre>
-usage: connord iptables [-h] {reload,flush,apply} ...
+usage: connord iptables [-h] {list,reload,flush,apply} ...
+
+Manage your iptables configuration with this command. Under normal
+cirumstances your rules files are automatically applied when running
+'connect'. If somethings going wrong or you are modifying rules you can try
+one of the commands defined here. You can list your current iptables rules
+with the 'list' command as an alternative to the native iptables -L -vn
+--line-num.
 
 positional arguments:
-  {reload,flush,apply}
-    reload              Reload iptables rules files with current environment.
-                        Useful after editing a rules file and you wish to apply
-                        them instantly.
-    flush               Flush iptables to fallback configuration or with
-                        --no-fallback to no rules at all.
-    apply               Apply iptables rules defined in DOMAIN configuration.
+  {list,reload,flush,apply}
+    reload              Reload iptables configuration.
+    flush               Flush iptables.
+    apply               Apply iptables rules per 'table'.
 
 optional arguments:
   -h, --help            show this help message and exit
+
+Run a command with -h or --help for more information.
 </pre>
 
 ## Supported FEATUREs:
@@ -520,18 +570,18 @@ double                    Double VPN
 dedicated                 Dedicated IP
 standard                  Standard VPN servers
 p2p                       P2P
-obfuscated                Obfuscated Servers
 onion                     Onion Over VPN
 </pre>
 
 
 ## Developing
 
-Clone the repo and install development environment:
+Clone the repo and install the development environment:
 
     $ git clone git@github.com:MaelStor/connord.git
     $ cd connord
-    $ make develop
+    $ make venv
     $ . .venv/bin/activate
 
-You should be good to go from here :)
+You should be good to go from here. If you already have a virtualenv for connord
+then executing `make develop` is sufficient.

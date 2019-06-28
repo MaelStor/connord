@@ -37,6 +37,8 @@ from connord import areas
 from connord import countries
 from connord import features
 from connord import types
+from connord import Printer
+from connord import sqlite
 from .features import FeatureError
 
 
@@ -153,26 +155,48 @@ def parse_args(argv):
 
     :returns: list of args
     """
-    description = """
-Connect to NordVPN servers secure and fast.
-DNS is managed with resolvconf and the firewall through iptables to keep
-your connection safe.
-"""
-    parser = argparse.ArgumentParser(description=description)
+    description = (
+        "CønNørD connects you to NordVPN servers with "
+        "OpenVPN (https://openvpn.net) and you can choose between a high amount "
+        "of possible filters, to make it easy for you to connect "
+        "to servers with the best performance and features the server offers to "
+        "you. It's taken care that your DNS isn't leaked."
+    )
+    epilog = "Run a command with -h or --help for more information."
+    parser = argparse.ArgumentParser(description=description, epilog=epilog)
     verbosity = parser.add_mutually_exclusive_group()
-    verbosity.add_argument("-q", "--quiet", action="store_true", help="Be quiet")
-    verbosity.add_argument("-v", "--verbose", action="store_true", help="Be verbose")
+    verbosity.add_argument(
+        "-q", "--quiet", action="store_true", help="Suppress error messages."
+    )
+    verbosity.add_argument(
+        "-v", "--verbose", action="store_true", help="Show what's going."
+    )
     command = parser.add_subparsers(dest="command")
+    description = (
+        "Update NordVPN configuration files and the location "
+        "database. Use --force to force an update. Normally 'update' allows for "
+        "one update per day."
+    )
+    help_message = "Update nordvpn configuration files and the location database."
     update_cmd = command.add_parser(
-        "update", help="Update nordvpn configuration files."
+        "update", help=help_message, description=description
     )
     update_cmd.add_argument(
         "-f",
         "--force",
         action="store_true",
-        help="Force update no matter of configuration.",
+        help="Force an update of the configuration files.",
     )
-    list_cmd = command.add_parser("list", help="List features, types, ... or servers.")
+    description = (
+        "The 'list' command allows some powerful filtering so you can "
+        "select a server tailored to your demands. 'types', 'features', "
+        "'areas', 'countries' give you an overview output of possible "
+        "arguments to the respective flag."
+    )
+    help_message = "List features, types, ... and servers."
+    list_cmd = command.add_parser(
+        "list", help=help_message, description=description, epilog=epilog
+    )
     list_ipt_parent = argparse.ArgumentParser(description="List iptables")
     list_ipt_parent.add_argument(
         "-4", dest="v4", action="store_true", help="(Default) List ipv4 rules"
@@ -211,12 +235,15 @@ your connection safe.
     list_cmd_sub.add_parser(
         "types", help="List all possible types/categories of NordVPN servers."
     )
+    description = (
+        "List servers filtered by one or more of the specified arguments."
+        " If no arguments are given list all NordVPN servers. To see possible "
+        "values for --area, --country, --feature and --type have a look at the "
+        "respective 'list' commands."
+    )
+    help_message = "List servers filtered by specified arguments."
     list_servers = list_cmd_sub.add_parser(
-        "servers",
-        help=(
-            "List servers filtered by one of the specified arguments."
-            " If no arguments are given list all NordVPN servers."
-        ),
+        "servers", help=help_message, description=description
     )
     list_servers.add_argument(
         "-c",
@@ -269,28 +296,39 @@ your connection safe.
     list_servers.add_argument(
         "--top", type=TopType(), help="Show TOP count resulting servers."
     )
-    connect_cmd = command.add_parser("connect", help="Connect to a server.")
+    description = (
+        "Connect to NordVPN servers. You may specify a single server of "
+        "your choice with -s SERVER, where SERVER is a COUNTRY_CODE followed by "
+        "a number. This must be a SERVER for which a configuration file exists. "
+        "The same filters --area, --country ... like in the 'list' command can "
+        "be applied here. For a list of possible values see the respective "
+        "command in the 'list' command. "
+        "IMPORTANT: Note that currently obfuscated servers aren't supported. "
+    )
+    connect_cmd = command.add_parser(
+        "connect", help="Connect to a server.", description=description
+    )
     server_best = connect_cmd.add_mutually_exclusive_group()
     server_best.add_argument(
         "-s",
         "--server",
         type=DomainType(),
         nargs=1,
-        help="Connect to a specific server. Arguments -c, -a, -f, -t have no"
-        " effect.",
+        help="Connect to a specific server. Only -d, -o, --udp and --tcp have an "
+        "effect.",
     )
     server_best.add_argument(
         "-b",
         "--best",
         action="store_true",
         help="Use best server depending on server load. When multiple servers"
-        " got the same load use the one with the best ping.",
+        " got the same load use the one with the best ping. This is the default "
+        "behaviour if not specified on the command-line",
     )
     connect_cmd.add_argument(
         "-c",
         "--country",
         action="append",
-        nargs="?",
         type=CountryType(),
         help="Select a specific country. May be specified multiple times.",
     )
@@ -299,23 +337,20 @@ your connection safe.
         "--area",
         action="append",
         type=AreaType(),
-        nargs="?",
         help="Select a specific area. May be specified multiple times.",
     )
     connect_cmd.add_argument(
         "-f",
         "--feature",
         action="append",
-        nargs="?",
         type=FeatureType(),
-        help="Select servers with a specific list of features. May be"
+        help="Select servers with a specific feature. May be"
         " specified multiple times.",
     )
     connect_cmd.add_argument(
         "-t",
         "--type",
         action="append",
-        nargs="?",
         type=TypeType(),
         help="Select servers with a specific type. May be specified multiple" " times.",
     )
@@ -358,54 +393,82 @@ your connection safe.
         action="store_true",
         help="Use TCP protocol. Only one of --udp or --tcp may be present.",
     )
+    description = (
+        "Kill the openvpn process spawned by connord or all openvpn "
+        "processes with --all"
+    )
     kill_cmd = command.add_parser(
-        "kill", help="Kill openvpn processes. Useful in daemon mode."
+        "kill", help="Kill the openvpn process.", description=description
     )
     kill_cmd.add_argument(
         "-a", "--all", action="store_true", help="Kill all openvpn processes."
     )
-    iptables_cmd = command.add_parser("iptables", help="Wrapper around iptables.")
+    description = (
+        "Manage your iptables configuration with this command. Under normal "
+        "cirumstances your rules files are automatically applied when running "
+        "'connect'. "
+        "If somethings going wrong or you are modifying  rules you can try one "
+        "of the commands defined here. "
+        "You can list your current iptables rules with the 'list' command as an "
+        "alternative to the native iptables -L -vn --line-num."
+    )
+    iptables_cmd = command.add_parser(
+        "iptables", help="Manage iptables.", description=description, epilog=epilog
+    )
     iptables_cmd_subparsers = iptables_cmd.add_subparsers(dest="iptables_sub")
     iptables_cmd_subparsers.add_parser(
         "list", parents=[list_ipt_parent], add_help=False
     )
+    help_message = "Reload iptables configuration."
+    description = (
+        "Reload iptables 'rules' configuration when connected to "
+        "NordVPN or else the 'fallback' configuration. Especially useful after "
+        "editing a configuration file and you wish to apply it to your running "
+        "iptables rules."
+    )
     iptables_cmd_subparsers.add_parser(
-        "reload",
-        help="Reload iptables rules files with current environment. "
-        "Useful after editing a rules file and you wish to apply "
-        "them instantly.",
+        "reload", help=help_message, description=description
+    )
+    help_message = "Flush iptables."
+    description = (
+        "Flush iptables to fallback configuration or with --no-fallback to no "
+        "rules at all and apply ACCEPT policy to builtin chains."
     )
     flush_cmd = iptables_cmd_subparsers.add_parser(
-        "flush",
-        help="Flush iptables to fallback configuration or with "
-        "--no-fallback to nothing.",
+        "flush", help=help_message, description=description
     )
     flush_cmd.add_argument(
         "--no-fallback",
         dest="no_fallback",
         action="store_true",
-        help="Flush tables ignoring fallback files",
+        help="Flush tables ignoring fallback files.",
+    )
+    help_message = "Apply iptables rules per 'table'."
+    description = (
+        "Apply iptables rules defined in 'rules' or 'fallback' "
+        "configuration files for a specific 'table'."
     )
     apply_cmd = iptables_cmd_subparsers.add_parser(
-        "apply", help="Apply iptables rules defined in DOMAIN configuration"
+        "apply", help=help_message, description=description
     )
     apply_cmd.add_argument(
-        "domain", type=DomainType(), nargs=1, help="Apply iptables rules with domain"
+        "table", type=TableType(), help="Apply iptables rules for 'table'."
     )
-    udp_tcp = apply_cmd.add_mutually_exclusive_group()
-    udp_tcp.add_argument(
-        "--udp", action="store_true", help="Use UDP protocol. This is the default"
-    )
-    udp_tcp.add_argument(
-        "--tcp",
+    apply_cmd.add_argument(
+        "-f",
+        "--fallback",
         action="store_true",
-        help="Use TCP protocol. Only one of --udp or --tcp may be present.",
+        help="Apply fallback instead of the rules configuration.",
+    )
+    apply_cmd.add_argument(
+        "-6", dest="ipv6", action="store_true", help="Apply the ipv6 configuration."
     )
     command.add_parser("version", help="Show version")
 
     return parser.parse_args(argv)
 
 
+@user.needs_root
 def process_list_ipt_cmd(args):
     if args.v4 and args.v6:
         version_ = "all"
@@ -477,6 +540,7 @@ def process_list_cmd(args):
         listings.list_servers(None, None, None, None, None, 100, "max", None)
 
 
+@user.needs_root
 def process_connect_cmd(args):
     """
     Process arguments for connect command
@@ -553,33 +617,32 @@ def process_iptables_cmd(args):
         else:
             iptables.reset(fallback=True)
 
-    # TODO: rearrange apply to apply a specific set of rules like filter.rules
     elif args.iptables_sub == "apply":
-        iptables.reset(fallback=True)
-        if args.tcp:
-            protocol = "tcp"
+        config_file = iptables.get_config_path(
+            args.table, args.fallback, ipv6=args.ipv6
+        )
+
+        if args.fallback:
+            server = None
+            protocol = None
         else:
-            protocol = "udp"
-
-        domain = args.domain[0]
-        server = servers.get_server_by_domain(domain)
-        # TODO: which action to take when applying rules fails?
-        iptables.apply_config_dir(server, protocol)
+            try:
+                server = resources.get_stats(stats_name="server")
+                protocol = resources.get_stats()["last_server"]["protocol"]
+            except (resources.ResourceNotFoundError, KeyError):
+                raise iptables.IptablesError(
+                    "Cannot apply 'rules' files when not connected to a NordVPN server."
+                )
+        return iptables.apply_config(config_file, server, protocol)
     elif args.iptables_sub == "reload":
-        stats_dict = resources.get_stats()
-        domain = str()
-        protocol = str()
         try:
-            domain = stats_dict["last_server"]["domain"]
-            protocol = stats_dict["last_server"]["protocol"]
-        except KeyError:
-            print("Could not reload iptables. Run 'connect' or apply iptables first.")
-            return False
+            server = resources.get_stats(stats_name="server")
+            protocol = resources.get_stats()["last_server"]["protocol"]
+            filetype = "rules"
+        except (resources.ResourceNotFoundError, KeyError):
+            filetype = "fallback"
 
-        server = resources.get_stats(stats_name="server")
-
-        iptables.reset(fallback=True)
-        iptables.apply_config_dir(server, protocol)
+        return iptables.apply_config_dir(server, protocol, filetype=filetype)
     elif args.iptables_sub == "list":
         return process_list_ipt_cmd(args)
     else:
@@ -615,6 +678,9 @@ def main():  # noqa: C901
         sys.argv.extend(["-h"])
 
     args = parse_args(sys.argv[1:])
+    # TODO: recognize configuration in config.yml
+    printer = Printer(verbose=args.verbose, quiet=args.quiet)
+
     try:
         if args.command == "update":
             update.update(force=args.force)
@@ -629,34 +695,36 @@ def main():  # noqa: C901
         elif args.command == "iptables":
             process_iptables_cmd(args)
         else:
-            raise NotImplementedError("Could not process commandline arguments.")
+            # This should only happen when someone tampers with sys.argv
+            raise NotImplementedError("Could not process command-line arguments.")
         sys.exit(0)
     except PermissionError:
-        print(
+        printer.error(
             'Permission Denied: You need to run "connord {}" as root'.format(
                 args.command
-            ),
-            file=sys.stderr,
+            )
         )
     except resources.ResourceNotFoundError as error:
-        print(error, file=sys.stderr)
+        printer.error(str(error))
     except resources.MalformedResourceError as error:
-        print(error, file=sys.stderr)
+        printer.error(str(error))
     except areas.AreaError as error:
-        print(error, file=sys.stderr)
+        printer.error(str(error))
     except iptables.IptablesError as error:
-        print(error, file=sys.stderr)
+        printer.error(str(error))
     except countries.CountryError as error:
-        print(error, file=sys.stderr)
+        printer.error(str(error))
     except FeatureError as error:
-        print(error, file=sys.stderr)
+        printer.error(str(error))
     except servers.DomainNotFoundError as error:
-        print(error, file=sys.stderr)
+        printer.error(str(error))
     except servers.MalformedDomainError as error:
-        print(error, file=sys.stderr)
+        printer.error(str(error))
     except connect.ConnectError as error:
-        print(error, file=sys.stderr)
+        printer.error(str(error))
     except RequestException as error:
-        print(error, file=sys.stderr)
+        printer.error(str(error))
+    except sqlite.SqliteError as error:
+        printer.error(str(error))
 
     sys.exit(1)

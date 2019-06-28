@@ -18,7 +18,7 @@
 
 """Defines Formatter classes"""
 
-import sys
+from connord import Printer
 
 
 class Formatter:
@@ -59,4 +59,4 @@ class Formatter:
 
     def get_stream_file(self, stream=False):
         """Return self as stream if False else stdout"""
-        return sys.stdout if stream else self
+        return Printer() if stream else self

@@ -26,7 +26,7 @@ import time
 import os
 import re
 import signal
-from connord import ConnordError
+from connord import ConnordError, Printer
 from connord import iptables
 from connord import servers
 from connord import load
@@ -34,7 +34,6 @@ from connord import countries
 from connord import areas
 from connord import types
 from connord import features
-from connord import user
 from connord import resources
 from connord import update
 
@@ -66,6 +65,10 @@ def ping(server):
         else:
             server_copy["ping"] = float("inf")
 
+        printer = Printer()
+        printer.info(
+            "{:6}: ping: {}".format(server_copy["domain"], server_copy["ping"])
+        )
         return server_copy
 
 
@@ -113,11 +116,21 @@ def filter_servers(
     if areas_:
         servers_ = areas.filter_servers(servers_, areas_)
     if types_:
+        if "obfuscated" in types_:
+            raise ConnectError("Connecting to obfuscated servers isn't supported yet.")
+
         servers_ = types.filter_servers(servers_, types_)
     if features_:
         servers_ = features.filter_servers(servers_, features_)
 
-    return servers_
+    # Filter out obfuscated servers. Not supported yet
+    filtered_servers = [
+        server
+        for server in servers_
+        if not types.has_type(server, "Obfuscated Servers")
+    ]
+
+    return filtered_servers
 
 
 def filter_best_servers(servers_):
@@ -135,7 +148,6 @@ def filter_best_servers(servers_):
     return servers_
 
 
-@user.needs_root
 def connect_to_specific_server(domain, openvpn, daemon, protocol):
     """Connect to a specific server
 
@@ -146,11 +158,12 @@ def connect_to_specific_server(domain, openvpn, daemon, protocol):
     :returns: True if openvpn was run successfully
     """
     server = servers.get_server_by_domain(domain[0])
+    if types.has_type(server, "Obfuscated Servers"):
+        raise ConnectError("Connecting to obfuscated servers isn't supported yet.")
     return run_openvpn(server, openvpn, daemon, protocol)
 
 
 # pylint: disable=too-many-locals
-@user.needs_root
 def connect(
     domain,
     countries_,
@@ -194,11 +207,13 @@ def connect(
 
     best_servers = filter_best_servers(servers_)
     max_retries = 3
+    printer = Printer()
     for i, server in enumerate(best_servers):
         if i == max_retries:
             raise ConnectError("Maximum retries reached.")
 
         if server["ping"] != inf:
+            printer.info("Trying to connect to {}".format(server["domain"]))
             if run_openvpn(server, openvpn, daemon, protocol):
                 return True
             # else give the next server a try
@@ -487,6 +502,8 @@ class OpenvpnCommand:
         config_dict = resources.get_config()["openvpn"]
         self.cleanup()
 
+        printer = Printer()
+        printer.info("Running openvpn with '{}'".format(self.cmd))
         with subprocess.Popen(self.cmd) as ovpn:
             # give openvpn a maximum of 60 seconds to startup. A lower value is bad if
             # asked for username/password.
@@ -532,7 +549,6 @@ class OpenvpnCommand:
         return True
 
 
-@user.needs_root
 def run_openvpn(server, openvpn, daemon, protocol):
     """Intermediate function to setup openvpn and wrap the final run."""
     openvpn_cmd = OpenvpnCommand(server, openvpn, daemon, protocol)
@@ -552,7 +568,6 @@ def run_openvpn(server, openvpn, daemon, protocol):
     return retval
 
 
-@user.needs_root
 def kill_openvpn(pid=None):
     """Kill all openvpn processes currently running or if pid is given this process.
     :param pid: integer with an process id. Can be any pid but intention is to shutdown

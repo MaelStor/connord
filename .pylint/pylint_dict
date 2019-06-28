@@ -1,5 +1,6 @@
 api
 args
+argv
 bool
 boolean
 catched
@@ -19,6 +20,7 @@ ipaddress
 iprange
 iptables
 json
+kwargs
 mael
 maelstor
 namespace
@@ -46,6 +48,7 @@ stor
 str
 subclasses
 sudo
+sys
 tcp
 udp
 uid
