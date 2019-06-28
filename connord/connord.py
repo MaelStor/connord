@@ -705,26 +705,26 @@ def main():  # noqa: C901
             )
         )
     except resources.ResourceNotFoundError as error:
-        printer.error(error)
+        printer.error(str(error))
     except resources.MalformedResourceError as error:
-        printer.error(error)
+        printer.error(str(error))
     except areas.AreaError as error:
-        printer.error(error)
+        printer.error(str(error))
     except iptables.IptablesError as error:
-        printer.error(error)
+        printer.error(str(error))
     except countries.CountryError as error:
-        printer.error(error)
+        printer.error(str(error))
     except FeatureError as error:
-        printer.error(error)
+        printer.error(str(error))
     except servers.DomainNotFoundError as error:
-        printer.error(error)
+        printer.error(str(error))
     except servers.MalformedDomainError as error:
-        printer.error(error)
+        printer.error(str(error))
     except connect.ConnectError as error:
-        printer.error(error)
+        printer.error(str(error))
     except RequestException as error:
-        printer.error(error)
+        printer.error(str(error))
     except sqlite.SqliteError as error:
-        printer.error(error)
+        printer.error(str(error))
 
     sys.exit(1)

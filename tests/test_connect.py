@@ -129,6 +129,7 @@ def test_filter_servers(mocker, servers_fix):
     mocked_areas.filter_servers.return_value = servers_fix
     mocked_types = mocker.patch("connord.connect.types")
     mocked_types.filter_servers.return_value = servers_fix
+    mocked_types.has_type.return_value = False
     mocked_features = mocker.patch("connord.connect.features")
     mocked_features.filter_servers.return_value = servers_fix
 
@@ -156,7 +157,6 @@ def test_filter_best_servers(
 
 def test_connect_to_specific_server(mocker, servers_12):
     mockbase = MockBase("connect")
-    mockbase.mock_user_is_root(mocker, True)
     mockbase.setup(connect)
 
     server = servers_12[0]
@@ -176,7 +176,6 @@ def test_connect_to_specific_server(mocker, servers_12):
 def test_connect_when_bet_not_in_domain(mocker):
     # setup
     mockbase = MockBase("connect")
-    mockbase.mock_user_is_root(mocker, True)
     mockbase.setup(connect)
 
     mocked_con_spec = mocker.patch(
@@ -217,7 +216,6 @@ def test_connect_when_bet_not_in_domain(mocker):
 def test_connect_when_domain_is_best(mocker, pinged_servers, servers_fix):
     # setup
     mockbase = MockBase("connect")
-    mockbase.mock_user_is_root(mocker, True)
     mockbase.setup(connect)
 
     mocked_con_spec = mocker.patch(
@@ -276,7 +274,6 @@ def test_connect_when_domain_is_best_max_retries_reached(
 ):
     # setup
     mockbase = MockBase("connect")
-    mockbase.mock_user_is_root(mocker, True)
     mockbase.setup(connect)
 
     mocked_con_spec = mocker.patch(
@@ -339,7 +336,6 @@ def test_connect_when_domain_is_best_no_server_left_with_valid_ping(
 ):
     # setup
     mockbase = MockBase("connect")
-    mockbase.mock_user_is_root(mocker, True)
     mockbase.setup(connect)
 
     mocked_con_spec = mocker.patch(
@@ -406,7 +402,6 @@ def test_connect_when_domain_is_best_two_servers_run_openvpn_fails(
 ):
     # setup
     mockbase = MockBase("connect")
-    mockbase.mock_user_is_root(mocker, True)
     mockbase.setup(connect)
 
     mocked_con_spec = mocker.patch(

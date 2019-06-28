@@ -34,7 +34,6 @@ from connord import countries
 from connord import areas
 from connord import types
 from connord import features
-from connord import user
 from connord import resources
 from connord import update
 
@@ -117,11 +116,21 @@ def filter_servers(
     if areas_:
         servers_ = areas.filter_servers(servers_, areas_)
     if types_:
+        if "obfuscated" in types_:
+            raise ConnectError("Connecting to obfuscated servers isn't supported yet.")
+
         servers_ = types.filter_servers(servers_, types_)
     if features_:
         servers_ = features.filter_servers(servers_, features_)
 
-    return servers_
+    # Filter out obfuscated servers. Not supported yet
+    filtered_servers = [
+        server
+        for server in servers_
+        if not types.has_type(server, "Obfuscated Servers")
+    ]
+
+    return filtered_servers
 
 
 def filter_best_servers(servers_):
@@ -139,7 +148,6 @@ def filter_best_servers(servers_):
     return servers_
 
 
-@user.needs_root
 def connect_to_specific_server(domain, openvpn, daemon, protocol):
     """Connect to a specific server
 
@@ -150,11 +158,12 @@ def connect_to_specific_server(domain, openvpn, daemon, protocol):
     :returns: True if openvpn was run successfully
     """
     server = servers.get_server_by_domain(domain[0])
+    if types.has_type(server, "Obfuscated Servers"):
+        raise ConnectError("Connecting to obfuscated servers isn't supported yet.")
     return run_openvpn(server, openvpn, daemon, protocol)
 
 
 # pylint: disable=too-many-locals
-@user.needs_root
 def connect(
     domain,
     countries_,
@@ -540,7 +549,6 @@ class OpenvpnCommand:
         return True
 
 
-@user.needs_root
 def run_openvpn(server, openvpn, daemon, protocol):
     """Intermediate function to setup openvpn and wrap the final run."""
     openvpn_cmd = OpenvpnCommand(server, openvpn, daemon, protocol)
@@ -560,7 +568,6 @@ def run_openvpn(server, openvpn, daemon, protocol):
     return retval
 
 
-@user.needs_root
 def kill_openvpn(pid=None):
     """Kill all openvpn processes currently running or if pid is given this process.
     :param pid: integer with an process id. Can be any pid but intention is to shutdown
