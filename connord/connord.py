@@ -726,6 +726,8 @@ def main():  # noqa: C901
         printer.error(str(error))
     except connect.ConnectError as error:
         printer.error(str(error))
+    except update.UpdateError as error:
+        printer.error(str(error))
     except RequestException as error:
         printer.error(str(error))
     except sqlite.SqliteError as error:

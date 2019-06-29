@@ -116,21 +116,11 @@ def filter_servers(
     if areas_:
         servers_ = areas.filter_servers(servers_, areas_)
     if categories_:
-        if "obfuscated" in categories_:
-            raise ConnectError("Connecting to obfuscated servers isn't supported yet.")
-
         servers_ = categories.filter_servers(servers_, categories_)
     if features_:
         servers_ = features.filter_servers(servers_, features_)
 
-    # Filter out obfuscated servers. Not supported yet
-    filtered_servers = [
-        server
-        for server in servers_
-        if not categories.has_category(server, "Obfuscated Servers")
-    ]
-
-    return filtered_servers
+    return servers_
 
 
 def filter_best_servers(servers_):
@@ -158,8 +148,16 @@ def connect_to_specific_server(domain, openvpn, daemon, protocol):
     :returns: True if openvpn was run successfully
     """
     server = servers.get_server_by_domain(domain[0])
+    printer = Printer()
     if categories.has_category(server, "Obfuscated Servers"):
-        raise ConnectError("Connecting to obfuscated servers isn't supported yet.")
+        if not printer.yes_no(
+            (
+                "WARNING: {} is an obfuscated server.\n"
+                "This may fail if not configured properly.\n"
+                "Are you sure you want to continue?"
+            ).format(server["domain"])
+        ):
+            return False
     return run_openvpn(server, openvpn, daemon, protocol)
 
 
@@ -212,10 +210,21 @@ def connect(
         if i == max_retries:
             raise ConnectError("Maximum retries reached.")
 
+        if categories.has_category(server, "Obfuscated Servers"):
+            if not printer.yes_no(
+                (
+                    "WARNING: {} is an obfuscated server.\n"
+                    "This may fail if not configured properly.\n"
+                    "Are you sure you want to continue?"
+                ).format(server["domain"])
+            ):
+                continue
+
         if server["ping"] != inf:
             printer.info("Trying to connect to {}".format(server["domain"]))
             if run_openvpn(server, openvpn, daemon, protocol):
                 return True
+
             # else give the next server a try
         else:
             raise ConnectError("No server left with a valid ping.")
