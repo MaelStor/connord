@@ -21,6 +21,7 @@ Init file
 """
 
 import sys
+import errno
 from progress.bar import IncrementalBar
 from progress.spinner import Spinner
 
@@ -60,6 +61,17 @@ class Printer(Borg):
         if "quiet" not in self.__dict__.keys():
             self.quiet = quiet
 
+    def yes_no(self, question):
+        reply = input(question + " (y/N): ").lower().strip()
+        if not reply:
+            return False
+        if reply in ("y", "ye", "yes"):
+            return True
+        if reply in ("n", "no"):
+            return False
+
+        return self.yes_no("Invalid answer. Try 'y' or 'n' or enter for No.")
+
     def error(self, message):
         """Prints errors if not quiet"""
         if not self.quiet:
@@ -77,14 +89,6 @@ class Printer(Borg):
             else:
                 print(message_prefixed)
 
-    #
-    # def suffix(self, message, no_newline=False):
-    #     if self.verbose and not self.quiet:
-    #         if no_newline:
-    #             print(message, end="")
-    #         else:
-    #             print(message)
-
     @staticmethod
     def write(message):
         """Prints messages independently from verbose and quiet settings
@@ -93,7 +97,11 @@ class Printer(Borg):
 
         Example: print('something', file=Printer())
         """
-        print(message, end="")
+        try:
+            print(message, end="")
+        except IOError as error:
+            if error.errno != errno.EPIPE:
+                raise
 
     @staticmethod
     def format_prefix(prefix):
@@ -188,7 +196,7 @@ class Printer(Borg):
             pass
 
 
-__version__ = "0.1.3"
+__version__ = "0.1.4"
 __license__ = "GNU General Public License v3 or later (GPLv3+)"
 __copyright__ = """connord  Copyright (C) 2019  Mael Stor <maelstor@posteo.de>
 This program comes with ABSOLUTELY NO WARRANTY; This is free software, and you

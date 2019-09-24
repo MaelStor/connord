@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from connord import connord
-from main_test_module import get_stub, MockBase
+from tests.main_test_module import get_stub, MockBase
 
 
 def test_main_when_sys_argv_has_no_arguments(capsys, mocker):
@@ -82,7 +82,7 @@ class ArgumentFixture:
         self,
         country=None,
         area=None,
-        type_=None,
+        category_=None,
         feature=None,
         netflix=None,
         iptables=None,
@@ -95,7 +95,7 @@ class ArgumentFixture:
     ):
         self.country = country
         self.area = area
-        self.type = type_
+        self.category = category_
         self.feature = feature
         self.netflix = netflix
         self.top = top

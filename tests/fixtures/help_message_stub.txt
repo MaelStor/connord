@@ -9,7 +9,7 @@ positional arguments:
   {update,list,connect,kill,iptables,version}
     update              Update nordvpn configuration files and the location
                         database.
-    list                List features, types, ... and servers.
+    list                List features, categories, ... and servers.
     connect             Connect to a server.
     kill                Kill the openvpn process.
     iptables            Manage iptables.

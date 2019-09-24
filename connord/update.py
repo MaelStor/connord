@@ -27,25 +27,24 @@ from datetime import datetime, timedelta
 import requests
 from connord import ConnordError, Printer
 from connord import resources
-from connord import user
 from connord import areas
 
-__URL = "https://downloads.nordcdn.com/configs/archives/servers/ovpn.zip"
-TIMEOUT = timedelta(days=1)
+__URL = "https://downloads.nordcdn.com/configs/archives/servers"
+__ARCHIVES = {"standard": "ovpn.zip", "obfuscated": "ovpn_xor.zip"}
+TIMEOUT = timedelta(hours=1)
 
 
 class UpdateError(ConnordError):
     """Raised during update"""
 
 
-@user.needs_root
-def update_orig():
+def update_orig(archive):
     """
     Move the original file to make room for the newly downloaded file
     """
 
     try:
-        zip_file = resources.get_zip_file(create_dirs=True)
+        zip_file = resources.get_zip_file(zip_name=archive, create_dirs=True)
     except resources.ResourceNotFoundError:
         return False
 
@@ -56,20 +55,22 @@ def update_orig():
 def get():
     """Get the zip file
     """
-    zip_path = resources.get_zip_path()
-    update_orig()
 
-    printer = Printer()
-    spinner = printer.spinner("Downloading configuration files")
-    with requests.get(__URL, stream=True, timeout=1) as response, open(
-        zip_path, "wb"
-    ) as zip_fd:
-        chunk_size = 512
-        for chunk in response.iter_content(chunk_size=chunk_size):
-            spinner.next()
-            zip_fd.write(chunk)
+    for category, archive in __ARCHIVES.items():
+        printer = Printer()
+        zip_path = resources.get_zip_path(archive)
+        update_orig(archive)
+        spinner = printer.spinner("Downloading {} configurations".format(category))
+        url = "{}/{}".format(__URL, archive)
+        with requests.get(url, stream=True, timeout=1) as response, open(
+            zip_path, "wb"
+        ) as zip_fd:
+            chunk_size = 512
+            for chunk in response.iter_content(chunk_size=chunk_size):
+                spinner.next()
+                zip_fd.write(chunk)
 
-    spinner.finish()
+        spinner.finish()
 
     return True
 
@@ -90,7 +91,6 @@ def unzip():
 
     printer = Printer()
     zip_dir = resources.get_zip_dir(create=True)
-    zip_file = resources.get_zip_file()
 
     with printer.Do("Deleting old configuration files"):
         for ovpn_dir in ("ovpn_udp", "ovpn_tcp"):
@@ -98,15 +98,17 @@ def unzip():
             if os.path.exists(remove_dir):
                 rmtree(remove_dir, ignore_errors=True)
 
-    with ZipFile(zip_file, "r") as zip_stream:
-        name_list = zip_stream.namelist()
+    for key, archive in __ARCHIVES.items():
+        zip_file = resources.get_zip_file(archive)
+        with ZipFile(zip_file, "r") as zip_stream:
+            name_list = zip_stream.namelist()
 
-        with printer.incremental_bar(
-            "Unzipping '{}'".format(os.path.basename(zip_file)), max=len(name_list)
-        ) as incremental_bar:
-            for file_name in name_list:
-                zip_stream.extract(file_name, zip_dir)
-                incremental_bar.next()
+            with printer.incremental_bar(
+                "Unzipping {} configurations".format(key), max=len(name_list)
+            ) as incremental_bar:
+                for file_name in name_list:
+                    zip_stream.extract(file_name, zip_dir)
+                    incremental_bar.next()
 
 
 def update(force=False):
@@ -118,35 +120,39 @@ def update(force=False):
         get()
         unzip()
     else:
-        zip_file = resources.get_zip_path()
-        orig_file = resources.get_zip_path("ovpn.zip.orig")
-        if update_needed():
-            get()
-            if not file_equals(orig_file, zip_file):
-                unzip()
-            else:
-                printer.info(zip_file + " already up-to-date")
+        update_archives = False
+        for archive in __ARCHIVES.values():
+            zip_file = resources.get_zip_path(archive)
+            # if one archive needs an update all archives are updated
+            if update_needed(zip_file):
+                update_archives = True
+                break
         else:
-            next_update = datetime.fromtimestamp(os.path.getctime(zip_file)) + TIMEOUT
-            printer.info(
-                "No update needed. Next necesseray update needed at {!s}".format(
-                    next_update
-                )
+            raise UpdateError(
+                "Just one update per hour allowed. Use --force to ignore "
+                "the timeout."
             )
+
+        if update_archives:
+            get()
+            for archive in __ARCHIVES.values():
+                zip_file = resources.get_zip_path(archive)
+                orig_file = resources.get_zip_path(archive + ".orig")
+                if not file_equals(orig_file, zip_file):
+                    unzip()
+                    break
+            else:
+                printer.info("Configurations are up-to-date.")
 
     areas.update_database()
     return True
 
 
-def update_needed():
+def update_needed(zip_path):
     """Check if an update is needed
     : returns: False if the zip file's creation time hasn't reached the timeout
                else True.
     """
-    try:
-        zip_file = resources.get_zip_file()
-        now = datetime.now()
-        time_created = datetime.fromtimestamp(os.path.getctime(zip_file))
-        return now - TIMEOUT > time_created
-    except resources.ResourceNotFoundError:
-        return True
+    now = datetime.now()
+    time_created = datetime.fromtimestamp(os.path.getctime(zip_path))
+    return now - TIMEOUT > time_created

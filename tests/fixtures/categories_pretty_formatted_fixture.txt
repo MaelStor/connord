@@ -1,4 +1,4 @@
-================================= Server Types =================================
+================================== Categories ==================================
   double                    Double VPN
   dedicated                 Dedicated IP
   standard                  Standard VPN servers
