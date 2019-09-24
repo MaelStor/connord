@@ -28,7 +28,8 @@ import yaml
 from jinja2 import Environment, FileSystemLoader
 
 import netifaces
-from connord import ConnordError, Printer
+from connord import ConnordError
+from connord.printer import Printer
 from connord import user
 from connord import resources
 from connord.formatter import Formatter

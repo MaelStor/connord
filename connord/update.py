@@ -25,7 +25,8 @@ from shutil import move, rmtree
 from zipfile import ZipFile
 from datetime import datetime, timedelta
 import requests
-from connord import ConnordError, Printer
+from connord import ConnordError
+from connord.printer import Printer
 from connord import resources
 from connord import areas
 

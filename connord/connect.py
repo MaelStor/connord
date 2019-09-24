@@ -26,7 +26,8 @@ import time
 import os
 import re
 import signal
-from connord import ConnordError, Printer
+from connord import ConnordError
+from connord.printer import Printer
 from connord import iptables
 from connord import servers
 from connord import load

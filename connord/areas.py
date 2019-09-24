@@ -21,7 +21,8 @@ import time
 import requests
 from cachetools import cached, LRUCache
 import cachetools.func
-from connord import ConnordError, Printer
+from connord import ConnordError
+from connord.printer import Printer
 from connord import servers
 from connord import sqlite
 from connord.formatter import Formatter
