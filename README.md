@@ -43,7 +43,6 @@ should cover most use cases.
 
 ## Dependencies
 
-- python3
 - resolvconf
 - iptables
 - openvpn
@@ -61,7 +60,12 @@ should cover most use cases.
 
 - (Optional) Customize `config.yml` either in `site-packages` or `/etc/connord` if
   you've taken the optional step above.
-- Execute `$ sudo connord connect`
+- Depending on your current iptables rules you may need to run 
+  `$ sudo connord iptables flush`.
+- Execute `$ sudo connord connect -c YOUR_COUNTRY_CODE` and replace
+  YOUR\_COUNTRY\_CODE with the
+  [ISO_3166-1_alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2) country
+  code of your current country.
 
 ## Installation
 
@@ -69,11 +73,11 @@ First make sure you have all system dependencies installed.
 
 #### Ubuntu/Debian
 
-    $ sudo apt-get install python3 resolvconf iptables openvpn
+    $ sudo apt-get install resolvconf iptables openvpn
 
 #### Arch
 
-    $ sudo pacman -Sy python openresolv iptables openvpn
+    $ sudo pacman -Sy openresolv iptables openvpn
 
 #### Installation of C&#xF8;nN&#xF8;rD
 
@@ -119,6 +123,35 @@ messages with `-q` or `--quiet` if you like to.
 Verbose mode of `openvpn` can be set in `config.yml` in the openvpn
 section or at the command-line when using `connord connect` adding it to the
 openvpn command with `-o '--verb 3'`.
+
+## Obfuscated servers
+
+In order to be able to connect to obfuscated servers you need to
+[patch](https://github.com/clayface/openvpn_xorpatch) OpenVPN. For example the
+repository of [Tunnelblick](https://github.com/Tunnelblick/Tunnelblick) includes
+the patches in third_party/sources/openvpn. How this can be done is described
+[here](https://www.reddit.com/r/nordvpn/comments/bsbxt6/how_to_make_nordvpn_obfuscated_servers_work_on/).
+I haven't patched my openvpn client, so I can't share experiences but above
+solution is reported to work. Please don't post any issues around this topic on 
+the issue board of C&#xF8;nN&#xF8;rD.
+
+You can list obfuscated servers with `$ connord list servers -t obfuscated`.
+Same scheme to finally connect to an obfuscated server for example located in
+HongKong: `$ sudo connord connect -c hk -t obfuscated`.
+
+You will be warned by connord if you try to connect to an obfuscated server, to
+prevent accidential connection, what fails if you haven't patched the openvpn
+client. For example:
+
+<pre>
+$ connord connect -c hk -t obfuscated
+WARNING: hk67.nordvpn.com is an obfuscated server.
+This may fail if not configured properly.
+Are you sure you want to continue? (y/N): y
+Options error: Unrecognized option or missing or extra parameter(s) in /tmp/ovpn.conf:24: scramble (2.4.7)
+Use --help for more information.
+connord: Running openvpn failed: Openvpn process stopped unexpected.
+</pre>
 
 ## Configuration
 
@@ -482,8 +515,7 @@ Connect to NordVPN servers. You may specify a single server of your choice
 with -s SERVER, where SERVER is a COUNTRY_CODE followed by a number. This must
 be a SERVER for which a configuration file exists. The same filters --area,
 --country ... like in the 'list' command can be applied here. For a list of
-possible values see the respective command in the 'list' command. IMPORTANT:
-Note that currently obfuscated servers aren't supported.
+possible values see the respective command in the 'list' command. 
 
 optional arguments:
   -h, --help            show this help message and exit
