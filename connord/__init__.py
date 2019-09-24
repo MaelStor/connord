@@ -61,6 +61,17 @@ class Printer(Borg):
         if "quiet" not in self.__dict__.keys():
             self.quiet = quiet
 
+    def yes_no(self, question):
+        reply = input(question + " (y/N): ").lower().strip()
+        if not reply:
+            return False
+        if reply in ("y", "ye", "yes"):
+            return True
+        if reply in ("n", "no"):
+            return False
+
+        return self.yes_no("Invalid answer. Try 'y' or 'n' or enter for No.")
+
     def error(self, message):
         """Prints errors if not quiet"""
         if not self.quiet:
