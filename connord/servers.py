@@ -24,7 +24,7 @@ from connord import countries
 from connord.formatter import Formatter
 
 __API_URL = "https://api.nordvpn.com/server"
-NETFLIX = ["us", "ca", "jp", "gb", "fr", "it"]
+NETFLIX = ["us", "ca", "jp", "de", "gb", "fr", "it"]
 
 
 class DomainNotFoundError(ConnordError):
