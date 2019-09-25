@@ -18,7 +18,7 @@
 
 """Defines Formatter classes"""
 
-from connord import Printer
+from connord.printer import Printer
 
 
 class Formatter:

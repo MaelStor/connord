@@ -372,14 +372,14 @@ def test_filter_servers(mocker, servers, connection):
     # setup
     areas_ = ["fr"]
     cities = [
-        ["Frankfurt"],
-        ["Frankfurt"],
-        ["Frankfurt"],
-        ["Amsterdam"],
-        ["Amsterdam"],
-        ["Amsteradm"],
-        ["Manassas"],
-        ["Dallas"],
+        "Frankfurt",
+        "Frankfurt",
+        "Frankfurt",
+        "Amsterdam",
+        "Amsterdam",
+        "Amsteradm",
+        "Manassas",
+        "Dallas",
     ]
     expected_servers = get_expected_servers_by_domain(["de111", "de112", "de113"])
     mocked_sqlite = mocker.patch("connord.areas.sqlite")

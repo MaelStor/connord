@@ -20,7 +20,8 @@
 Prints the version along with the copyright.
 """
 
-from connord import __version__, __copyright__, Printer
+from connord import __version__, __copyright__
+from connord.printer import Printer
 from connord import resources
 
 

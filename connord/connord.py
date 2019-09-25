@@ -39,7 +39,7 @@ from connord import areas
 from connord import countries
 from connord import features
 from connord import categories
-from connord import Printer
+from connord.printer import Printer
 from connord import sqlite
 from .features import FeatureError
 
