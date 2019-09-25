@@ -4,6 +4,8 @@ import sys
 from progress.bar import IncrementalBar
 from progress.spinner import Spinner
 
+from connord import sqlite
+
 
 class Borg:
     """Define a borg class"""
@@ -168,3 +170,10 @@ class Printer(Borg):
 
         def finish(self):
             pass
+
+    def print_map(self, latitude, longitude):
+        con = sqlite.create_connection()
+        map_s = sqlite.get_map(con, latitude, longitude)
+
+        if map_s is not None:
+            print(map_s, file=self)

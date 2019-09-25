@@ -222,7 +222,12 @@ def connect(
                 continue
 
         if server["ping"] != inf:
-            printer.info("Trying to connect to {}".format(server["domain"]))
+            printer.info(
+                "Trying to connect to {}: {} ms".format(
+                    server["domain"], server["ping"]
+                )
+            )
+            printer.print_map(server["location"]["lat"], server["location"]["long"])
             if run_openvpn(server, openvpn, daemon, protocol):
                 return True
 

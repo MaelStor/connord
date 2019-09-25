@@ -117,7 +117,15 @@ def update_database():
 
         country = server["country"]
         country_code = server["flag"].lower()
-        location = (latitude, longitude, display_name, city, country, country_code)
+        location = (
+            latitude,
+            longitude,
+            display_name,
+            city,
+            country,
+            country_code,
+            None,  # map
+        )
 
         connection = sqlite.create_connection()
         with connection:
@@ -225,7 +233,7 @@ def filter_servers(servers_, areas_):
             if not sqlite.location_exists(connection, lat, lon):
                 update_database()
 
-            city = sqlite.get_city(connection, lat, lon)[0]
+            city = sqlite.get_city(connection, lat, lon)
             city = city.translate(translation_table)
             city = city.lower()
             for area in areas_trans:
