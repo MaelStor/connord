@@ -28,7 +28,7 @@ class ConnordError(Exception):
 # pylint: disable=too-few-public-methods
 
 
-__version__ = "0.1.4"
+__version__ = "0.1.5"
 __license__ = "GNU General Public License v3 or later (GPLv3+)"
 __copyright__ = """connord  Copyright (C) 2019  Mael Stor <maelstor@posteo.de>
 This program comes with ABSOLUTELY NO WARRANTY; This is free software, and you
