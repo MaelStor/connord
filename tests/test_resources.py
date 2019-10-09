@@ -199,7 +199,7 @@ def test_get_zip_path_when_parameter_is_default(mocker):
     actual_result = resources.get_zip_path()
 
     # assert
-    mocked_get_zip_dir.assert_called_once_with(create=False)
+    mocked_get_zip_dir.assert_called_once_with(create=True)
     assert actual_result == expected_result
 
 

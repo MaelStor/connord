@@ -26,7 +26,8 @@ import time
 import os
 import re
 import signal
-from connord import ConnordError, Printer
+from connord import ConnordError
+from connord.printer import Printer
 from connord import iptables
 from connord import servers
 from connord import load
@@ -221,7 +222,12 @@ def connect(
                 continue
 
         if server["ping"] != inf:
-            printer.info("Trying to connect to {}".format(server["domain"]))
+            printer.info(
+                "Trying to connect to {}: {} ms".format(
+                    server["domain"], server["ping"]
+                )
+            )
+            printer.print_map(server["location"]["lat"], server["location"]["long"])
             if run_openvpn(server, openvpn, daemon, protocol):
                 return True
 

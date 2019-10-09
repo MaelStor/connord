@@ -26,7 +26,7 @@ from connord import resources
 class SqliteError(ConnordError):
     """Thrown within this module"""
 
-    def __init__(self, error, message=""):
+    def __init__(self, error=None, message=""):
         self.error = error
 
         if not message:
@@ -60,6 +60,7 @@ def create_table(connection, create_table_sql):
     try:
         cursor = connection.cursor()
         cursor.execute(create_table_sql)
+        connection.commit()
     except Error as error:
         raise SqliteError(error, "Could not create table")
 
@@ -77,13 +78,15 @@ def create_location(connection, location):
                 display_name,
                 city,
                 country,
-                country_code
+                country_code,
+                map
               )
-              VALUES(?,?,?,?,?,?) """
+              VALUES(?,?,?,?,?,?,?) """
 
     try:
         cursor = connection.cursor()
         cursor.execute(sql, location)
+        connection.commit()
         return cursor.lastrowid
     except Error as error:
         raise SqliteError(error, "Could not create location '{}'".format(location))
@@ -92,72 +95,103 @@ def create_location(connection, location):
 def location_exists(connection, latitude, longitude):
     """Return true if a location (latitude, longitude) exists. Prints errors to
     stdout."""
-
-    sql = """SELECT latitude, longitude FROM locations
-            WHERE latitude = {} AND longitude = {}""".format(
-        latitude, longitude
+    result = get_columns(
+        connection,
+        columns="latitude, longitude",
+        latitude=latitude,
+        longitude=longitude,
+        fetch="one",
     )
-
-    try:
-        cursor = connection.cursor()
-        result = cursor.execute(sql).fetchone()
-        return bool(result)
-    except Error as error:
-        raise SqliteError(
-            error,
-            "Failed location 'exists' query: lat: {}, lon: {}".format(
-                longitude, latitude
-            ),
-        )
+    return bool(result)
 
 
 def get_city(connection, latitude, longitude):
     """Return the city specified with latitude and longitude. Prints errors to
     stdout."""
-    sql = """SELECT city FROM locations
-            WHERE latitude = {} AND longitude = {}""".format(
-        latitude, longitude
+    return get_columns(
+        connection, columns="city", latitude=latitude, longitude=longitude, fetch="one"
     )
 
-    try:
-        cursor = connection.cursor()
-        result = cursor.execute(sql).fetchone()
-        return result
-    except Error as error:
-        raise SqliteError(
-            error, "Failed location query: lat: {}, lon: {}".format(longitude, latitude)
-        )
 
-
-@cached(cache=TTLCache(ttl=60, maxsize=5))
+# deprecated: use get_columns directly
 def get_locations(connection):
     """Returns all locations found in the database as list. Prints errors to
     stdout."""
-    connection.row_factory = sqlite3.Row
-    sql = """SELECT * FROM locations"""
+    return get_columns(connection)
+
+
+# pylint: disable=too-many-arguments
+@cached(cache=TTLCache(ttl=60, maxsize=20))
+def get_columns(
+    connection,
+    columns="*",
+    table="locations",
+    latitude=None,
+    longitude=None,
+    fetch="all",
+):
+    """
+    Query columns from a given table by unique locations defined by latitude and
+    longitude if not None else selects all rows
+
+    param connection: A valid connection to the database
+    param columns: A comma separated list of columns. Takes the special value '*'
+    param table: query the given table
+    param latitude: the latitude of the location
+    param longitude: the longitude of the location
+    param fetch: the query type 'all' or 'one'. 'many' is currently resolved to 'all'
+    returns: the result of the query. May be None if location does not exist
+    """
+
+    if latitude is None and longitude is None:
+        sql = """SELECT {} FROM {}""".format(columns, table)
+    else:
+        sql = """SELECT {} FROM {}
+                WHERE latitude = {} AND longitude = {}""".format(
+            columns, table, latitude, longitude
+        )
 
     try:
+        if fetch == "one":
+            cursor = connection.cursor()
+            result = cursor.execute(sql).fetchone()
+            if result:
+                return result[0]
+
+            return result
+
+        connection.row_factory = sqlite3.Row
         cursor = connection.cursor()
         result = cursor.execute(sql).fetchall()
         return result
+
     except Error as error:
-        raise SqliteError(error, "Failed query of locations")
+        raise SqliteError(
+            error,
+            "Failed query of {} for {} with lat={}, lon={}".format(
+                columns, table, latitude, longitude
+            ),
+        )
 
 
+# deprecated: use get_columns directly
 def get_display_name(connection, latitude, longitude):
     """Return the display_name of the city specified by latitude, longitude. Prints
     errors to stdout."""
-    sql = """SELECT display_name FROM locations
-            WHERE latitude = {} AND longitude = {}""".format(
-        latitude, longitude
+    return get_columns(
+        connection,
+        columns="display_name",
+        latitude=latitude,
+        longitude=longitude,
+        fetch="one",
     )
 
-    try:
-        cursor = connection.cursor()
-        result = cursor.execute(sql).fetchone()
-        return result
-    except Error as error:
-        raise SqliteError(error, "Failed query of display name")
+
+# deprecated: use get_columns directly
+def get_map(connection, latitude, longitude):
+    return get_columns(
+        connection, columns="map", latitude=latitude, longitude=longitude, fetch="one"
+    )
 
 
 def create_location_table(connection):

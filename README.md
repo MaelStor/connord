@@ -62,10 +62,14 @@ should cover most use cases.
   you've taken the optional step above.
 - Depending on your current iptables rules you may need to run 
   `$ sudo connord iptables flush`.
+- Get the openvpn configuration files for nordvpn with `$ sudo connord update`.
+  Files are installed in `/etc/openvpn/client/nordvpn` per default.
 - Execute `$ sudo connord connect -c YOUR_COUNTRY_CODE` and replace
   YOUR\_COUNTRY\_CODE with the
   [ISO_3166-1_alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2) country
-  code of your current country.
+  code of your current country. You will be asked for your username and password
+  which are stored under `/etc/openvpn/client/nordvpn/credentials` with mode
+  `0600`.
 
 ## Installation
 
