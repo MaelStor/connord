@@ -119,7 +119,7 @@ def get_zip_path(zip_name=None):
     if not zip_name:
         zip_name = "ovpn.zip"
 
-    zip_dir = get_zip_dir(create=False)
+    zip_dir = get_zip_dir(create=True)
     return zip_dir + "/" + zip_name
 
 

@@ -112,12 +112,15 @@ def unzip():
                     incremental_bar.next()
 
 
-def update(force=False):
-    """Update the nordvpn configuration files
-    """
-
+def _update_openvpn_conf(force):
     printer = Printer()
-    if force:
+    try:
+        resources.get_zip_dir(create=False)
+        initial_run = False
+    except resources.ResourceNotFoundError:
+        initial_run = True
+
+    if force or initial_run:
         get()
         unzip()
     else:
@@ -145,6 +148,11 @@ def update(force=False):
             else:
                 printer.info("Configurations are up-to-date.")
 
+
+def update(force=False):
+    """Update connord openvpn configuration files and databases
+    """
+    _update_openvpn_conf(force)
     areas.update_database()
     return True
 
@@ -154,6 +162,9 @@ def update_needed(zip_path):
     : returns: False if the zip file's creation time hasn't reached the timeout
                else True.
     """
+    if not os.path.exists(zip_path):
+        return True
+
     now = datetime.now()
     time_created = datetime.fromtimestamp(os.path.getctime(zip_path))
     return now - TIMEOUT > time_created
