@@ -46,7 +46,7 @@ setup(
         "Jinja2>=2.10.1,<3.0.0",
         "netaddr>=0.7.19,<1.0.0",
         "PyYAML>=5.1,<6.0",
-        "python-iptables>=0.14.0,<1.0.0",
+        "python-iptables>=0.14.0,<2.0.0",
         "progress>=1.5,<2.0",
         "netifaces>=0.10.9,<1.0.0",
     ],
