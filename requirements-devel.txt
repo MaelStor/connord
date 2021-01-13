@@ -26,7 +26,7 @@ progress==1.5
 py==1.8.0
 pycodestyle==2.5.0
 pyflakes==2.1.1
-Pygments==2.4.2
+Pygments==2.7.4
 pytest==4.5.0
 pytest-cov==2.7.1
 pytest-mock==1.10.4
