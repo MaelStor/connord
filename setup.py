@@ -42,7 +42,7 @@ setup(
     ],
     install_requires=[
         "requests>=2.22.0,<3.0.0",
-        "cachetools>=3.1.1,<4.0.0",
+        "cachetools>=3.1.1,<5.0.0",
         "Jinja2>=2.10.1,<3.0.0",
         "netaddr>=0.7.19,<1.0.0",
         "PyYAML>=5.1,<6.0",
